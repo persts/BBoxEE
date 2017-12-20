@@ -22,14 +22,13 @@
 # along with Point Class Assigner.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-import sys
 import os
 import glob
 import pickle
 import datetime
 import numpy as np
 from PIL import Image, ImageQt
-
+from .label_assistant import LabelAssistant
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'label_widget.ui'))
@@ -42,12 +41,16 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.setWindowTitle('Annotation Tool')
         self.directory = '.'
+        self.currentFileName = ''
+        self.rois = []
         self.selectedRow = -1
         self.currentImage = 1
         self.imageList = []
         self.mask = None
         self.data = self._baseSchema()
         self.dataDirty = False
+        self.assistant = LabelAssistant(self)
+        self.assistant.submitted.connect(self.updateAnnotation)
 
         self.graphicsScene = QtWidgets.QGraphicsScene()
         self.graphicsView.setScene(self.graphicsScene)
@@ -266,6 +269,7 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
 
     def resizeEvent(self, theEvent):
         self.graphicsView.fitInView(self.graphicsScene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
+        self.displayRois()
 
     def roiCreated(self, theRect):
         if theRect.width() > 0 and theRect.height() > 0:
@@ -278,6 +282,8 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
             self.displayLabelData()
             self.selectedRow = self.tableWidgetLabels.rowCount() - 1
         self.displayRois()
+        self.assistant.move(self.pos().x() + self.width() / 2, self.pos().y() + self.height() / 2)
+        self.assistant.show()
 
     def rowChanged(self, theModelIndex):
         self.selectedRow = theModelIndex.row()
@@ -315,6 +321,11 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         else:
             self.dataDirty = False
             self.pushButtonSave.setEnabled(False)
+
+    def updateAnnotation(self, theData):
+        for key in theData.keys():
+            self.data['images'][self.currentFileName][self.selectedRow][key] = theData[key]
+        self.displayLabelData()
 
     def updateRoi(self, theRect):
         if theRect.width() > 0 and theRect.height() > 0:

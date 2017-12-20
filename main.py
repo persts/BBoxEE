@@ -25,8 +25,8 @@
 import sys
 from PyQt5 import QtWidgets
 
-from extract_widget import ExtractWidget
-from label_widget import LabelWidget
+from andenet import ExtractWidget
+from andenet import LabelWidget
 
 app = QtWidgets.QApplication(sys.argv)
 gui = QtWidgets.QMainWindow()

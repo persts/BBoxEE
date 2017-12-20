@@ -294,7 +294,7 @@
   <customwidget>
    <class>LabelGraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header location="global">label_graphicsview</header>
+   <header location="global">andenet/label_graphicsview</header>
   </customwidget>
  </customwidgets>
  <resources/>
