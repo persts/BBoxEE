@@ -56,7 +56,7 @@
      <item>
       <widget class="QPushButton" name="pushButtonSubmit">
        <property name="text">
-        <string>PushButton</string>
+        <string>Submit</string>
        </property>
       </widget>
      </item>

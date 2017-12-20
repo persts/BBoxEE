@@ -282,7 +282,8 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
             self.displayLabelData()
             self.selectedRow = self.tableWidgetLabels.rowCount() - 1
         self.displayRois()
-        self.assistant.move(self.pos().x() + self.width() / 2, self.pos().y() + self.height() / 2)
+        pos = self.mapToGlobal(self.graphicsView.pos())
+        self.assistant.move(pos.x() + (self.graphicsView.width() - self.assistant.width()) / 2, pos.y() + (self.graphicsView.height() - self.assistant.height()) / 2)
         self.assistant.show()
 
     def rowChanged(self, theModelIndex):
