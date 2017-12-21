@@ -23,7 +23,6 @@
 #
 # --------------------------------------------------------------------------
 import os
-import sys
 import glob
 import pickle
 import random
@@ -99,15 +98,19 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
         masks = {}
         train_examples = []
         validation_examples = []
+        # Loop through all of the selected rows
         for index in self.tableWidgetFiles.selectionModel().selectedRows():
             file_name = self.tableWidgetFiles.item(index.row(), 0).text()
+            # open the andenet annotation file
             file = open(file_name, 'rb')
             data = pickle.load(file)
             file.close()
+            # Create a dictionary of the masks
             directory = data['directory']
-            masks[directory] = data['mask']
+            if data['mask_name'] != '':
+                masks[data['mask_name']] = data['mask']
             for file in data['images']:
-                example = {'direcetory': directory, 'file': file, 'annotations': []}
+                example = {'directory': directory, 'mask_name': data['mask_name'], 'file': file, 'annotations': []}
                 for annotation in data['images'][file]:
                     if truncated and annotation['truncated'] == 'Y':
                         pass
@@ -122,9 +125,27 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
         train_size = int((1.0 - validation_split) * len(examples))
         train_examples = examples[:train_size]
         validation_examples = examples[train_size:]
-        # Shuffle array
-        # Split array into training and validation sets
+
+        # Build the label mapping
+        remap = {'lookup': []}
+
+        for index in range(self.tableWidgetRemap.rowCount()):
+            key = self.tableWidgetRemap.item(index, 0).text()
+            new_key = self.tableWidgetRemap.item(index, 2).text()
+            if new_key == '':
+                new_key = key
+            remap[key] = new_key
+            if new_key not in remap['lookup']:
+                remap['lookup'].append(new_key)
         # pass data to exporter
+        # TODO: switch between exporters
+        directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
+        if directory != '':
+            self.progressBar.setRange(0, len(train_examples) + len(validation_examples))
+            from andenet import TfExporter
+            self.exporter = TfExporter(directory, train_examples, validation_examples, masks, remap)
+            self.exporter.progress.connect(self.progressBar.setValue)
+            self.exporter.start()
 
     def extractLabels(self, theFile, truncated=True, occluded=True, difficult=True):
         file = open(theFile, 'rb')

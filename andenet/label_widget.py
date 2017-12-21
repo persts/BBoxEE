@@ -77,7 +77,7 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         return {'bbox': None, 'label': 'N/A', 'occluded': 'N', 'truncated': 'N', 'difficult': 'N'}
 
     def _baseSchema(self):
-        return {'directory': '', 'mask': None, 'images': {}, 'schema': 'v1'}
+        return {'directory': '', 'mask': None, 'mask_name': '', 'images': {}, 'schema': 'v1'}
 
     def cellChanged(self, theRow, theColumn):
         text = self.tableWidgetLabels.item(theRow, theColumn).text()
@@ -309,6 +309,7 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
                 img = np.clip(img, 0, 1)
                 self.mask = img
                 self.data['mask'] = img
+                self.data['mask_name'] = os.path.split(file[0])[1]
                 self.setDirty(True)
             else:
                 print('TODO: Display Message')
