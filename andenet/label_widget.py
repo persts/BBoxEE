@@ -24,7 +24,8 @@
 # --------------------------------------------------------------------------
 import os
 import glob
-import pickle
+import json
+import copy
 import datetime
 import numpy as np
 from PIL import Image, ImageQt
@@ -174,11 +175,12 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
                 self.save()
         fileName = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Annotations', self.directory, 'Andenet (*.adn)')
         if fileName[0] != '':
-            file = open(fileName[0], 'rb')
-            self.data = pickle.load(file)
+            file = open(fileName[0], 'r')
+            self.data = json.load(file)
             file.close()
             self.directory = self.data['directory']
-            self.mask = self.data['mask']
+            tmp = np.array(self.data['mask'], dtype='uint8')
+            self.mask = np.dstack((tmp, tmp, tmp))
             self.loadImageList()
             self.setDirty(False)
             self.pushButtonSelectMask.setEnabled(True)
@@ -294,8 +296,8 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         file = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Annotations', self.directory + 'untitled.adn', 'Andenet (*.adn)')
         if file[0] != '':
             self.data['timestamp'] = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
-            fileObject = open(file[0], 'wb')
-            pickle.dump(self.data, fileObject)
+            fileObject = open(file[0], 'w')
+            json.dump(self.data, fileObject)
             fileObject.close()
             self.setDirty(False)
 
@@ -308,7 +310,10 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
                 img = np.array(img)
                 img = np.clip(img, 0, 1)
                 self.mask = img
-                self.data['mask'] = img
+                mask = np.dsplit(img, 3)
+                mask = mask[0]
+                mask = mask.reshape(mask.shape[:-1])
+                self.data['mask'] = mask.tolist()
                 self.data['mask_name'] = os.path.split(file[0])[1]
                 self.setDirty(True)
             else:
