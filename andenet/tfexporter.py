@@ -34,6 +34,7 @@ from object_detection.utils import dataset_util
 
 class TfExporter(QtCore.QThread):
     progress = QtCore.pyqtSignal(int)
+    exported = QtCore.pyqtSignal()
 
     def __init__(self, theDirectory, theTrainExamples, theValidationExamples, theMasks, theRemap):
         QtCore.QThread.__init__(self)
@@ -77,27 +78,28 @@ class TfExporter(QtCore.QThread):
                 truncated = []
                 difficult = []
                 for annotation in example['annotations']:
-                    xmins.append(annotation['bbox'][0] / width)
-                    ymins.append(annotation['bbox'][1] / height)
-                    xmaxs.append((annotation['bbox'][0] + annotation['bbox'][2]) / width)
-                    ymaxs.append((annotation['bbox'][1] + annotation['bbox'][3]) / height)
                     label = self.remap[annotation['label']]
-                    classes_text.append(label.encode('utf8'))
-                    classes.append(self.remap['lookup'].index(label))
-                    if annotation['occluded'] == 'Y':
-                        occluded.append(1)
-                    else:
-                        occluded.append(0)
+                    if label.lower() != 'exclude':
+                        xmins.append(annotation['bbox'][0] / width)
+                        ymins.append(annotation['bbox'][1] / height)
+                        xmaxs.append((annotation['bbox'][0] + annotation['bbox'][2]) / width)
+                        ymaxs.append((annotation['bbox'][1] + annotation['bbox'][3]) / height)
+                        classes_text.append(label.encode('utf8'))
+                        classes.append(self.remap['lookup'].index(label))
+                        if annotation['occluded'] == 'Y':
+                            occluded.append(1)
+                        else:
+                            occluded.append(0)
 
-                    if annotation['truncated'] == 'Y':
-                        truncated.append(1)
-                    else:
-                        truncated.append(0)
+                        if annotation['truncated'] == 'Y':
+                            truncated.append(1)
+                        else:
+                            truncated.append(0)
 
-                    if annotation['difficult'] == 'Y':
-                        difficult.append(1)
-                    else:
-                        difficult.append(0)
+                        if annotation['difficult'] == 'Y':
+                            difficult.append(1)
+                        else:
+                            difficult.append(0)
 
                 feature_dict = {
                     'image/height': dataset_util.int64_feature(height),
@@ -117,7 +119,11 @@ class TfExporter(QtCore.QThread):
                     'image/object/truncated': dataset_util.int64_list_feature(truncated),
                     'image/object/occluded': dataset_util.int64_list_feature(occluded),
                 }
-                tf_example = tf.train.Example(features=tf.train.Features(feature=feature_dict))
-                writer.write(tf_example.SerializeToString())
+                # Check to see if an annotation was excluded and was the only annotation for the file
+                if len(xmins) > 0:
+                    tf_example = tf.train.Example(features=tf.train.Features(feature=feature_dict))
+                    writer.write(tf_example.SerializeToString())
+                counter += 1
                 self.progress.emit(counter)
             writer.close()
+            self.exported.emit()

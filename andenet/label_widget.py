@@ -179,8 +179,9 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
             self.data = json.load(file)
             file.close()
             self.directory = self.data['directory']
-            tmp = np.array(self.data['mask'], dtype='uint8')
-            self.mask = np.dstack((tmp, tmp, tmp))
+            if self.mask is not None:
+                tmp = np.array(self.data['mask'], dtype='uint8')
+                self.mask = np.dstack((tmp, tmp, tmp))
             self.loadImageList()
             self.setDirty(False)
             self.pushButtonSelectMask.setEnabled(True)

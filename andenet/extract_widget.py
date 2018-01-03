@@ -24,8 +24,9 @@
 # --------------------------------------------------------------------------
 import os
 import glob
-import pickle
+import json
 import random
+import numpy as np
 from PyQt5 import QtCore, QtWidgets, uic
 
 EXTRACT, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'extract_widget.ui'))
@@ -66,6 +67,8 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
         self.checkBoxOccluded.stateChanged.connect(self.loadRemapTable)
         self.checkBoxDifficult.stateChanged.connect(self.loadRemapTable)
 
+        self.radioButtonTensorFlow.toggled.connect(self.toggleTensorflow)
+
     def cellChanged(self, theRow, theColumn):
         label = self.tableWidgetRemap.item(theRow, 0).text()
         self.remap[label] = self.tableWidgetRemap.item(theRow, theColumn).text()
@@ -102,13 +105,14 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
         for index in self.tableWidgetFiles.selectionModel().selectedRows():
             file_name = self.tableWidgetFiles.item(index.row(), 0).text()
             # open the andenet annotation file
-            file = open(file_name, 'rb')
-            data = pickle.load(file)
+            file = open(file_name, 'r')
+            data = json.load(file)
             file.close()
             # Create a dictionary of the masks
             directory = data['directory']
             if data['mask_name'] != '':
-                masks[data['mask_name']] = data['mask']
+                mask = np.array(data['mask'], dtype='uint8')
+                masks[data['mask_name']] = np.dstack((mask, mask, mask))
             for file in data['images']:
                 example = {'directory': directory, 'mask_name': data['mask_name'], 'file': file, 'annotations': []}
                 for annotation in data['images'][file]:
@@ -122,9 +126,6 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
                         example['annotations'].append(annotation)
                 examples.append(example)
         random.shuffle(examples)
-        train_size = int((1.0 - validation_split) * len(examples))
-        train_examples = examples[:train_size]
-        validation_examples = examples[train_size:]
 
         # Build the label mapping
         remap = {'lookup': []}
@@ -138,18 +139,30 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
             if new_key not in remap['lookup']:
                 remap['lookup'].append(new_key)
         # pass data to exporter
-        # TODO: switch between exporters
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
         if directory != '':
-            self.progressBar.setRange(0, len(train_examples) + len(validation_examples))
-            from andenet import TfExporter
-            self.exporter = TfExporter(directory, train_examples, validation_examples, masks, remap)
+            self.pushButtonExport.setEnabled(False)
+            self.progressBar.setRange(0, len(examples))
+            if self.radioButtonTensorFlow.isChecked():
+                train_size = int((1.0 - validation_split) * len(examples))
+                train_examples = examples[:train_size]
+                validation_examples = examples[train_size:]
+                from andenet import TfExporter
+                self.exporter = TfExporter(directory, train_examples, validation_examples, masks, remap)
+            if self.radioButtonAndenet.isChecked():
+                from andenet import AndenetExporter
+                self.exporter = AndenetExporter(directory, examples, masks, remap)
+
             self.exporter.progress.connect(self.progressBar.setValue)
+            self.exporter.exported.connect(self.exportComplete)
             self.exporter.start()
 
+    def exportComplete(self):
+        self.pushButtonExport.setEnabled(True)
+
     def extractLabels(self, theFile, truncated=True, occluded=True, difficult=True):
-        file = open(theFile, 'rb')
-        data = pickle.load(file)
+        file = open(theFile, 'r')
+        data = json.load(file)
         file.close()
         labels = {}
         for file in data['images']:
@@ -202,3 +215,9 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
             self.tableWidgetRemap.setItem(row, 2, QtWidgets.QTableWidgetItem(self.remap[label]))
             row += 1
         self.tableWidgetRemap.blockSignals(False)
+
+    def toggleTensorflow(self, checked):
+        if checked:
+            self.doubleSpinBoxValidation.setEnabled(True)
+        else:
+            self.doubleSpinBoxValidation.setEnabled(False)
