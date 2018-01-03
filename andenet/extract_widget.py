@@ -32,57 +32,61 @@ from PyQt5 import QtCore, QtWidgets, uic
 EXTRACT, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'extract_widget.ui'))
 
 
-# Thread to find all of the *.roi files and prevent the gui from blocking
 class Globber(QtCore.QThread):
+    """Threader worker to keep going from freezing while search for annotation files."""
+
     finished = QtCore.pyqtSignal(list)
 
     def __init__(self):
+        """Class init function."""
         QtCore.QThread.__init__(self)
         self.directory = ''
 
     def run(self):
-        fileList = glob.glob(self.directory + os.path.sep + '**/*.adn', recursive=True)
-        self.finished.emit(fileList)
+        """The starting point for the thread."""
+        file_list = glob.glob(self.directory + os.path.sep + '**/*.adn', recursive=True)
+        self.finished.emit(file_list)
 
 
 class ExtractWidget(QtWidgets.QWidget, EXTRACT):
+    """Widget for selecting, relabeling, and exporting annotated images."""
+
     def __init__(self, parent=None):
+        """Class init function."""
         QtWidgets.QWidget.__init__(self)
         self.setupUi(self)
         self.remap = {}
         self.globber = Globber()
-        self.globber.finished.connect(self.displayFiles)
+        self.globber.finished.connect(self.display)
 
-        self.pushButtonSelectDirectory.clicked.connect(self.loadAnnotationFiles)
+        self.pushButtonSelectDirectory.clicked.connect(self.load_annotation_files)
         self.pushButtonExport.clicked.connect(self.export)
 
         self.tableWidgetFiles.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.tableWidgetFiles.selectionModel().selectionChanged.connect(self.loadRemapTable)
+        self.tableWidgetFiles.selectionModel().selectionChanged.connect(self.refresh_remap_table)
         self.tableWidgetFiles.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
         self.tableWidgetRemap.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-        self.tableWidgetRemap.cellChanged.connect(self.cellChanged)
+        self.tableWidgetRemap.cellChanged.connect(self.update_remap_dictionary)
 
-        self.checkBoxTruncated.stateChanged.connect(self.loadRemapTable)
-        self.checkBoxOccluded.stateChanged.connect(self.loadRemapTable)
-        self.checkBoxDifficult.stateChanged.connect(self.loadRemapTable)
+        self.checkBoxTruncated.stateChanged.connect(self.refresh_remap_table)
+        self.checkBoxOccluded.stateChanged.connect(self.refresh_remap_table)
+        self.checkBoxDifficult.stateChanged.connect(self.refresh_remap_table)
 
-        self.radioButtonTensorFlow.toggled.connect(self.toggleTensorflow)
+        self.radioButtonTensorFlow.toggled.connect(self.toggle_tensorflow)
 
-    def cellChanged(self, theRow, theColumn):
-        label = self.tableWidgetRemap.item(theRow, 0).text()
-        self.remap[label] = self.tableWidgetRemap.item(theRow, theColumn).text()
-
-    def displayFiles(self, theFileList):
+    def display(self, file_list):
+        """(Slot) Display annotation files in table with summary count by label."""
         self.pushButtonSelectDirectory.setEnabled(True)
         self.progressBar.setRange(0, 1)
-        self.tableWidgetFiles.setRowCount(len(theFileList))
-        for index in range(len(theFileList)):
-            file_name = theFileList[index]
+        self.tableWidgetFiles.setRowCount(len(file_list))
+        for index in range(len(file_list)):
+            file_name = file_list[index]
             item = QtWidgets.QTableWidgetItem(file_name)
             item.setFlags(QtCore.Qt.ItemIsSelectable)
             self.tableWidgetFiles.setItem(index, 0, item)
-            labels = self.extractLabels(file_name)
+            # TODO: Store labels in dictionary to prevent having to re read from file on changes
+            labels = self.summarize_labels(file_name)
             string = ''
             for c in labels:
                 string += c + ': ' + str(labels[c]) + "\n"
@@ -93,6 +97,7 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
         self.tableWidgetFiles.resizeColumnToContents(1)
 
     def export(self):
+        """(Slot) Import and run selected extractor."""
         truncated = self.checkBoxTruncated.isChecked()
         occluded = self.checkBoxOccluded.isChecked()
         difficult = self.checkBoxDifficult.isChecked()
@@ -104,17 +109,19 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
         # Loop through all of the selected rows
         for index in self.tableWidgetFiles.selectionModel().selectedRows():
             file_name = self.tableWidgetFiles.item(index.row(), 0).text()
-            # open the andenet annotation file
+            # Open the andenet annotation file
             file = open(file_name, 'r')
             data = json.load(file)
             file.close()
-            # Create a dictionary of the masks
+            # Add mask to dictionary
             directory = data['directory']
             if data['mask_name'] != '':
                 mask = np.array(data['mask'], dtype='uint8')
                 masks[data['mask_name']] = np.dstack((mask, mask, mask))
+            # Loop through images in annotation file
             for file in data['images']:
                 example = {'directory': directory, 'mask_name': data['mask_name'], 'file': file, 'annotations': []}
+                # Loop through annotations and filter
                 for annotation in data['images'][file]:
                     if truncated and annotation['truncated'] == 'Y':
                         pass
@@ -124,12 +131,12 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
                         pass
                     else:
                         example['annotations'].append(annotation)
-                examples.append(example)
+                if len(example['annotations'] > 0):
+                    examples.append(example)
         random.shuffle(examples)
 
         # Build the label mapping
         remap = {'lookup': []}
-
         for index in range(self.tableWidgetRemap.rowCount()):
             key = self.tableWidgetRemap.item(index, 0).text()
             new_key = self.tableWidgetRemap.item(index, 2).text()
@@ -138,6 +145,7 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
             remap[key] = new_key
             if new_key not in remap['lookup']:
                 remap['lookup'].append(new_key)
+
         # pass data to exporter
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
         if directory != '':
@@ -154,32 +162,15 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
                 self.exporter = AndenetExporter(directory, examples, masks, remap)
 
             self.exporter.progress.connect(self.progressBar.setValue)
-            self.exporter.exported.connect(self.exportComplete)
+            self.exporter.exported.connect(self.exported)
             self.exporter.start()
 
-    def exportComplete(self):
+    def exported(self):
+        """(Slot) Reinable export button when export is completed."""
         self.pushButtonExport.setEnabled(True)
 
-    def extractLabels(self, theFile, truncated=True, occluded=True, difficult=True):
-        file = open(theFile, 'r')
-        data = json.load(file)
-        file.close()
-        labels = {}
-        for file in data['images']:
-            for annotation in data['images'][file]:
-                if not truncated and annotation['truncated'] == 'Y':
-                    pass
-                elif not occluded and annotation['occluded'] == 'Y':
-                    pass
-                elif not difficult and annotation['difficult'] == 'Y':
-                    pass
-                else:
-                    if annotation['label'] not in labels:
-                        labels[annotation['label']] = 0
-                    labels[annotation['label']] += 1
-        return labels
-
-    def loadAnnotationFiles(self):
+    def load_annotation_files(self):
+        """(Slot) Select directory and start the globber to search for annotation files."""
         directory = QtWidgets.QFileDialog.getExistingDirectory(self)
         if directory != '':
             self.pushButtonSelectDirectory.setEnabled(False)
@@ -187,14 +178,16 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
             self.globber.directory = directory
             self.globber.start()
 
-    def loadRemapTable(self):
+    def refresh_remap_table(self):
+        """(Slot) Update the remap table based on selected files and exclude criteria."""
         labels = {}
         truncated = not self.checkBoxTruncated.isChecked()
         occluded = not self.checkBoxOccluded.isChecked()
         difficult = not self.checkBoxDifficult.isChecked()
         for index in self.tableWidgetFiles.selectionModel().selectedRows():
             file = self.tableWidgetFiles.item(index.row(), 0).text()
-            l = self.extractLabels(file, truncated=truncated, occluded=occluded, difficult=difficult)
+            # TODO: Load label data from intermediate store rather then from disk again
+            l = self.summarize_labels(file, truncated=truncated, occluded=occluded, difficult=difficult)
             for label in l:
                 if label in labels:
                     labels[label] += l[label]
@@ -216,8 +209,35 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
             row += 1
         self.tableWidgetRemap.blockSignals(False)
 
-    def toggleTensorflow(self, checked):
+    def summarize_labels(self, file_name, truncated=True, occluded=True, difficult=True):
+        """Read labels from original annotaiton file and summarize by file."""
+        file = open(file_name, 'r')
+        data = json.load(file)
+        file.close()
+        labels = {}
+        for file in data['images']:
+            for annotation in data['images'][file]:
+                if not truncated and annotation['truncated'] == 'Y':
+                    pass
+                elif not occluded and annotation['occluded'] == 'Y':
+                    pass
+                elif not difficult and annotation['difficult'] == 'Y':
+                    pass
+                else:
+                    if annotation['label'] not in labels:
+                        labels[annotation['label']] = 0
+                    labels[annotation['label']] += 1
+        # TODO: Save labels to dict index by file name
+        return labels
+
+    def toggle_tensorflow(self, checked):
+        """(Slot) Update GUI to reflect differences in export options."""
         if checked:
             self.doubleSpinBoxValidation.setEnabled(True)
         else:
             self.doubleSpinBoxValidation.setEnabled(False)
+
+    def update_remap_dictionary(self, row, column):
+        """(Slot) Update remap dictionary when cell in table changes."""
+        label = self.tableWidgetRemap.item(row, 0).text()
+        self.remap[label] = self.tableWidgetRemap.item(row, column).text()

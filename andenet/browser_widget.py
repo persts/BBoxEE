@@ -48,22 +48,26 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         self.pushButtonSelectDirectory.clicked.connect(self.load)
         self.pushButtonNext.clicked.connect(self.next)
         self.pushButtonPrevious.clicked.connect(self.previous)
-        self.lineEditCurrentRecord.editingFinished.connect(self.jumpToImage)
+        self.lineEditCurrentRecord.editingFinished.connect(self.jump_to_image)
 
     def display(self):
         """Display image in widget, JSON metadata, and labeled annotation boxes."""
         data = self.data[self.current_record - 1]
         self.lineEditCurrentRecord.setText(str(self.current_record))
         self.textBrowser.setText(json.dumps(data, indent=4, sort_keys=True))
+        # Seek to the start of the data block then read in the image data
         self.images.seek(data['image_data']['start'])
         raw = self.images.read(data['image_data']['size'])
+        # Turn into a virtual file stream and load the image as if from disk
         file = io.BytesIO(raw)
         img = Image.open(file)
+        # Display the image in the graphhics view
         self.qImage = ImageQt.ImageQt(img)
         self.graphicsScene.clear()
         self.graphicsScene.addPixmap(QtGui.QPixmap.fromImage(self.qImage))
         self.graphicsView.fitInView(self.graphicsScene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
         self.graphicsView.setSceneRect(self.graphicsScene.itemsBoundingRect())
+        # Add bounding boxes and labels.
         for annotation in data['annotations']:
             rect = QtCore.QRectF(annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3])
             graphics_item = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.magenta, QtCore.Qt.SolidPattern), 3))
@@ -76,7 +80,7 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
             text.moveBy(10., 0.)
             text.setParentItem(graphics_item)
 
-    def jumpToImage(self):
+    def jump_to_image(self):
         """(Slot) Just to image after editing has finished in line edit."""
         try:
             image_number = int(self.lineEditCurrentRecord.text())
