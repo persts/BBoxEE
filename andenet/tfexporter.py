@@ -33,17 +33,35 @@ from object_detection.utils import dataset_util
 
 
 class TfExporter(QtCore.QThread):
+    """Export annotated image examples into the Tensorflow TFRecord format."""
+
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal()
 
-    def __init__(self, theDirectory, theTrainExamples, theValidationExamples, theMasks, theRemap):
+    def __init__(self, directory, train_examples, validation_examples, masks, remap):
+        """
+        Class init function.
+
+        Args:
+            directory (str): Destination directory
+            train_examples (list): List of all of the annotated examples to be used for trianing
+            validation_examples (list): List of all of the annotated examples to be used for validation
+            masks (dict): Dictionary holding the masks index by mask name
+            remap (dict): A lookup table for renaming classes
+        """
         QtCore.QThread.__init__(self)
-        self.directory = theDirectory
-        self.examples = [theTrainExamples, theValidationExamples]
-        self.masks = theMasks
-        self.remap = theRemap
+        self.directory = directory
+        self.examples = [train_examples, validation_examples]
+        self.masks = masks
+        self.remap = remap
 
     def run(self):
+        """
+        The starting point for the thread.
+
+        After creating and instance of the class, calling start() will call this
+        function which processes and saves all of the annotaiton examples to disk.
+        """
         counter = 0
         for examples in self.examples:
             writer = None

@@ -35,30 +35,40 @@ class AndenetExporter(QtCore.QThread):
     Exports annotated image examples into the Andenet format.
 
     Andenet export format consists of two file:
-    metadata.json - a JSON file containing the annotation information
-    images.bin - binary file of sequentially written images whos offsets and sizes are stored with the annotaiton information
+    metadata.json
+        JSON file containing the annotation information
+
+    images.bin
+        Binary file of sequentially written images whos offsets and
+        sizes are stored with the annotaiton information
     """
 
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal()
 
-    def __init__(self, theDirectory, theExamples, theMasks, theRemap):
+    def __init__(self, directory, examples, masks, remap):
         """
         Class init function.
 
         Args:
-            theDirectory (str): Destination directory
-            theExamples (:obj:'list'): List of all of the annotated examples
-            theMasks (:obj:'dict'): Dictionary holding the masks index by mask name
-            theRemap (:obj:'dict'): A lookup table for renaming classes
+            directory (str): Destination directory
+            examples (list): List of all of the annotated examples
+            masks (dict): Dictionary holding the masks index by mask name
+            remap (dict): A lookup table for renaming classes
         """
         QtCore.QThread.__init__(self)
-        self.directory = theDirectory
-        self.examples = theExamples
-        self.masks = theMasks
-        self.remap = theRemap
+        self.directory = directory
+        self.examples = examples
+        self.masks = masks
+        self.remap = remap
 
     def run(self):
+        """
+        The starting point for the thread.
+
+        After creating and instance of the class, calling start() will call this
+        function which processes and saves all of the annotaiton examples to disk.
+        """
         counter = 0
         running_byte_count = 0
         image_writer = open(self.directory + os.path.sep + 'images.bin', 'wb')

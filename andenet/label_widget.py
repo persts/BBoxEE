@@ -272,7 +272,7 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
 
     def resizeEvent(self, theEvent):
         self.graphicsView.fitInView(self.graphicsScene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
-        self.displayRois()
+        # self.displayRois()
 
     def roiCreated(self, theRect):
         if theRect.width() > 0 and theRect.height() > 0:

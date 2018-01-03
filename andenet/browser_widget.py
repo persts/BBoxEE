@@ -32,12 +32,15 @@ BROWSER, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'browser_wid
 
 
 class BrowserWidget(QtWidgets.QWidget, BROWSER):
+    """Browser to view data stored in the Andenet format."""
+
     def __init__(self, parent=None):
+        """Class init function."""
         QtWidgets.QWidget.__init__(self)
         self.setupUi(self)
         self.data = None
         self.images = None
-        self.currentRecord = 0
+        self.current_record = 0
 
         self.graphicsScene = QtWidgets.QGraphicsScene()
         self.graphicsView.setScene(self.graphicsScene)
@@ -45,10 +48,12 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         self.pushButtonSelectDirectory.clicked.connect(self.load)
         self.pushButtonNext.clicked.connect(self.next)
         self.pushButtonPrevious.clicked.connect(self.previous)
+        self.lineEditCurrentRecord.editingFinished.connect(self.jumpToImage)
 
     def display(self):
-        data = self.data[self.currentRecord - 1]
-        self.lineEditCurrentRecord.setText(str(self.currentRecord))
+        """Display image in widget, JSON metadata, and labeled annotation boxes."""
+        data = self.data[self.current_record - 1]
+        self.lineEditCurrentRecord.setText(str(self.current_record))
         self.textBrowser.setText(json.dumps(data, indent=4, sort_keys=True))
         self.images.seek(data['image_data']['start'])
         raw = self.images.read(data['image_data']['size'])
@@ -61,7 +66,7 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         self.graphicsView.setSceneRect(self.graphicsScene.itemsBoundingRect())
         for annotation in data['annotations']:
             rect = QtCore.QRectF(annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3])
-            theItem = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.magenta, QtCore.Qt.SolidPattern), 3))
+            graphics_item = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.magenta, QtCore.Qt.SolidPattern), 3))
             font = QtGui.QFont()
             font.setPointSize(60)
             text = QtWidgets.QGraphicsTextItem(annotation['label'])
@@ -69,25 +74,44 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
             text.setPos(rect.topLeft().toPoint())
             text.setDefaultTextColor(QtCore.Qt.magenta)
             text.moveBy(10., 0.)
-            text.setParentItem(theItem)
+            text.setParentItem(graphics_item)
+
+    def jumpToImage(self):
+        """(Slot) Just to image after editing has finished in line edit."""
+        try:
+            image_number = int(self.lineEditCurrentRecord.text())
+            if image_number <= len(self.data) and image_number >= 1:
+                self.current_record = image_number
+                self.display()
+            else:
+                self.lineEditCurrentRecord.setText(str(self.current_record))
+        except ValueError:
+            self.lineEditCurrentRecord.setText(str(self.current_record))
 
     def load(self):
+        """(Slot) Load metadata file."""
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
         if directory != '':
             self.images = open(directory + os.path.sep + 'images.bin', 'rb')
             file = open(directory + os.path.sep + 'metadata.json')
             self.data = json.load(file)
             file.close()
-            self.currentRecord = 1
+            self.current_record = 1
             self.labelTotal.setText('of ' + str(len(self.data)))
             self.display()
 
     def next(self):
-        if self.data is not None and self.currentRecord < len(self.data):
-            self.currentRecord += 1
+        """(Slot) Load next record."""
+        if self.data is not None and self.current_record < len(self.data):
+            self.current_record += 1
             self.display()
 
     def previous(self):
-        if self.data is not None and self.currentRecord > 1:
-            self.currentRecord -= 1
+        """(Slot) Load previous record."""
+        if self.data is not None and self.current_record > 1:
+            self.current_record -= 1
             self.display()
+
+    def resizeEvent(self, event):
+        """Override of virtual function to resize contents of graphics view when widget is resized."""
+        self.graphicsView.fitInView(self.graphicsScene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
