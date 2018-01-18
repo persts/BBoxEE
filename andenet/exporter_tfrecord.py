@@ -32,7 +32,7 @@ import numpy as np
 from object_detection.utils import dataset_util
 
 
-class TfExporter(QtCore.QThread):
+class TfrExporter(QtCore.QThread):
     """Export annotated image examples into the Tensorflow TFRecord format."""
 
     progress = QtCore.pyqtSignal(int)
@@ -103,7 +103,7 @@ class TfExporter(QtCore.QThread):
                         xmaxs.append((annotation['bbox'][0] + annotation['bbox'][2]) / width)
                         ymaxs.append((annotation['bbox'][1] + annotation['bbox'][3]) / height)
                         classes_text.append(label.encode('utf8'))
-                        classes.append(self.remap['lookup'].index(label))
+                        classes.append(self.remap['lookup'].index(label) + 1)
                         if annotation['occluded'] == 'Y':
                             occluded.append(1)
                         else:
@@ -145,3 +145,7 @@ class TfExporter(QtCore.QThread):
                 self.progress.emit(counter)
             writer.close()
             self.exported.emit()
+        file = open(self.directory + os.path.sep + 'label_map.pbtxt', 'w')
+        for counter in range(len(self.remap['lookup'])):
+            file.write("item {{\n name: \"{}\"\n id: {}\n}}\n".format(self.remap['lookup'][counter], counter + 1))
+        file.close()

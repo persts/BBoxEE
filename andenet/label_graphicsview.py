@@ -25,55 +25,73 @@
 from PyQt5 import QtWidgets, QtCore
 
 
-class RoiSizeGrip(QtWidgets.QSizeGrip):
+class BBoxSizeGrip(QtWidgets.QSizeGrip):
+    """Extended version of QSizeGrip."""
+
     resized = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
+        """Class init function."""
         QtWidgets.QSizeGrip.__init__(self, parent)
 
-    def mouseReleaseEvent(self, theEvent):
+    def mouseReleaseEvent(self, event):
+        """Overload of mouseReleaseEvent to emit a resize signal."""
         self.resized.emit()
 
 
-class RoiWidget(QtWidgets.QFrame):
+class BBoxWidget(QtWidgets.QFrame):
+    """Custom QFrame to allow resizing of annotation bounding boxes."""
+
     resized = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
+        """Class init function."""
         QtWidgets.QFrame.__init__(self, parent)
         self.setWindowFlags(QtCore.Qt.SubWindow)
         self.layout = QtWidgets.QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
-        self.setStyleSheet("RoiWidget { border: 1px solid rgb(255, 0, 255);}")
-        self.grip1 = RoiSizeGrip(self)
-        self.grip2 = RoiSizeGrip(self)
-        self.grip1.resized.connect(self.resizeComplete)
+        self.setStyleSheet("BBoxWidget { border: 1px solid rgb(255, 0, 255);}")
+        self.grip1 = BBoxSizeGrip(self)
+        self.grip2 = BBoxSizeGrip(self)
+        self.grip1.resized.connect(self.resize_complete)
         self.layout.addWidget(self.grip1, 0, QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        self.grip2.resized.connect(self.resizeComplete)
+        self.grip2.resized.connect(self.resize_complete)
         self.layout.addWidget(self.grip2, 0, QtCore.Qt.AlignRight | QtCore.Qt.AlignBottom)
         self.hide()
 
-    def resizeComplete(self):
+    def resize_complete(self):
+        """(Slot) Receives the resize signal from the BBoxSizeGrip and emits a resized signal."""
         self.resized.emit()
 
-    def resizeEvent(self, theEvent):
+    def resizeEvent(self, event):
+        """Overload of the base resizeEvent."""
         self.setGeometry(self.pos().x(), self.pos().y(), self.width(), self.height())
 
 
 class LabelGraphicsView(QtWidgets.QGraphicsView):
-    roiCreated = QtCore.pyqtSignal(QtCore.QRectF)
-    roiResized = QtCore.pyqtSignal(QtCore.QRectF)
+    """Custom QGraphicsView for creating and editing annotation bounding boxes."""
+
+    created = QtCore.pyqtSignal(QtCore.QRectF)
+    resized = QtCore.pyqtSignal(QtCore.QRectF)
 
     def __init__(self, parent=None):
+        """Class init function."""
         QtWidgets.QGraphicsView.__init__(self, parent)
         self.points = []
-        self.roiSelector = RoiWidget(self)
-        self.roi = QtCore.QRectF()
-        self.roiSelector.resized.connect(self.resizeRoi)
+        self.bbox_editor = BBoxWidget(self)
+        self.bbox = QtCore.QRectF()
+        self.bbox_editor.resized.connect(self.bbox_resized)
 
-    def getRoi(self):
-        if self.roiSelector is not None:
-            rect = self.mapToScene(self.roiSelector.pos().x(), self.roiSelector.pos().y(), self.roiSelector.width(), self.roiSelector.height()).boundingRect()
+    def get_bbox(self):
+        """Map the ROI location from scene coordinates to image coordinates.
+
+        Returns:
+            QRectF: The location of the ROI in image coordinates.
+        """
+        if self.bbox_editor is not None:
+            rect = self.mapToScene(self.bbox_editor.pos().x(), self.bbox_editor.pos().y(), self.bbox_editor.width(), self.bbox_editor.height()).boundingRect()
             adjusted = False
+            # Check to see if ROI is completely on the scene, if not adjust to fit on scene.
             if rect.left() < 0:
                 rect.setLeft(0.0)
                 adjusted = True
@@ -88,14 +106,16 @@ class LabelGraphicsView(QtWidgets.QGraphicsView):
                 adjusted = True
             if adjusted:
                 rect2 = self.mapFromScene(rect).boundingRect()
-                self.roiSelector.setGeometry(rect2.left(), rect2.top(), rect2.width(), rect2.height())
+                self.bbox_editor.setGeometry(rect2.left(), rect2.top(), rect2.width(), rect2.height())
         return rect
 
-    def mousePressEvent(self, theEvent):
+    def mousePressEvent(self, event):
+        """Overload of the mousePressEvent that stores mouse click positions in a list."""
         if len(self.scene().items()) > 0:
-            self.points.append(theEvent.pos())
+            self.points.append(event.pos())
 
-    def mouseReleaseEvent(self, theEvent):
+    def mouseReleaseEvent(self, event):
+        """Overload of the MouseReleaseEvent that will calculate the bounding box when four points are available."""
         x_min = 100000000
         y_min = 100000000
         x_max = 0
@@ -106,15 +126,21 @@ class LabelGraphicsView(QtWidgets.QGraphicsView):
                 x_max = max(x_max, point.x())
                 y_min = min(y_min, point.y())
                 y_max = max(y_max, point.y())
-            self.roiSelector.setGeometry(x_min, y_min, x_max - x_min, y_max - y_min)
-            self.roiSelector.show()
-            self.roiCreated.emit(self.getRoi())
+            self.bbox_editor.setGeometry(x_min, y_min, x_max - x_min, y_max - y_min)
+            self.bbox_editor.show()
+            self.created.emit(self.get_bbox())
             self.points = []
 
-    def resizeRoi(self):
-        self.roiResized.emit(self.getRoi())
+    def bbox_resized(self):
+        """(Slot) Received bbox resized signal and emits another resize signal."""
+        self.resized.emit(self.get_bbox())
 
-    def showRoiSelector(self, theRect):
-        rect = self.mapFromScene(theRect).boundingRect()
-        self.roiSelector.setGeometry(rect.left(), rect.top(), rect.width(), rect.height())
-        self.roiSelector.show()
+    def show_bbox_editor(self, reference_rect):
+        """Redisplay the ROI editor.
+
+        Args:
+            reference_rect (QRectF): The geometry to use when redisplaying the ROI editor.
+        """
+        rect = self.mapFromScene(reference_rect).boundingRect()
+        self.bbox_editor.setGeometry(rect.left(), rect.top(), rect.width(), rect.height())
+        self.bbox_editor.show()

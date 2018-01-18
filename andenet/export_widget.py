@@ -29,11 +29,11 @@ import random
 import numpy as np
 from PyQt5 import QtCore, QtWidgets, uic
 
-EXTRACT, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'extract_widget.ui'))
+EXPORT, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'export_widget.ui'))
 
 
 class Globber(QtCore.QThread):
-    """Threader worker to keep going from freezing while search for annotation files."""
+    """Threaded worker to keep going from freezing while search for annotation files."""
 
     finished = QtCore.pyqtSignal(list)
 
@@ -48,13 +48,14 @@ class Globber(QtCore.QThread):
         self.finished.emit(file_list)
 
 
-class ExtractWidget(QtWidgets.QWidget, EXTRACT):
+class ExportWidget(QtWidgets.QWidget, EXPORT):
     """Widget for selecting, relabeling, and exporting annotated images."""
 
     def __init__(self, parent=None):
         """Class init function."""
         QtWidgets.QWidget.__init__(self)
         self.setupUi(self)
+        self.label_cache = {}
         self.remap = {}
         self.globber = Globber()
         self.globber.finished.connect(self.display)
@@ -97,7 +98,7 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
         self.tableWidgetFiles.resizeColumnToContents(1)
 
     def export(self):
-        """(Slot) Import and run selected extractor."""
+        """(Slot) Import and run selected exporter."""
         truncated = self.checkBoxTruncated.isChecked()
         occluded = self.checkBoxOccluded.isChecked()
         difficult = self.checkBoxDifficult.isChecked()
@@ -114,7 +115,7 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
             data = json.load(file)
             file.close()
             # Add mask to dictionary
-            directory = data['directory']
+            directory = os.path.split(file_name)[0]
             if data['mask_name'] != '':
                 mask = np.array(data['mask'], dtype='uint8')
                 masks[data['mask_name']] = np.dstack((mask, mask, mask))
@@ -131,7 +132,7 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
                         pass
                     else:
                         example['annotations'].append(annotation)
-                if len(example['annotations'] > 0):
+                if len(example['annotations']) > 0:
                     examples.append(example)
         random.shuffle(examples)
 
@@ -143,7 +144,7 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
             if new_key == '':
                 new_key = key
             remap[key] = new_key
-            if new_key not in remap['lookup']:
+            if new_key.lower() != 'exclude' and new_key not in remap['lookup']:
                 remap['lookup'].append(new_key)
 
         # pass data to exporter
@@ -155,8 +156,8 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
                 train_size = int((1.0 - validation_split) * len(examples))
                 train_examples = examples[:train_size]
                 validation_examples = examples[train_size:]
-                from andenet import TfExporter
-                self.exporter = TfExporter(directory, train_examples, validation_examples, masks, remap)
+                from andenet import TfrExporter
+                self.exporter = TfrExporter(directory, train_examples, validation_examples, masks, remap)
             if self.radioButtonAndenet.isChecked():
                 from andenet import AndenetExporter
                 self.exporter = AndenetExporter(directory, examples, masks, remap)
@@ -171,6 +172,7 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
 
     def load_annotation_files(self):
         """(Slot) Select directory and start the globber to search for annotation files."""
+        self.label_cache = {}
         directory = QtWidgets.QFileDialog.getExistingDirectory(self)
         if directory != '':
             self.pushButtonSelectDirectory.setEnabled(False)
@@ -186,7 +188,6 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
         difficult = not self.checkBoxDifficult.isChecked()
         for index in self.tableWidgetFiles.selectionModel().selectedRows():
             file = self.tableWidgetFiles.item(index.row(), 0).text()
-            # TODO: Load label data from intermediate store rather then from disk again
             l = self.summarize_labels(file, truncated=truncated, occluded=occluded, difficult=difficult)
             for label in l:
                 if label in labels:
@@ -215,19 +216,31 @@ class ExtractWidget(QtWidgets.QWidget, EXTRACT):
         data = json.load(file)
         file.close()
         labels = {}
-        for file in data['images']:
-            for annotation in data['images'][file]:
-                if not truncated and annotation['truncated'] == 'Y':
-                    pass
-                elif not occluded and annotation['occluded'] == 'Y':
-                    pass
-                elif not difficult and annotation['difficult'] == 'Y':
-                    pass
-                else:
-                    if annotation['label'] not in labels:
-                        labels[annotation['label']] = 0
-                    labels[annotation['label']] += 1
-        # TODO: Save labels to dict index by file name
+        if file_name not in self.label_cache:
+            self.label_cache[file_name] = {}
+            for file in data['images']:
+                for annotation in data['images'][file]:
+                    if annotation['label'] not in self.label_cache[file_name]:
+                        self.label_cache[file_name][annotation['label']] = {'full': 0, 'truncated': 0, 'occluded': 0, 'difficult': 0}
+
+                    if annotation['truncated'] == 'Y':
+                        self.label_cache[file_name][annotation['label']]['truncated'] += 1
+                    elif annotation['occluded'] == 'Y':
+                        self.label_cache[file_name][annotation['label']]['occluded'] += 1
+                    elif annotation['difficult'] == 'Y':
+                        self.label_cache[file_name][annotation['label']]['difficult'] += 1
+                    else:
+                        self.label_cache[file_name][annotation['label']]['full'] += 1
+
+        for label in self.label_cache[file_name]:
+            if label not in labels:
+                labels[label] = self.label_cache[file_name][label]['full']
+            if truncated:
+                labels[label] += self.label_cache[file_name][label]['truncated']
+            if occluded:
+                labels[label] += self.label_cache[file_name][label]['occluded']
+            if difficult:
+                labels[label] += self.label_cache[file_name][label]['difficult']
         return labels
 
     def toggle_tensorflow(self, checked):
