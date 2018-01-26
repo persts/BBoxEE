@@ -81,6 +81,7 @@ class LabelGraphicsView(QtWidgets.QGraphicsView):
         self.bbox_editor = BBoxWidget(self)
         self.bbox = QtCore.QRectF()
         self.bbox_editor.resized.connect(self.bbox_resized)
+        self.setViewportUpdateMode(0)
 
     def get_bbox(self):
         """Map the ROI location from scene coordinates to image coordinates.
