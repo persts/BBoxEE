@@ -25,12 +25,13 @@
 import os
 import glob
 import json
-import copy
 import datetime
 import numpy as np
 from PIL import Image, ImageQt
 from .label_assistant import LabelAssistant
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
+import tensorflow as tf
+from utils import label_map_util
 
 LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'label_widget.ui'))
 
@@ -51,10 +52,13 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         self.current_image = 1
         self.image_list = []
         self.mask = None
-        self.data = self._baseSchema()
+        self.data = self._base_schema()
         self.dirty = False
         self.assistant = LabelAssistant(self)
         self.assistant.submitted.connect(self.update_annotation)
+        self.image = None
+        self.detection_graph = tf.Graph()
+        self.model_loaded = False
 
         self.graphicsScene = QtWidgets.QGraphicsScene()
         self.graphicsView.setScene(self.graphicsScene)
@@ -67,21 +71,53 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         self.pushButtonLabelFile.clicked.connect(self.load_from_file)
         self.pushButtonNext.clicked.connect(self.next_image)
         self.pushButtonPrevious.clicked.connect(self.previous_image)
+        self.pushButtonLoadModel.clicked.connect(self.load_model)
+        self.pushButtonAnnotate.clicked.connect(self.annotate)
         self.pushButtonSave.clicked.connect(self.save)
         self.pushButtonSelectMask.clicked.connect(self.select_mask)
         self.lineEditCurrentImage.editingFinished.connect(self.jump_to_image)
-        self.tableWidgetLabels.selectionModel().currentRowChanged.connect(self.row_changed)
+        self.tableWidgetLabels.selectionModel().selectionChanged.connect(self.selection_changed)
         self.tableWidgetLabels.cellChanged.connect(self.cell_changed)
         self.tableWidgetLabels.cellDoubleClicked.connect(self.delete_row)
 
         self.tableWidgetLabels.horizontalHeader().setStretchLastSection(False)
         self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
-    def _annotationSchema(self):
+    def _annotation_schema(self):
         return {'bbox': None, 'label': 'N/A', 'occluded': 'N', 'truncated': 'N', 'difficult': 'N'}
 
-    def _baseSchema(self):
+    def _base_schema(self):
         return {'directory': '', 'mask': None, 'mask_name': '', 'images': {}, 'schema': 'v1'}
+
+    def annotate(self):
+        """Annotate image using existing model."""
+        self.pushButtonAnnotate.setEnabled(False)
+        if self.image is not None and self.model_loaded:
+            with self.detection_graph.as_default():
+                with tf.Session(graph=self.detection_graph) as sess:
+                    # Definite input and output Tensors for detection_graph
+                    image_tensor = self.detection_graph.get_tensor_by_name('image_tensor:0')
+                    # Each box represents a part of the image where a particular object was detected.
+                    detection_boxes = self.detection_graph.get_tensor_by_name('detection_boxes:0')
+                    # Each score represent how level of confidence for each of the objects.
+                    # Score is shown on the result image, together with the class label.
+                    detection_scores = self.detection_graph.get_tensor_by_name('detection_scores:0')
+                    detection_classes = self.detection_graph.get_tensor_by_name('detection_classes:0')
+                    num_detections = self.detection_graph.get_tensor_by_name('num_detections:0')
+                    image_np_expanded = np.expand_dims(self.image, axis=0)
+                    # Actual detection.
+                    (boxes, scores, classes, num) = sess.run([detection_boxes, detection_scores, detection_classes, num_detections], feed_dict={image_tensor: image_np_expanded})
+                    boxes = np.squeeze(boxes)
+                    scores = np.squeeze(scores)
+                    classes = np.squeeze(classes)
+                for i in range(len(scores)):
+                    if scores[i] > 0.6:
+                        bbox = boxes[i]
+                        tl = QtCore.QPointF(bbox[1] * self.image.shape[1], bbox[0] * self.image.shape[0])
+                        br = QtCore.QPointF(bbox[3] * self.image.shape[1], bbox[2] * self.image.shape[0])
+                        self.bbox_created(QtCore.QRectF(tl, br), show_assistant=False)
+                        self.update_annotation({'label': self.category_index[classes[i]]['name']})
+        self.pushButtonAnnotate.setEnabled(True)
 
     def cell_changed(self, row, column):
         """(Slot) Update annotation data on change."""
@@ -143,9 +179,9 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
     def jump_to_image(self):
         """(Slot) Just to a specific image when when line edit changes."""
         try:
-            imageNum = int(self.lineEditCurrentImage.text())
-            if imageNum <= len(self.image_list) and imageNum >= 1:
-                self.current_image = imageNum
+            image_num = int(self.lineEditCurrentImage.text())
+            if image_num <= len(self.image_list) and image_num >= 1:
+                self.current_image = image_num
                 self.load_image()
             else:
                 self.lineEditCurrentImage.setText(str(self.current_image))
@@ -166,7 +202,7 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Directory', self.directory)
         if directory != '':
             self.directory = directory
-            self.data = self._baseSchema()
+            self.data = self._base_schema()
             # self.data['directory'] = self.directory
             self.mask = None
             self.load_image_list()
@@ -210,9 +246,10 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         file = os.path.join(self.directory, self.current_file_name)
         img = Image.open(file)
         self.current_imageSize = img.size
+        self.image = np.array(img)
         if self.mask is not None:
-            img = np.array(img) * self.mask
-            img = Image.fromarray(img)
+            img = self.image * self.mask
+            img = Image.fromarray(self.image)
 
         self.qImage = ImageQt.ImageQt(img)
         self.graphicsScene.addPixmap(QtGui.QPixmap.fromImage(self.qImage))
@@ -241,6 +278,23 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
             self.labelImages.setText('of ' + str(len(self.image_list)))
             self.lineEditCurrentImage.setText('1')
             self.load_image()
+
+    def load_model(self):
+        """Load a frozen inference graph and label map."""
+        directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Model Directory', self.directory)
+        if directory != '':
+            self.label_map = label_map_util.load_labelmap(directory + os.path.sep + 'label_map.pbtxt')
+            self.categories = label_map_util.convert_label_map_to_categories(self.label_map, max_num_classes=100, use_display_name=True)
+            self.category_index = label_map_util.create_category_index(self.categories)
+            od_graph_def = tf.GraphDef()
+            with self.detection_graph.as_default():
+                od_graph_def = tf.GraphDef()
+                with tf.gfile.GFile(directory + os.path.sep + 'frozen_inference_graph.pb', 'rb') as fid:
+                    serialized_graph = fid.read()
+                    od_graph_def.ParseFromString(serialized_graph)
+                    tf.import_graph_def(od_graph_def, name='')
+            self.model_loaded = True
+            self.pushButtonAnnotate.setEnabled(True)
 
     def next_annotated_image(self):
         """(Slot) Jump to the next image that has been annotated."""
@@ -295,26 +349,22 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         self.graphicsView.fitInView(self.graphicsScene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
         # self.display_bboxes()
 
-    def bbox_created(self, rect):
+    def bbox_created(self, rect, show_assistant=True):
         """(Slot) save the newly created bbox and display it."""
         if rect.width() > 0 and rect.height() > 0:
             self.set_dirty(True)
             if self.current_file_name not in self.data['images']:
                 self.data['images'][self.current_file_name] = []
-            metadata = self._annotationSchema()
+            metadata = self._annotation_schema()
             metadata['bbox'] = [rect.x(), rect.y(), rect.width(), rect.height()]
             self.data['images'][self.current_file_name].append(metadata)
             self.display_annotation_data()
             self.selected_row = self.tableWidgetLabels.rowCount() - 1
         self.display_bboxes()
-        pos = self.mapToGlobal(self.graphicsView.pos())
-        self.assistant.move(pos.x() + (self.graphicsView.width() - self.assistant.width()) / 2, pos.y() + (self.graphicsView.height() - self.assistant.height()) / 2)
-        self.assistant.show()
-
-    def row_changed(self, model_index):
-        """(Slot) Update bbox editor to correspond with the currently selected row."""
-        self.selected_row = model_index.row()
-        self.display_bboxes()
+        if show_assistant:
+            pos = self.mapToGlobal(self.graphicsView.pos())
+            self.assistant.move(pos.x() + (self.graphicsView.width() - self.assistant.width()) / 2, pos.y() + (self.graphicsView.height() - self.assistant.height()) / 2)
+            self.assistant.show()
 
     def save(self):
         """(Slot) Save the annotations to disk."""
@@ -346,6 +396,15 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
                 print('TODO: Display Message')
                 self.mask = None
         self.load_image()
+
+    def selection_changed(self, selected, deselected):
+        """(Slot) Listen for deselection of rows to hide BBox Editor."""
+        if len(selected.indexes()) == 0:
+            self.graphicsView.bbox_editor.hide()
+            self.selected_row = -1
+        else:
+            self.selected_row = selected.indexes()[0].row()
+        self.display_bboxes()
 
     def set_dirty(self, is_dirty):
         """Set dirty flag.
