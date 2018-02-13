@@ -67,7 +67,7 @@ When running locally, the tensorflow/models/research/ and slim directories shoul
 
 ``` bash
 # From tensorflow/models/research/
-export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim
+export PYTHONPATH=$PYTHONPATH:`pwd`:`pwd`/slim:`pwd`/object_detection
 ```
 Note: This command needs to run from every new terminal you start. If you wish to avoid running this manually, you can add it as a new line to the end of your ~/.bashrc file.
 
