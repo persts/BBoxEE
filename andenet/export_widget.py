@@ -33,7 +33,7 @@ EXPORT, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'export_widge
 
 
 class Globber(QtCore.QThread):
-    """Threaded worker to keep going from freezing while search for annotation files."""
+    """Threaded worker to keep gui from freezing while search for annotation files."""
 
     finished = QtCore.pyqtSignal(list)
 

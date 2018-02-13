@@ -249,7 +249,7 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         self.image = np.array(img)
         if self.mask is not None:
             img = self.image * self.mask
-            img = Image.fromarray(self.image)
+            img = Image.fromarray(img)
 
         self.qImage = ImageQt.ImageQt(img)
         self.graphicsScene.addPixmap(QtGui.QPixmap.fromImage(self.qImage))
