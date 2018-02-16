@@ -129,8 +129,6 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
             else:
                 text = self.data['images'][self.current_file_name][row][header]
                 self.tableWidgetLabels.setItem(row, column, QtWidgets.QTableWidgetItem(text))
-        else:
-            text = text.lower()
         self.data['images'][self.current_file_name][row][header] = text
         self.set_dirty(True)
 
