@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>LabelWidget</class>
+ <class>Form</class>
  <widget class="QWidget" name="Form">
   <property name="geometry">
    <rect>
@@ -234,6 +234,20 @@
        </widget>
       </item>
       <item>
+       <widget class="Line" name="line_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBoxDisplayAnnotationData">
+        <property name="text">
+         <string>Display annotation data in bounding box</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QTableWidget" name="tableWidgetLabels">
         <column>
          <property name="text">
@@ -351,9 +365,6 @@
     </widget>
    </item>
   </layout>
-  <zorder>graphicsView</zorder>
-  <zorder>frame_2</zorder>
-  <zorder>horizontalSpacer_4</zorder>
  </widget>
  <customwidgets>
   <customwidget>

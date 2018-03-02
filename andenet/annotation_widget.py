@@ -81,6 +81,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.tableWidgetLabels.selectionModel().selectionChanged.connect(self.selection_changed)
         self.tableWidgetLabels.cellChanged.connect(self.cell_changed)
         self.tableWidgetLabels.cellDoubleClicked.connect(self.delete_row)
+        self.checkBoxDisplayAnnotationData.clicked.connect(self.display_bboxes)
 
         self.tableWidgetLabels.horizontalHeader().setStretchLastSection(False)
         self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
@@ -168,17 +169,19 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
                 else:
                     rect = QtCore.QRectF(annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3])
                     graphics_item = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3))
-                    # if check box to show
-                    font = QtGui.QFont()
-                    font.setPointSize(20)
-                    content = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}".format(annotation['label'], annotation['truncated'], annotation['occluded'], annotation['difficult'])
-                    text = QtWidgets.QGraphicsTextItem(content)
-                    text.setFont(font)
-                    text.setPos(rect.topLeft().toPoint())
-                    text.setDefaultTextColor(QtCore.Qt.magenta)
-                    text.moveBy(10., 0.)
-                    text.setParentItem(graphics_item)
-                    # END BLOCK
+                    # display annotation data center in bounding box.
+                    if self.checkBoxDisplayAnnotationData.isChecked():
+                        font = QtGui.QFont()
+                        font.setPointSize(int(rect.width() * 0.075))
+                        content = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}".format(annotation['label'], annotation['truncated'], annotation['occluded'], annotation['difficult'])
+                        text = QtWidgets.QGraphicsTextItem(content)
+                        text.setFont(font)
+                        text.setPos(rect.topLeft().toPoint())
+                        text.setDefaultTextColor(QtCore.Qt.yellow)
+                        x_offset = text.boundingRect().width() / 2.0
+                        y_offset = text.boundingRect().height() / 2.0
+                        text.moveBy((rect.width() / 2.0) - x_offset, (rect.height() / 2.0) - y_offset)
+                        text.setParentItem(graphics_item)
                     self.bboxes.append(graphics_item)
 
     def jump_to_image(self):

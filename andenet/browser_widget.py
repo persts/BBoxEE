@@ -49,6 +49,7 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         self.pushButtonNext.clicked.connect(self.next)
         self.pushButtonPrevious.clicked.connect(self.previous)
         self.lineEditCurrentRecord.editingFinished.connect(self.jump_to_image)
+        self.checkBoxDisplayAnnotationData.clicked.connect(self.display)
 
     def display(self):
         """Display image in widget, JSON metadata, and labeled annotation boxes."""
@@ -70,15 +71,20 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         # Add bounding boxes and labels.
         for annotation in data['annotations']:
             rect = QtCore.QRectF(annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3])
-            graphics_item = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.magenta, QtCore.Qt.SolidPattern), 3))
-            font = QtGui.QFont()
-            font.setPointSize(60)
-            text = QtWidgets.QGraphicsTextItem(annotation['label'])
-            text.setFont(font)
-            text.setPos(rect.topLeft().toPoint())
-            text.setDefaultTextColor(QtCore.Qt.magenta)
-            text.moveBy(10., 0.)
-            text.setParentItem(graphics_item)
+            graphics_item = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3))
+            # display annotation data center in bounding box.
+            if self.checkBoxDisplayAnnotationData.isChecked():
+                font = QtGui.QFont()
+                font.setPointSize(int(rect.width() * 0.075))
+                content = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}".format(annotation['label'], annotation['truncated'], annotation['occluded'], annotation['difficult'])
+                text = QtWidgets.QGraphicsTextItem(content)
+                text.setFont(font)
+                text.setPos(rect.topLeft().toPoint())
+                text.setDefaultTextColor(QtCore.Qt.yellow)
+                x_offset = text.boundingRect().width() / 2.0
+                y_offset = text.boundingRect().height() / 2.0
+                text.moveBy((rect.width() / 2.0) - x_offset, (rect.height() / 2.0) - y_offset)
+                text.setParentItem(graphics_item)
 
     def jump_to_image(self):
         """(Slot) Just to image after editing has finished in line edit."""
