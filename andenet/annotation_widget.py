@@ -28,15 +28,17 @@ import json
 import datetime
 import numpy as np
 from PIL import Image, ImageQt
-from .label_assistant import LabelAssistant
+from andenet import schema
+from andenet import AnnotationAssistant
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import tensorflow as tf
 from utils import label_map_util
 
-LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'label_widget.ui'))
+
+LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotation_widget.ui'))
 
 
-class LabelWidget(QtWidgets.QWidget, LABEL):
+class AnnotationWidget(QtWidgets.QWidget, LABEL):
     """Widget for annotating images."""
 
     def __init__(self, parent=None):
@@ -52,9 +54,9 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         self.current_image = 1
         self.image_list = []
         self.mask = None
-        self.data = self._base_schema()
+        self.data = schema.annotation_file()
         self.dirty = False
-        self.assistant = LabelAssistant(self)
+        self.assistant = AnnotationAssistant(self)
         self.assistant.submitted.connect(self.update_annotation)
         self.image = None
         self.detection_graph = tf.Graph()
@@ -82,12 +84,6 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
 
         self.tableWidgetLabels.horizontalHeader().setStretchLastSection(False)
         self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
-
-    def _annotation_schema(self):
-        return {'bbox': None, 'label': 'N/A', 'occluded': 'N', 'truncated': 'N', 'difficult': 'N'}
-
-    def _base_schema(self):
-        return {'directory': '', 'mask': None, 'mask_name': '', 'images': {}, 'schema': 'v1'}
 
     def annotate(self):
         """Annotate image using existing model."""
@@ -171,8 +167,19 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
                     self.graphicsView.show_bbox_editor(rect)
                 else:
                     rect = QtCore.QRectF(annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3])
-                    rect = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3))
-                    self.bboxes.append(rect)
+                    graphics_item = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3))
+                    # if check box to show
+                    font = QtGui.QFont()
+                    font.setPointSize(20)
+                    content = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}".format(annotation['label'], annotation['truncated'], annotation['occluded'], annotation['difficult'])
+                    text = QtWidgets.QGraphicsTextItem(content)
+                    text.setFont(font)
+                    text.setPos(rect.topLeft().toPoint())
+                    text.setDefaultTextColor(QtCore.Qt.magenta)
+                    text.moveBy(10., 0.)
+                    text.setParentItem(graphics_item)
+                    # END BLOCK
+                    self.bboxes.append(graphics_item)
 
     def jump_to_image(self):
         """(Slot) Just to a specific image when when line edit changes."""
@@ -200,8 +207,7 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Directory', self.directory)
         if directory != '':
             self.directory = directory
-            self.data = self._base_schema()
-            # self.data['directory'] = self.directory
+            self.data = schema.annotation_file()
             self.mask = None
             self.load_image_list()
             self.pushButtonSelectMask.setEnabled(True)
@@ -353,7 +359,7 @@ class LabelWidget(QtWidgets.QWidget, LABEL):
             self.set_dirty(True)
             if self.current_file_name not in self.data['images']:
                 self.data['images'][self.current_file_name] = []
-            metadata = self._annotation_schema()
+            metadata = schema.annotation()
             metadata['bbox'] = [rect.x(), rect.y(), rect.width(), rect.height()]
             self.data['images'][self.current_file_name].append(metadata)
             self.display_annotation_data()

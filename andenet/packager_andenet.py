@@ -30,11 +30,11 @@ from PyQt5 import QtCore
 import numpy as np
 
 
-class AndenetExporter(QtCore.QThread):
+class AndenetPackager(QtCore.QThread):
     """
-    Exports annotated image examples into the Andenet format.
+    Packacges annotated image examples into the Andenet format.
 
-    Andenet export format consists of two file:
+    Andenet package format consists of two file:
     metadata.json
         JSON file containing the annotation information
 
@@ -44,7 +44,7 @@ class AndenetExporter(QtCore.QThread):
     """
 
     progress = QtCore.pyqtSignal(int)
-    exported = QtCore.pyqtSignal()
+    packaged = QtCore.pyqtSignal()
 
     def __init__(self, directory, examples, masks, remap):
         """
@@ -73,7 +73,7 @@ class AndenetExporter(QtCore.QThread):
         running_byte_count = 0
         image_writer = open(self.directory + os.path.sep + 'images.bin', 'wb')
         json_writer = open(self.directory + os.path.sep + 'metadata.json', 'w')
-        examples_to_export = []
+        examples_to_package = []
         for example in self.examples:
             # Remap the label names and drop exluded classes
             annotations = []
@@ -100,11 +100,11 @@ class AndenetExporter(QtCore.QThread):
                 bytes_out = image_writer.write(encoded_jpg)
                 example['image_data'] = {'start': running_byte_count, 'size': bytes_out}
                 running_byte_count += bytes_out
-                # Push example onto metadata list to export
-                examples_to_export.append(example)
+                # Push example onto metadata list to package
+                examples_to_package.append(example)
             counter += 1
             self.progress.emit(counter)
-        json.dump(examples_to_export, json_writer)
+        json.dump(examples_to_package, json_writer)
         image_writer.close()
         json_writer.close()
-        self.exported.emit()
+        self.packaged.emit()

@@ -25,10 +25,10 @@
 import os
 from PyQt5 import QtCore, QtWidgets, uic
 
-LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'label_assistant.ui'))
+LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotation_assistant.ui'))
 
 
-class LabelAssistant(QtWidgets.QWidget, LABEL):
+class AnnotationAssistant(QtWidgets.QWidget, LABEL):
     """Helper widget that displays label and metadata choices after creating a bounding box."""
 
     submitted = QtCore.pyqtSignal(dict)

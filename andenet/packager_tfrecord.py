@@ -32,11 +32,11 @@ import numpy as np
 from object_detection.utils import dataset_util
 
 
-class TfrExporter(QtCore.QThread):
-    """Export annotated image examples into the Tensorflow TFRecord format."""
+class TfrPackager(QtCore.QThread):
+    """Package annotated image examples into the Tensorflow TFRecord format."""
 
     progress = QtCore.pyqtSignal(int)
-    exported = QtCore.pyqtSignal()
+    packaged = QtCore.pyqtSignal()
 
     def __init__(self, directory, train_examples, validation_examples, masks, remap):
         """
@@ -144,7 +144,7 @@ class TfrExporter(QtCore.QThread):
                 counter += 1
                 self.progress.emit(counter)
             writer.close()
-            self.exported.emit()
+            self.packaged.emit()
         file = open(self.directory + os.path.sep + 'label_map.pbtxt', 'w')
         for counter in range(len(self.remap['lookup'])):
             file.write("item {{\n name: \"{}\"\n id: {}\n}}\n".format(self.remap['lookup'][counter], counter + 1))

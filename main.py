@@ -25,17 +25,17 @@
 import sys
 from PyQt5 import QtWidgets
 
-from andenet import ExportWidget
-from andenet import LabelWidget
+from andenet import PackageWidget
+from andenet import AnnotationWidget
 from andenet import BrowserWidget
 
 app = QtWidgets.QApplication(sys.argv)
 gui = QtWidgets.QMainWindow()
 gui.setWindowTitle('Animal Detection Network')
 widget = QtWidgets.QTabWidget()
-widget.addTab(LabelWidget(), "Annotation")
-widget.addTab(ExportWidget(), 'Exporter')
-widget.addTab(BrowserWidget(), 'Browser')
+widget.addTab(AnnotationWidget(), "Annotate")
+widget.addTab(PackageWidget(), 'Package')
+widget.addTab(BrowserWidget(), 'Browse')
 gui.setCentralWidget(widget)
 gui.setGeometry(10, 10, 1200, 700)
 gui.show()

@@ -1,6 +1,7 @@
-from .label_widget import LabelWidget
-from .export_widget import ExportWidget
-from .label_assistant import LabelAssistant
+from .annotation_assistant import AnnotationAssistant
+from .packager_andenet import AndenetPackager
+from .packager_tfrecord import TfrPackager
+
+from .annotation_widget import AnnotationWidget
+from .package_widget import PackageWidget
 from .browser_widget import BrowserWidget
-from .exporter_andenet import AndenetExporter
-from .exporter_tfrecord import TfrExporter

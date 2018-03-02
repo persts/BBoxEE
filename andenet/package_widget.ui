@@ -73,16 +73,6 @@
          <string>Format</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_3">
-         <item row="0" column="0">
-          <widget class="QRadioButton" name="radioButtonAndenet">
-           <property name="text">
-            <string>Andenet Package</string>
-           </property>
-           <property name="checked">
-            <bool>true</bool>
-           </property>
-          </widget>
-         </item>
          <item row="1" column="0">
           <widget class="QRadioButton" name="radioButtonTensorFlow">
            <property name="text">
@@ -126,6 +116,16 @@
            </property>
            <property name="singleStep">
             <double>0.050000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" colspan="4">
+          <widget class="QRadioButton" name="radioButtonAndenet">
+           <property name="text">
+            <string>Andenet Package</string>
+           </property>
+           <property name="checked">
+            <bool>true</bool>
            </property>
           </widget>
          </item>
@@ -180,9 +180,9 @@
          </spacer>
         </item>
         <item>
-         <widget class="QPushButton" name="pushButtonExport">
+         <widget class="QPushButton" name="pushButtonPackage">
           <property name="text">
-           <string>Export</string>
+           <string>Package</string>
           </property>
          </widget>
         </item>

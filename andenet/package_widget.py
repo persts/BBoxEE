@@ -29,7 +29,7 @@ import random
 import numpy as np
 from PyQt5 import QtCore, QtWidgets, uic
 
-EXPORT, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'export_widget.ui'))
+PACK, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'package_widget.ui'))
 
 
 class Globber(QtCore.QThread):
@@ -48,8 +48,8 @@ class Globber(QtCore.QThread):
         self.finished.emit(file_list)
 
 
-class ExportWidget(QtWidgets.QWidget, EXPORT):
-    """Widget for selecting, relabeling, and exporting annotated images."""
+class PackageWidget(QtWidgets.QWidget, PACK):
+    """Widget for selecting, relabeling, and packaging annotated images."""
 
     def __init__(self, parent=None):
         """Class init function."""
@@ -61,7 +61,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.globber.finished.connect(self.display)
 
         self.pushButtonSelectDirectory.clicked.connect(self.load_annotation_files)
-        self.pushButtonExport.clicked.connect(self.export)
+        self.pushButtonPackage.clicked.connect(self.package)
 
         self.tableWidgetFiles.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidgetFiles.selectionModel().selectionChanged.connect(self.refresh_remap_table)
@@ -97,8 +97,18 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
             self.tableWidgetFiles.resizeRowToContents(index)
         self.tableWidgetFiles.resizeColumnToContents(1)
 
-    def export(self):
-        """(Slot) Import and run selected exporter."""
+    def load_annotation_files(self):
+        """(Slot) Select directory and start the globber to search for annotation files."""
+        self.label_cache = {}
+        directory = QtWidgets.QFileDialog.getExistingDirectory(self)
+        if directory != '':
+            self.pushButtonSelectDirectory.setEnabled(False)
+            self.progressBar.setRange(0, 0)
+            self.globber.directory = directory
+            self.globber.start()
+
+    def package(self):
+        """(Slot) Import and run selected packager."""
         truncated = self.checkBoxTruncated.isChecked()
         occluded = self.checkBoxOccluded.isChecked()
         difficult = self.checkBoxDifficult.isChecked()
@@ -147,38 +157,28 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
             if new_key.lower() != 'exclude' and new_key not in remap['lookup']:
                 remap['lookup'].append(new_key)
 
-        # pass data to exporter
+        # pass data to packager
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
         if directory != '':
-            self.pushButtonExport.setEnabled(False)
+            self.pushButtonPackage.setEnabled(False)
             self.progressBar.setRange(0, len(examples))
             if self.radioButtonTensorFlow.isChecked():
                 train_size = int((1.0 - validation_split) * len(examples))
                 train_examples = examples[:train_size]
                 validation_examples = examples[train_size:]
-                from andenet import TfrExporter
-                self.exporter = TfrExporter(directory, train_examples, validation_examples, masks, remap)
+                from andenet import TfrPackager
+                self.packager = TfrPackager(directory, train_examples, validation_examples, masks, remap)
             if self.radioButtonAndenet.isChecked():
-                from andenet import AndenetExporter
-                self.exporter = AndenetExporter(directory, examples, masks, remap)
+                from andenet import AndenetPackager
+                self.packager = AndenetPackager(directory, examples, masks, remap)
 
-            self.exporter.progress.connect(self.progressBar.setValue)
-            self.exporter.exported.connect(self.exported)
-            self.exporter.start()
+            self.packager.progress.connect(self.progressBar.setValue)
+            self.packager.packaged.connect(self.packaged)
+            self.packager.start()
 
-    def exported(self):
-        """(Slot) Reinable export button when export is completed."""
-        self.pushButtonExport.setEnabled(True)
-
-    def load_annotation_files(self):
-        """(Slot) Select directory and start the globber to search for annotation files."""
-        self.label_cache = {}
-        directory = QtWidgets.QFileDialog.getExistingDirectory(self)
-        if directory != '':
-            self.pushButtonSelectDirectory.setEnabled(False)
-            self.progressBar.setRange(0, 0)
-            self.globber.directory = directory
-            self.globber.start()
+    def packaged(self):
+        """(Slot) Reinable package button when packaging is completed."""
+        self.pushButtonPackage.setEnabled(True)
 
     def refresh_remap_table(self):
         """(Slot) Update the remap table based on selected files and exclude criteria."""
@@ -244,7 +244,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         return labels
 
     def toggle_tensorflow(self, checked):
-        """(Slot) Update GUI to reflect differences in export options."""
+        """(Slot) Update GUI to reflect differences in package options."""
         if checked:
             self.doubleSpinBoxValidation.setEnabled(True)
         else:
