@@ -19,7 +19,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Point Class Assigner.  If not, see <http://www.gnu.org/licenses/>.
+# along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
 import os
@@ -84,7 +84,7 @@ class AndenetPackager(QtCore.QThread):
             example['annotations'] = annotations
             # Only process images with more than on annotation remaining
             if len(example['annotations']) > 0:
-                file_name = example['directory'] + os.path.sep + example['file']
+                file_name = example['directory'] + os.path.sep + example['file_name']
                 img = Image.open(file_name)
                 # Turn image into an array to remove metadata and apply mask if there is one
                 array = np.array(img)

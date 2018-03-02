@@ -19,7 +19,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Point Class Assigner.  If not, see <http://www.gnu.org/licenses/>.
+# along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
 import os
@@ -144,13 +144,14 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.tableWidgetLabels.setRowCount(0)
         self.tableWidgetLabels.blockSignals(True)
         if self.current_file_name in self.data['images']:
-            rows = len(self.data['images'][self.current_file_name])
+            rows = len(self.data['images'][self.current_file_name]['annotations'])
             self.tableWidgetLabels.setRowCount(rows)
             for row in range(rows):
-                self.tableWidgetLabels.setItem(row, 0, QtWidgets.QTableWidgetItem(self.data['images'][self.current_file_name][row]['label']))
-                self.tableWidgetLabels.setItem(row, 1, QtWidgets.QTableWidgetItem(self.data['images'][self.current_file_name][row]['truncated']))
-                self.tableWidgetLabels.setItem(row, 2, QtWidgets.QTableWidgetItem(self.data['images'][self.current_file_name][row]['occluded']))
-                self.tableWidgetLabels.setItem(row, 3, QtWidgets.QTableWidgetItem(self.data['images'][self.current_file_name][row]['difficult']))
+                annotation = self.data['images'][self.current_file_name]['annotations'][row]
+                self.tableWidgetLabels.setItem(row, 0, QtWidgets.QTableWidgetItem(annotation['label']))
+                self.tableWidgetLabels.setItem(row, 1, QtWidgets.QTableWidgetItem(annotation['truncated']))
+                self.tableWidgetLabels.setItem(row, 2, QtWidgets.QTableWidgetItem(annotation['occluded']))
+                self.tableWidgetLabels.setItem(row, 3, QtWidgets.QTableWidgetItem(annotation['difficult']))
         # self.tableWidgetLabels.resizeColumnToContents(0)
         self.tableWidgetLabels.blockSignals(False)
 
@@ -161,13 +162,18 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
                 self.graphicsScene.removeItem(bbox)
             self.bboxes = []
         if self.current_file_name in self.data['images']:
-            for i in range(len(self.data['images'][self.current_file_name])):
-                annotation = self.data['images'][self.current_file_name][i]
+            annotations = self.data['images'][self.current_file_name]['annotations']
+            for i in range(len(annotations)):
+                annotation = annotations[i]
+                bbox = annotation['bbox']
+                width = self.current_image_size[0]
+                height = self.current_image_size[1]
+                top_left = QtCore.QPointF(bbox['xmin'] * width, bbox['ymin'] * height)
+                bottom_right = QtCore.QPointF(bbox['xmax'] * width, bbox['ymax'] * height)
+                rect = QtCore.QRectF(top_left, bottom_right)
                 if i == self.selected_row:
-                    rect = QtCore.QRectF(annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3])
                     self.graphicsView.show_bbox_editor(rect)
                 else:
-                    rect = QtCore.QRectF(annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3])
                     graphics_item = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3))
                     # display annotation data center in bounding box.
                     if self.checkBoxDisplayAnnotationData.isChecked():
@@ -252,7 +258,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.current_file_name = self.image_list[self.current_image - 1]
         file = os.path.join(self.directory, self.current_file_name)
         img = Image.open(file)
-        self.current_imageSize = img.size
+        self.current_image_size = img.size
         self.image = np.array(img)
         if self.mask is not None:
             img = self.image * self.mask
@@ -361,10 +367,14 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         if rect.width() > 0 and rect.height() > 0:
             self.set_dirty(True)
             if self.current_file_name not in self.data['images']:
-                self.data['images'][self.current_file_name] = []
+                self.data['images'][self.current_file_name] = schema.annotation_file_entry()
+            # TODO: Grab Attribution information from GUI
             metadata = schema.annotation()
-            metadata['bbox'] = [rect.x(), rect.y(), rect.width(), rect.height()]
-            self.data['images'][self.current_file_name].append(metadata)
+            metadata['bbox']['xmin'] = rect.left() / self.current_image_size[0]
+            metadata['bbox']['xmax'] = rect.right() / self.current_image_size[0]
+            metadata['bbox']['ymin'] = rect.top() / self.current_image_size[1]
+            metadata['bbox']['ymax'] = rect.bottom() / self.current_image_size[1]
+            self.data['images'][self.current_file_name]['annotations'].append(metadata)
             self.display_annotation_data()
             self.selected_row = self.tableWidgetLabels.rowCount() - 1
         self.display_bboxes()
@@ -385,11 +395,11 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
 
     def select_mask(self):
         """(Slot) Select mask from disk."""
-        filter_string = str(self.current_imageSize[0]) + '_' + str(self.current_imageSize[1]) + '.png'
+        filter_string = str(self.current_image_size[0]) + '_' + str(self.current_image_size[1]) + '.png'
         file = QtWidgets.QFileDialog.getOpenFileName(self, 'Select Mask', './masks/', 'PNG (*' + filter_string + ')')
         if file[0] != '':
             img = Image.open(file[0])
-            if self.current_imageSize == img.size:
+            if self.current_image_size == img.size:
                 img = np.array(img)
                 img = np.clip(img, 0, 1)
                 self.mask = img
@@ -429,11 +439,15 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
     def update_annotation(self, annotation_data):
         """(Slot) Update table with data submitted from assistant widget."""
         for key in annotation_data.keys():
-            self.data['images'][self.current_file_name][self.selected_row][key] = annotation_data[key]
+            self.data['images'][self.current_file_name]['annotations'][self.selected_row][key] = annotation_data[key]
         self.display_annotation_data()
 
     def update_bbox(self, rect):
         """(Slot) Store the new geometry for the active bbox."""
         if rect.width() > 0 and rect.height() > 0:
             self.set_dirty(True)
-            self.data['images'][self.current_file_name][self.selected_row]['bbox'] = [rect.x(), rect.y(), rect.width(), rect.height()]
+            annotation = self.data['images'][self.current_file_name]['annotations'][self.selected_row]
+            annotation['bbox']['xmin'] = rect.left() / self.current_image_size[0]
+            annotation['bbox']['xmax'] = rect.right() / self.current_image_size[0]
+            annotation['bbox']['ymin'] = rect.top() / self.current_image_size[1]
+            annotation['bbox']['ymax'] = rect.bottom() / self.current_image_size[1]

@@ -19,7 +19,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Point Class Assigner.  If not, see <http://www.gnu.org/licenses/>.
+# along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
 import os
@@ -28,6 +28,7 @@ import json
 import random
 import numpy as np
 from PyQt5 import QtCore, QtWidgets, uic
+from andenet import schema
 
 PACK, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'package_widget.ui'))
 
@@ -125,15 +126,20 @@ class PackageWidget(QtWidgets.QWidget, PACK):
             data = json.load(file)
             file.close()
             # Add mask to dictionary
-            directory = os.path.split(file_name)[0]
             if data['mask_name'] != '':
                 mask = np.array(data['mask'], dtype='uint8')
                 masks[data['mask_name']] = np.dstack((mask, mask, mask))
             # Loop through images in annotation file
+            directory = os.path.split(file_name)[0]
             for file in data['images']:
-                example = {'directory': directory, 'mask_name': data['mask_name'], 'file': file, 'annotations': []}
+                example = schema.package_entry()
+                example['directory'] = directory
+                example['file_name'] = file
+                example['mask_name'] = data['mask_name']
+                example['attribution'] = data['images'][file]['attribution']
+                example['license'] = data['images'][file]['license']
                 # Loop through annotations and filter
-                for annotation in data['images'][file]:
+                for annotation in data['images'][file]['annotations']:
                     if truncated and annotation['truncated'] == 'Y':
                         pass
                     elif occluded and annotation['occluded'] == 'Y':
@@ -219,7 +225,7 @@ class PackageWidget(QtWidgets.QWidget, PACK):
         if file_name not in self.label_cache:
             self.label_cache[file_name] = {}
             for file in data['images']:
-                for annotation in data['images'][file]:
+                for annotation in data['images'][file]['annotations']:
                     if annotation['label'] not in self.label_cache[file_name]:
                         self.label_cache[file_name][annotation['label']] = {'full': 0, 'truncated': 0, 'occluded': 0, 'difficult': 0}
 

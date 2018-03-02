@@ -19,7 +19,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Point Class Assigner.  If not, see <http://www.gnu.org/licenses/>.
+# along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
 import os
@@ -62,6 +62,8 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         # Turn into a virtual file stream and load the image as if from disk
         file = io.BytesIO(raw)
         img = Image.open(file)
+        width = img.size[0]
+        height = img.size[1]
         # Display the image in the graphhics view
         self.qImage = ImageQt.ImageQt(img)
         self.graphicsScene.clear()
@@ -70,7 +72,10 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         self.graphicsView.setSceneRect(self.graphicsScene.itemsBoundingRect())
         # Add bounding boxes and labels.
         for annotation in data['annotations']:
-            rect = QtCore.QRectF(annotation['bbox'][0], annotation['bbox'][1], annotation['bbox'][2], annotation['bbox'][3])
+            bbox = annotation['bbox']
+            top_left = QtCore.QPointF(bbox['xmin'] * width, bbox['ymin'] * height)
+            bottom_right = QtCore.QPointF(bbox['xmax'] * width, bbox['ymax'] * height)
+            rect = QtCore.QRectF(top_left, bottom_right)
             graphics_item = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3))
             # display annotation data center in bounding box.
             if self.checkBoxDisplayAnnotationData.isChecked():

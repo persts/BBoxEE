@@ -19,7 +19,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with Point Class Assigner.  If not, see <http://www.gnu.org/licenses/>.
+# along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
 import os
@@ -70,7 +70,7 @@ class TfrPackager(QtCore.QThread):
             else:
                 writer = tf.python_io.TFRecordWriter(self.directory + os.path.sep + 'validation.record')
             for example in examples:
-                file_name = example['directory'] + os.path.sep + example['file']
+                file_name = example['directory'] + os.path.sep + example['file_name']
                 img = Image.open(file_name)
                 height = img.size[1]
                 width = img.size[0]
@@ -98,10 +98,10 @@ class TfrPackager(QtCore.QThread):
                 for annotation in example['annotations']:
                     label = self.remap[annotation['label']]
                     if label.lower() != 'exclude':
-                        xmins.append(annotation['bbox'][0] / width)
-                        ymins.append(annotation['bbox'][1] / height)
-                        xmaxs.append((annotation['bbox'][0] + annotation['bbox'][2]) / width)
-                        ymaxs.append((annotation['bbox'][1] + annotation['bbox'][3]) / height)
+                        xmins.append(annotation['bbox']['xmin'])
+                        ymins.append(annotation['bbox']['ymin'])
+                        xmaxs.append(annotation['bbox']['xmax'])
+                        ymaxs.append(annotation['bbox']['ymax'])
                         classes_text.append(label.encode('utf8'))
                         classes.append(self.remap['lookup'].index(label) + 1)
                         if annotation['occluded'] == 'Y':
