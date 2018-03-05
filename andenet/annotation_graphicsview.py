@@ -68,7 +68,7 @@ class BBoxWidget(QtWidgets.QFrame):
         self.setGeometry(self.pos().x(), self.pos().y(), self.width(), self.height())
 
 
-class LabelGraphicsView(QtWidgets.QGraphicsView):
+class AnnotationGraphicsView(QtWidgets.QGraphicsView):
     """Custom QGraphicsView for creating and editing annotation bounding boxes."""
 
     created = QtCore.pyqtSignal(QtCore.QRectF)

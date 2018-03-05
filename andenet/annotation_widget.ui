@@ -21,7 +21,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <widget class="LabelGraphicsView" name="graphicsView">
+    <widget class="AnnotationGraphicsView" name="graphicsView">
      <property name="minimumSize">
       <size>
        <width>0</width>
@@ -368,9 +368,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>LabelGraphicsView</class>
+   <class>AnnotationGraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header location="global">andenet/label_graphicsview</header>
+   <header location="global">andenet/annotation_graphicsview</header>
   </customwidget>
  </customwidgets>
  <resources/>
