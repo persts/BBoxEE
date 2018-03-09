@@ -244,6 +244,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
                 self.load_image_list()
                 self.pushButtonSelectMask.setEnabled(True)
                 self.pushButtonLoadModel.setEnabled(True)
+                self.set_dirty(False)
 
     def load_from_file(self):
         """(Slot) Load existing annotation data from file."""
