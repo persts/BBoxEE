@@ -24,12 +24,12 @@
 # --------------------------------------------------------------------------
 def annotation():
     """Factory for an annotation block."""
-    return {'bbox': {'xmin': 0, 'xmax': 0, 'ymin': 0, 'ymax': 0}, 'label': 'N/A', 'occluded': 'N', 'truncated': 'N', 'difficult': 'N', 'schema': '1.0.0'}
+    return {'created_by': '', 'updated_by': '', 'bbox': {'xmin': 0, 'xmax': 0, 'ymin': 0, 'ymax': 0}, 'label': 'N/A', 'occluded': 'N', 'truncated': 'N', 'difficult': 'N', 'schema': '1.0.0'}
 
 
 def annotation_file():
     """Factory for the Animal Detection Network annotation file."""
-    return {'directory': '', 'mask': None, 'mask_name': '', 'images': {}, 'schema': '1.0.0'}
+    return {'mask': None, 'mask_name': '', 'images': {}, 'schema': '1.0.0'}
 
 
 def annotation_file_entry():
