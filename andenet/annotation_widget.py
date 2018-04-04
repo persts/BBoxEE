@@ -87,7 +87,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
     def annotate(self):
-        """(SLOT) Start Annotator."""
+        """(SLOT) Start the automated annotator."""
         proceed = True
         if self.dirty:
             msgBox = QtWidgets.QMessageBox()
@@ -111,6 +111,8 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             self.pushButtonAnnotatedNext.setEnabled(False)
             self.pushButtonPrevious.setEnabled(False)
             self.pushButtonAnnotatedPrevious.setEnabled(False)
+            self.tableWidgetLabels.setEnabled(False)
+            self.checkBoxDisplayAnnotationData.setChecked(True)
 
             self.progressBar.setRange(0, len(self.image_list))
             self.progressBar.setValue(0)
@@ -120,9 +122,10 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             self.annotator.start()
 
     def annotation_complete(self, data):
-        """(SLOT) Automatic annotation complete, reenable gui."""
-        self.data = data
-        self.load_image()
+        """(SLOT) Automatic annotation complete, reenable gui and reset current image to 1."""
+        self.data['images'] = data['images']
+        self.current_image = 0
+        self.next_image()
         self.pushButtonAnnotate.setEnabled(True)
         self.pushButtonDirectory.setEnabled(True)
         self.pushButtonLabelFile.setEnabled(True)
@@ -133,7 +136,16 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.pushButtonAnnotatedNext.setEnabled(True)
         self.pushButtonPrevious.setEnabled(True)
         self.pushButtonAnnotatedPrevious.setEnabled(True)
+        self.tableWidgetLabels.setEnabled(True)
         self.set_dirty(True)
+
+    def annotation_progress(self, progress, image, annotations):
+        """(SLOT) Show progress and current detections (annotations) as they are processed."""
+        if(progress == 1):
+            self.current_image = 0
+        self.progressBar.setValue(progress)
+        self.data['images'][image] = annotations
+        self.next_image()
 
     def cell_changed(self, row, column):
         """(Slot) Update annotation data on change."""
@@ -327,7 +339,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Model Directory', self.image_directory)
         if directory != '':
             self.annotator = Annotator(directory)
-            self.annotator.progress.connect(self.progressBar.setValue)
+            self.annotator.progress.connect(self.annotation_progress)
             self.annotator.finished.connect(self.annotation_complete)
             self.pushButtonAnnotate.setEnabled(True)
 
