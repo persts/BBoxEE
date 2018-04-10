@@ -348,18 +348,14 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
 
     def next_annotated_image(self):
         """(Slot) Jump to the next image that has been annotated."""
-        tmp_list = sorted(self.data['images'].keys())
-        current = self.image_list[self.current_image - 1]
-        if current in tmp_list:
-            index = tmp_list.index(current)
-            if index + 1 < len(tmp_list):
-                self.current_image = self.image_list.index(tmp_list[index + 1]) + 1
-        else:
-            index = 0
-            while(index < len(tmp_list) and tmp_list[index] < current):
+        index = self.current_image
+        while(index < len(self.image_list)):
+            image_name = self.image_list[index]
+            if image_name in self.data['images'] and len(self.data['images'][image_name]['annotations']) > 0:
+                self.current_image = index + 1
+                break
+            else:
                 index += 1
-            if index < len(tmp_list):
-                self.current_image = self.image_list.index(tmp_list[index]) + 1
         self.lineEditCurrentImage.setText(str(self.current_image))
         self.load_image()
 
@@ -372,18 +368,14 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
 
     def previous_annotated_image(self):
         """(Slot) Jump to the previous image that has been annotated."""
-        tmp_list = sorted(self.data['images'].keys())
-        current = self.image_list[self.current_image - 1]
-        if current in tmp_list:
-            index = tmp_list.index(current)
-            if index - 1 >= 0:
-                self.current_image = self.image_list.index(tmp_list[index - 1]) + 1
-        else:
-            index = len(tmp_list) - 1
-            while(index >= 0 and tmp_list[index] > current):
+        index = self.current_image - 2
+        while(index >= 0):
+            image_name = self.image_list[index]
+            if image_name in self.data['images'] and len(self.data['images'][image_name]['annotations']) > 0:
+                self.current_image = index + 1
+                break
+            else:
                 index -= 1
-            if index >= 0:
-                self.current_image = self.image_list.index(tmp_list[index]) + 1
         self.lineEditCurrentImage.setText(str(self.current_image))
         self.load_image()
 
