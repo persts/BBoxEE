@@ -28,7 +28,7 @@ from PyQt5 import QtCore, QtWidgets, uic
 LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotation_assistant.ui'))
 
 
-class AnnotationAssistant(QtWidgets.QWidget, LABEL):
+class AnnotationAssistant(QtWidgets.QDialog, LABEL):
     """Helper widget that displays label and metadata choices after creating a bounding box."""
 
     submitted = QtCore.pyqtSignal(dict)
@@ -38,6 +38,7 @@ class AnnotationAssistant(QtWidgets.QWidget, LABEL):
         QtWidgets.QWidget.__init__(self)
         self.setupUi(self)
         self.setWindowTitle('Annotation Assitant')
+        self.setModal(True)
         file = open('labels.txt')
         for line in file:
             self.comboBoxLabels.addItem(line.rstrip())
