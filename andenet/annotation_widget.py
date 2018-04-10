@@ -165,7 +165,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.tableWidgetLabels.selectionModel().blockSignals(True)
         self.tableWidgetLabels.removeRow(row)
         self.graphicsView.bbox_editor.hide()
-        del self.data['images'][self.current_file_name][row]
+        del self.data['images'][self.current_file_name]['annotations'][row]
         self.tableWidgetLabels.selectionModel().blockSignals(False)
         self.selected_row = -1
         self.display_bboxes()
@@ -205,7 +205,10 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
                 if i == self.selected_row:
                     self.graphicsView.show_bbox_editor(rect)
                 else:
-                    graphics_item = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3))
+                    pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3)
+                    if annotation['created_by'] == 'machine' and annotation['updated_by'] =='':
+                        pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.red, QtCore.Qt.SolidPattern), 3)
+                    graphics_item = self.graphicsScene.addRect(rect, pen)
                     # display annotation data center in bounding box.
                     if self.checkBoxDisplayAnnotationData.isChecked():
                         font = QtGui.QFont()
