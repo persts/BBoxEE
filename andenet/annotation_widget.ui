@@ -131,6 +131,26 @@
       </spacer>
      </item>
      <item>
+      <widget class="QPushButton" name="pushButtonClear">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Clear Annotations</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset>
+         <normaloff>icons/edit-clear.png</normaloff>icons/edit-clear.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
       <widget class="QPushButton" name="pushButtonNext">
        <property name="maximumSize">
         <size>

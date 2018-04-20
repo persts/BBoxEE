@@ -25,7 +25,6 @@
 import os
 import glob
 import json
-import datetime
 import numpy as np
 from PIL import Image, ImageQt
 from andenet import schema
@@ -33,7 +32,6 @@ from andenet import AnnotationAssistant
 from andenet import Annotator
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import tensorflow as tf
-from utils import label_map_util
 
 
 LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotation_widget.ui'))
@@ -73,6 +71,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.pushButtonLabelFile.clicked.connect(self.load_from_file)
         self.pushButtonNext.clicked.connect(self.next_image)
         self.pushButtonPrevious.clicked.connect(self.previous_image)
+        self.pushButtonClear.clicked.connect(self.clear_annotations)
         self.pushButtonLoadModel.clicked.connect(self.load_model)
         self.pushButtonAnnotate.clicked.connect(self.annotate)
         self.pushButtonSave.clicked.connect(self.save)
@@ -85,6 +84,16 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
 
         self.tableWidgetLabels.horizontalHeader().setStretchLastSection(False)
         self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+
+        self.right_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Right), self)
+        self.right_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.right_arrow.activated.connect(self.next_image)
+        self.left_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Left), self)
+        self.left_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.left_arrow.activated.connect(self.previous_image)
+        self.clear = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_C), self)
+        self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.clear.activated.connect(self.clear_annotations)
 
     def annotate(self):
         """(SLOT) Start the automated annotator."""
@@ -160,12 +169,25 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.data['images'][self.current_file_name]['annotations'][row][header] = text
         self.set_dirty(True)
 
+    def clear_annotations(self):
+        """(SLOT) Clear all annotations for the current image."""
+        self.tableWidgetLabels.selectionModel().blockSignals(True)
+        self.tableWidgetLabels.setRowCount(0)
+        self.graphicsView.bbox_editor.hide()
+        if self.data is not None and self.current_file_name in self.data['images']:
+            del self.data['images'][self.current_file_name]
+        self.tableWidgetLabels.selectionModel().blockSignals(False)
+        self.selected_row = -1
+        self.display_bboxes()
+
     def delete_row(self, row, column):
         """(Slot) Delete row from table and associated metadata when double clicked."""
         self.tableWidgetLabels.selectionModel().blockSignals(True)
         self.tableWidgetLabels.removeRow(row)
         self.graphicsView.bbox_editor.hide()
         del self.data['images'][self.current_file_name]['annotations'][row]
+        if self.tableWidgetLabels.rowCount() == 0:
+            del self.data['images'][self.current_file_name]
         self.tableWidgetLabels.selectionModel().blockSignals(False)
         self.selected_row = -1
         self.display_bboxes()
@@ -192,7 +214,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             for bbox in self.bboxes:
                 self.graphicsScene.removeItem(bbox)
             self.bboxes = []
-        if self.current_file_name in self.data['images']:
+        if self.data is not None and self.current_file_name in self.data['images']:
             annotations = self.data['images'][self.current_file_name]['annotations']
             for i in range(len(annotations)):
                 annotation = annotations[i]
@@ -206,7 +228,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
                     self.graphicsView.show_bbox_editor(rect)
                 else:
                     pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3)
-                    if annotation['created_by'] == 'machine' and annotation['updated_by'] =='':
+                    if annotation['created_by'] == 'machine' and annotation['updated_by'] == '':
                         pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.red, QtCore.Qt.SolidPattern), 3)
                     graphics_item = self.graphicsScene.addRect(rect, pen)
                     # display annotation data center in bounding box.
