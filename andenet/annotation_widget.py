@@ -85,12 +85,23 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.tableWidgetLabels.horizontalHeader().setStretchLastSection(False)
         self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
+        # Create some key bindings to help navigate through images
         self.right_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Right), self)
         self.right_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.right_arrow.activated.connect(self.next_image)
+
+        self.right_arrow2 = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_Right), self)
+        self.right_arrow2.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.right_arrow2.activated.connect(self.next_annotated_image)
+
         self.left_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Left), self)
         self.left_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.left_arrow.activated.connect(self.previous_image)
+
+        self.left_arrow2 = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_Left), self)
+        self.left_arrow2.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.left_arrow2.activated.connect(self.previous_annotated_image)
+
         self.clear = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_C), self)
         self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.clear.activated.connect(self.clear_annotations)
@@ -179,6 +190,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.tableWidgetLabels.selectionModel().blockSignals(False)
         self.selected_row = -1
         self.display_bboxes()
+        self.set_dirty(True)
 
     def delete_row(self, row, column):
         """(Slot) Delete row from table and associated metadata when double clicked."""
@@ -191,6 +203,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.tableWidgetLabels.selectionModel().blockSignals(False)
         self.selected_row = -1
         self.display_bboxes()
+        self.set_dirty(True)
 
     def display_annotation_data(self):
         """Display annotation data in table."""
