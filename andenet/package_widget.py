@@ -194,12 +194,12 @@ class PackageWidget(QtWidgets.QWidget, PACK):
         difficult = not self.checkBoxDifficult.isChecked()
         for index in self.tableWidgetFiles.selectionModel().selectedRows():
             file = self.tableWidgetFiles.item(index.row(), 0).text()
-            l = self.summarize_labels(file, truncated=truncated, occluded=occluded, difficult=difficult)
-            for label in l:
+            label_summary = self.summarize_labels(file, truncated=truncated, occluded=occluded, difficult=difficult)
+            for label in label_summary:
                 if label in labels:
-                    labels[label] += l[label]
+                    labels[label] += label_summary[label]
                 else:
-                    labels[label] = l[label]
+                    labels[label] = label_summary[label]
         self.tableWidgetRemap.blockSignals(True)
         self.tableWidgetRemap.setRowCount(len(labels.keys()))
         row = 0
