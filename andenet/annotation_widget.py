@@ -106,6 +106,10 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.clear.activated.connect(self.clear_annotations)
 
+        self.helper = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_A), self)
+        self.helper.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.helper.activated.connect(self.assistant.show)
+
     def annotate(self):
         """(SLOT) Start the automated annotator."""
         proceed = True
@@ -506,10 +510,11 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
 
     def update_annotation(self, annotation_data):
         """(Slot) Update table with data submitted from assistant widget."""
-        for key in annotation_data.keys():
-            self.data['images'][self.current_file_name]['annotations'][self.selected_row][key] = annotation_data[key]
-            self.data['images'][self.current_file_name]['annotations'][self.selected_row]['updated_by'] = 'human'
-        self.display_annotation_data()
+        if self.selected_row >= 0:
+            for key in annotation_data.keys():
+                self.data['images'][self.current_file_name]['annotations'][self.selected_row][key] = annotation_data[key]
+                self.data['images'][self.current_file_name]['annotations'][self.selected_row]['updated_by'] = 'human'
+            self.display_annotation_data()
 
     def update_bbox(self, rect):
         """(Slot) Store the new geometry for the active bbox."""
