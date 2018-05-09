@@ -1,6 +1,9 @@
+temp
 data
 models
 misc
 experimental
 __pycache__
 notes.txt
+labels.txt
+tox.ini

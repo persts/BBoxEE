@@ -22,6 +22,8 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
+
+
 def annotation():
     """Factory for an annotation block."""
     return {'created_by': '', 'updated_by': '', 'bbox': {'xmin': 0, 'xmax': 0, 'ymin': 0, 'ymax': 0}, 'label': 'N/A', 'occluded': 'N', 'truncated': 'N', 'difficult': 'N', 'schema': '1.0.0'}

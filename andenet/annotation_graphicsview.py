@@ -66,6 +66,8 @@ class BBoxWidget(QtWidgets.QFrame):
     def resizeEvent(self, event):
         """Overload of the base resizeEvent."""
         self.setGeometry(self.pos().x(), self.pos().y(), self.width(), self.height())
+        rectf = QtCore.QRectF(self.geometry())
+        self.parent().updateScene([rectf])
 
 
 class AnnotationGraphicsView(QtWidgets.QGraphicsView):
@@ -81,7 +83,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.bbox_editor = BBoxWidget(self)
         self.bbox = QtCore.QRectF()
         self.bbox_editor.resized.connect(self.bbox_resized)
-        self.setViewportUpdateMode(0)
+        self.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
 
     def get_bbox(self):
         """Map the ROI location from scene coordinates to image coordinates.
