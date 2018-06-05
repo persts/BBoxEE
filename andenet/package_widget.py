@@ -28,6 +28,7 @@ import json
 import random
 import numpy as np
 from PyQt5 import QtCore, QtWidgets, uic
+from andenet import AndenetPackager
 from andenet import schema
 
 PACK, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'package_widget.ui'))
@@ -75,8 +76,6 @@ class PackageWidget(QtWidgets.QWidget, PACK):
         self.checkBoxOccluded.stateChanged.connect(self.refresh_remap_table)
         self.checkBoxDifficult.stateChanged.connect(self.refresh_remap_table)
 
-        self.radioButtonTensorFlow.toggled.connect(self.toggle_tensorflow)
-
     def display(self, file_list):
         """(Slot) Display annotation files in table with summary count by label."""
         self.pushButtonSelectDirectory.setEnabled(True)
@@ -113,7 +112,6 @@ class PackageWidget(QtWidgets.QWidget, PACK):
         truncated = self.checkBoxTruncated.isChecked()
         occluded = self.checkBoxOccluded.isChecked()
         difficult = self.checkBoxDifficult.isChecked()
-        validation_split = self.doubleSpinBoxValidation.value()
         examples = []
         masks = {}
         train_examples = []
@@ -168,16 +166,7 @@ class PackageWidget(QtWidgets.QWidget, PACK):
         if directory != '':
             self.pushButtonPackage.setEnabled(False)
             self.progressBar.setRange(0, len(examples))
-            if self.radioButtonTensorFlow.isChecked():
-                train_size = int((1.0 - validation_split) * len(examples))
-                train_examples = examples[:train_size]
-                validation_examples = examples[train_size:]
-                from andenet import TfrPackager
-                self.packager = TfrPackager(directory, train_examples, validation_examples, masks, remap)
-            if self.radioButtonAndenet.isChecked():
-                from andenet import AndenetPackager
-                self.packager = AndenetPackager(directory, examples, masks, remap)
-
+            self.packager = AndenetPackager(directory, examples, masks, remap)
             self.packager.progress.connect(self.progressBar.setValue)
             self.packager.packaged.connect(self.packaged)
             self.packager.start()
@@ -248,13 +237,6 @@ class PackageWidget(QtWidgets.QWidget, PACK):
             if difficult:
                 labels[label] += self.label_cache[file_name][label]['difficult']
         return labels
-
-    def toggle_tensorflow(self, checked):
-        """(Slot) Update GUI to reflect differences in package options."""
-        if checked:
-            self.doubleSpinBoxValidation.setEnabled(True)
-        else:
-            self.doubleSpinBoxValidation.setEnabled(False)
 
     def update_remap_dictionary(self, row, column):
         """(Slot) Update remap dictionary when cell in table changes."""

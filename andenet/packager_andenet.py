@@ -25,9 +25,10 @@
 import os
 import io
 import json
+import numpy as np
 from PIL import Image
 from PyQt5 import QtCore
-import numpy as np
+from andenet import schema
 
 
 class AndenetPackager(QtCore.QThread):
@@ -82,6 +83,7 @@ class AndenetPackager(QtCore.QThread):
                     annotation['label'] = self.remap[annotation['label']]
                     annotations.append(annotation)
             example['annotations'] = annotations
+            # TODO: Consider skipping image if any annotation was excluded
             # Only process images with more than on annotation remaining
             if len(example['annotations']) > 0:
                 file_name = example['directory'] + os.path.sep + example['file_name']
@@ -90,6 +92,8 @@ class AndenetPackager(QtCore.QThread):
                 array = np.array(img)
                 if example['mask_name'] != '':
                     array = array * self.masks[example['mask_name']]
+                height = array.shape[0]
+                width = array.shape[1]
                 # Convert array back into an image and save in memory as a jpeg
                 img = Image.fromarray(array)
                 jpeg_file = io.BytesIO()
@@ -98,13 +102,19 @@ class AndenetPackager(QtCore.QThread):
                 # Write image data to file and add metadata to example record
                 encoded_jpg = jpeg_file.getvalue()
                 bytes_out = image_writer.write(encoded_jpg)
-                example['image_data'] = {'start': running_byte_count, 'size': bytes_out}
+                example['image_data']['start'] =  running_byte_count
+                example['image_data']['size'] = bytes_out
+                example['image_data']['height'] = height
+                example['image_data']['width'] = width
                 running_byte_count += bytes_out
                 # Push example onto metadata list to package
                 examples_to_package.append(example)
             counter += 1
             self.progress.emit(counter)
-        json.dump(examples_to_package, json_writer)
+        package = schema.package()
+        package['labels'] = self.remap['lookup']
+        package['metadata'] = examples_to_package
+        json.dump(package, json_writer)
         image_writer.close()
         json_writer.close()
         self.packaged.emit()

@@ -251,7 +251,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
                     # display annotation data center in bounding box.
                     if self.checkBoxDisplayAnnotationData.isChecked():
                         font = QtGui.QFont()
-                        font.setPointSize(int(rect.width() * 0.075))
+                        font.setPointSize(int(rect.width() * 0.065))
                         content = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}".format(annotation['label'], annotation['truncated'], annotation['occluded'], annotation['difficult'])
                         text = QtWidgets.QGraphicsTextItem(content)
                         text.setFont(font)

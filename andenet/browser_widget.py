@@ -27,6 +27,7 @@ import io
 import json
 from PIL import Image, ImageQt
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from andenet import TfrExporter
 
 BROWSER, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'browser_widget.ui'))
 
@@ -38,9 +39,11 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         """Class init function."""
         QtWidgets.QWidget.__init__(self)
         self.setupUi(self)
-        self.data = None
-        self.images = None
+        self.labels = None
+        self.metadata = None
+        self.image_data = None
         self.current_record = 0
+        self.exporter = None
 
         self.graphicsScene = QtWidgets.QGraphicsScene()
         self.graphicsView.setScene(self.graphicsScene)
@@ -48,17 +51,18 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         self.pushButtonSelectDirectory.clicked.connect(self.load)
         self.pushButtonNext.clicked.connect(self.next)
         self.pushButtonPrevious.clicked.connect(self.previous)
+        self.pushButtonExport.clicked.connect(self.export)
         self.lineEditCurrentRecord.editingFinished.connect(self.jump_to_image)
         self.checkBoxDisplayAnnotationData.clicked.connect(self.display)
 
     def display(self):
         """Display image in widget, JSON metadata, and labeled annotation boxes."""
-        data = self.data[self.current_record - 1]
+        data = self.metadata[self.current_record - 1]
         self.lineEditCurrentRecord.setText(str(self.current_record))
         self.textBrowser.setText(json.dumps(data, indent=4, sort_keys=True))
         # Seek to the start of the data block then read in the image data
-        self.images.seek(data['image_data']['start'])
-        raw = self.images.read(data['image_data']['size'])
+        self.image_data.seek(data['image_data']['start'])
+        raw = self.image_data.read(data['image_data']['size'])
         # Turn into a virtual file stream and load the image as if from disk
         file = io.BytesIO(raw)
         img = Image.open(file)
@@ -80,7 +84,7 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
             # display annotation data center in bounding box.
             if self.checkBoxDisplayAnnotationData.isChecked():
                 font = QtGui.QFont()
-                font.setPointSize(int(rect.width() * 0.075))
+                font.setPointSize(int(rect.width() * 0.065))
                 content = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}".format(annotation['label'], annotation['truncated'], annotation['occluded'], annotation['difficult'])
                 text = QtWidgets.QGraphicsTextItem(content)
                 text.setFont(font)
@@ -91,11 +95,28 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
                 text.moveBy((rect.width() / 2.0) - x_offset, (rect.height() / 2.0) - y_offset)
                 text.setParentItem(graphics_item)
 
+    def export(self):
+        directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
+        if directory != '':
+            export_to = self.comboBoxFormat.currentText()
+            validation_split = self.doubleSpinBoxSplit.value()
+            print(export_to)
+            if export_to == 'Tensorflow Record':
+                self.exporter = TfrExporter(directory, self.metadata, self.image_data, self.labels, validation_split)
+            self.progressBar.setRange(0, len(self.metadata))
+            self.exporter.progress.connect(self.progressBar.setValue)
+            self.exporter.exported.connect(self.export_finished)
+            self.exporter.start()
+
+    def export_finished(self):
+        """(Slot) Re enable export button after export has finished."""
+        self.pushButtonExport.setEnabled(True)
+
     def jump_to_image(self):
-        """(Slot) Just to image after editing has finished in line edit."""
+        """(Slot) Jump to image after editing has finished in line edit."""
         try:
             image_number = int(self.lineEditCurrentRecord.text())
-            if image_number <= len(self.data) and image_number >= 1:
+            if image_number <= len(self.metadata) and image_number >= 1:
                 self.current_record = image_number
                 self.display()
             else:
@@ -107,23 +128,26 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         """(Slot) Load metadata file."""
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
         if directory != '':
-            self.images = open(directory + os.path.sep + 'images.bin', 'rb')
+            self.image_data = open(directory + os.path.sep + 'images.bin', 'rb')
             file = open(directory + os.path.sep + 'metadata.json')
-            self.data = json.load(file)
+            obj = json.load(file)
+            self.metadata = obj['metadata']
+            self.labels = obj['labels']
             file.close()
             self.current_record = 1
-            self.labelTotal.setText('of ' + str(len(self.data)))
+            self.labelTotal.setText('of ' + str(len(self.metadata)))
             self.display()
+            self.pushButtonExport.setEnabled(True)
 
     def next(self):
         """(Slot) Load next record."""
-        if self.data is not None and self.current_record < len(self.data):
+        if self.metadata is not None and self.current_record < len(self.metadata):
             self.current_record += 1
             self.display()
 
     def previous(self):
         """(Slot) Load previous record."""
-        if self.data is not None and self.current_record > 1:
+        if self.metadata is not None and self.current_record > 1:
             self.current_record -= 1
             self.display()
 
