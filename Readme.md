@@ -25,6 +25,10 @@ Install GUI libraries:
 ``` bash
 sudo apt install python3-pyqt5 python3-tk
 ```
+Install Protocol Buffer Compiler:
+```bash
+sudo apt install protobuf-compiler
+```
 
 Install pip3 matplotlib and upgrade dependencies:
 
@@ -33,7 +37,7 @@ sudo apt install python3-pip
 sudo -H pip3 install --upgrade pip
 sudo -H pip3 install --upgrade pillow
 sudo -H pip3 install --upgrade lxml
-sudo -h pip3 install matplotlib
+sudo -H pip3 install matplotlib
 ```
 
 For detailed steps to install TensorFlow, follow the [TensorFlow installation instructions](https://www.tensorflow.org/install/). A typical user can install Tensorflow using one of the following commands:
