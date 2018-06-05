@@ -86,8 +86,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.bbox = QtCore.QRectF()
         self.bbox_editor.resized.connect(self.bbox_resized)
         self.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
-        self.active_brush = QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern)
-        self.active_pen = QtGui.QPen(self.active_brush, 2)
+        self.brushes = [QtGui.QBrush(QtCore.Qt.blue, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.green, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.red, QtCore.Qt.SolidPattern)]
+        self.pens = [QtGui.QPen(self.brushes[0], 2), QtGui.QPen(self.brushes[1], 2), QtGui.QPen(self.brushes[2], 2), QtGui.QPen(self.brushes[3], 2)]
 
     def get_bbox(self):
         """Map the ROI location from scene coordinates to image coordinates.
@@ -121,8 +121,9 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         """Overload of the mousePressEvent that stores mouse click positions in a list."""
         if len(self.scene().items()) > 0:
             point = self.mapToScene(event.pos())
-            self.graphics_items.append(self.scene().addEllipse(QtCore.QRectF(point.x() - 5, point.y() - 5, 11, 11), self.active_pen, self.active_brush))
+            self.graphics_items.append(self.scene().addEllipse(QtCore.QRectF(point.x() - 5, point.y() - 5, 11, 11), self.pens[len(self.points)], self.brushes[len(self.points)]))
             self.points.append(event.pos())
+            
 
     def mouseReleaseEvent(self, event):
         """Overload of the MouseReleaseEvent that will calculate the bounding box when four points are available."""
