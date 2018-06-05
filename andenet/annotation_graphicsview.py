@@ -22,7 +22,7 @@
 # along with with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-from PyQt5 import QtWidgets, QtCore
+from PyQt5 import QtWidgets, QtCore, QtGui
 
 
 class BBoxSizeGrip(QtWidgets.QSizeGrip):
@@ -80,10 +80,14 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         """Class init function."""
         QtWidgets.QGraphicsView.__init__(self, parent)
         self.points = []
+        self.graphics_items = []
         self.bbox_editor = BBoxWidget(self)
+        self.bbox_editor_last_rect = QtCore.QRectF()
         self.bbox = QtCore.QRectF()
         self.bbox_editor.resized.connect(self.bbox_resized)
         self.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
+        self.active_brush = QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern)
+        self.active_pen = QtGui.QPen(self.active_brush, 2)
 
     def get_bbox(self):
         """Map the ROI location from scene coordinates to image coordinates.
@@ -110,11 +114,14 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             if adjusted:
                 rect2 = self.mapFromScene(rect).boundingRect()
                 self.bbox_editor.setGeometry(rect2.left(), rect2.top(), rect2.width(), rect2.height())
+            self.bbox_editor_last_rect = rect
         return rect
 
     def mousePressEvent(self, event):
         """Overload of the mousePressEvent that stores mouse click positions in a list."""
         if len(self.scene().items()) > 0:
+            point = self.mapToScene(event.pos())
+            self.graphics_items.append(self.scene().addEllipse(QtCore.QRectF(point.x() - 5, point.y() - 5, 11, 11), self.active_pen, self.active_brush))
             self.points.append(event.pos())
 
     def mouseReleaseEvent(self, event):
@@ -129,6 +136,9 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 x_max = max(x_max, point.x())
                 y_min = min(y_min, point.y())
                 y_max = max(y_max, point.y())
+            for item in self.graphics_items:
+                self.scene().removeItem(item)
+            self.graphics_items = []
             self.bbox_editor.setGeometry(x_min, y_min, x_max - x_min, y_max - y_min)
             self.bbox_editor.show()
             self.created.emit(self.get_bbox())
@@ -137,6 +147,10 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
     def bbox_resized(self):
         """(Slot) Received bbox resized signal and emits another resize signal."""
         self.resized.emit(self.get_bbox())
+
+    def resizeEvent(self, event):
+        if self.bbox_editor.isVisible():
+            self.show_bbox_editor(self.bbox_editor_last_rect)
 
     def show_bbox_editor(self, reference_rect):
         """Redisplay the ROI editor.

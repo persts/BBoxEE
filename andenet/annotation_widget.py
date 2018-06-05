@@ -336,6 +336,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         """Load image into graphics scene."""
         self.graphicsView.bbox_editor.hide()
         self.graphicsView.points = []
+        self.graphicsView.graphics_items = []
         self.graphicsScene.clear()
         self.bboxes = []
         self.selected_row = -1
@@ -428,7 +429,6 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
     def resizeEvent(self, event):
         """Overload resizeEvent to fit image in graphics view."""
         self.graphicsView.fitInView(self.graphicsScene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
-        # self.display_bboxes()
 
     def bbox_created(self, rect, show_assistant=True):
         """(Slot) save the newly created bbox and display it."""
