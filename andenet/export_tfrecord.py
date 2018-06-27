@@ -33,7 +33,7 @@ from object_detection.utils import dataset_util
 
 
 class TfrExporter(QtCore.QThread):
-    """Package annotated image examples into the Tensorflow TFRecord format."""
+    """Export annotated image examples into the Tensorflow TFRecord format."""
 
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal()
