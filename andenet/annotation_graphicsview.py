@@ -89,6 +89,9 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.brushes = [QtGui.QBrush(QtCore.Qt.blue, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.green, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.red, QtCore.Qt.SolidPattern)]
         self.pens = [QtGui.QPen(self.brushes[0], 2), QtGui.QPen(self.brushes[1], 2), QtGui.QPen(self.brushes[2], 2), QtGui.QPen(self.brushes[3], 2)]
 
+        self.horizontalScrollBar().valueChanged.connect(self.refreshBboxPosition)
+        self.verticalScrollBar().valueChanged.connect(self.refreshBboxPosition)
+
     def get_bbox(self):
         """Map the ROI location from scene coordinates to image coordinates.
 
@@ -149,9 +152,12 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         """(Slot) Received bbox resized signal and emits another resize signal."""
         self.resized.emit(self.get_bbox())
 
-    def resizeEvent(self, event):
+    def refreshBboxPosition(self):
         if self.bbox_editor.isVisible():
             self.show_bbox_editor(self.bbox_editor_last_rect)
+
+    def resizeEvent(self, event):
+        self.refreshBboxPosition()
 
     def show_bbox_editor(self, reference_rect):
         """Redisplay the ROI editor.
@@ -159,6 +165,15 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         Args:
             reference_rect (QRectF): The geometry to use when redisplaying the ROI editor.
         """
+        self.bbox_editor_last_rect = reference_rect
         rect = self.mapFromScene(reference_rect).boundingRect()
         self.bbox_editor.setGeometry(rect.left(), rect.top(), rect.width(), rect.height())
         self.bbox_editor.show()
+
+    def wheelEvent(self, event):
+        if len(self.scene().items()) > 0:
+            if event.angleDelta().y() > 0:
+                self.scale(1.1, 1.1)
+            else:
+                self.scale(0.9, 0.9)
+            self.refreshBboxPosition()
