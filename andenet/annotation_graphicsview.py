@@ -47,6 +47,7 @@ class BBoxWidget(QtWidgets.QFrame):
     def __init__(self, parent=None):
         """Class init function."""
         QtWidgets.QFrame.__init__(self, parent)
+        self.setMouseTracking(True)
         self.setWindowFlags(QtCore.Qt.SubWindow)
         self.layout = QtWidgets.QHBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
@@ -122,14 +123,25 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def mousePressEvent(self, event):
         """Overload of the mousePressEvent that stores mouse click positions in a list."""
-        if len(self.scene().items()) > 0:
-            point = self.mapToScene(event.pos())
-            self.graphics_items.append(self.scene().addEllipse(QtCore.QRectF(point.x() - 5, point.y() - 5, 11, 11), self.pens[len(self.points)], self.brushes[len(self.points)]))
-            self.points.append(event.pos())
+        if event.button() == QtCore.Qt.MiddleButton:
+            for item in self.graphics_items:
+                self.scene().removeItem(item)
+            self.graphics_items = []
+            self.points = []
+        elif event.button() == QtCore.Qt.RightButton:
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+            new_event = QtGui.QMouseEvent(event.type(), event.pos(), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, event.modifiers())
+            QtWidgets.QGraphicsView.mousePressEvent(self, new_event)
+        else:
+            if len(self.scene().items()) > 0:
+                point = self.mapToScene(event.pos())
+                self.graphics_items.append(self.scene().addEllipse(QtCore.QRectF(point.x() - 5, point.y() - 5, 11, 11), self.pens[len(self.points)], self.brushes[len(self.points)]))
+                self.points.append(event.pos())
             
 
     def mouseReleaseEvent(self, event):
         """Overload of the MouseReleaseEvent that will calculate the bounding box when four points are available."""
+        self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
         x_min = 100000000
         y_min = 100000000
         x_max = 0
