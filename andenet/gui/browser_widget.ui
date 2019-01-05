@@ -115,6 +115,11 @@
                <string>Tensorflow Record</string>
               </property>
              </item>
+             <item>
+              <property name="text">
+               <string>YOLOv3 Format</string>
+              </property>
+             </item>
             </widget>
            </item>
           </layout>

@@ -95,18 +95,24 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
                 text.setParentItem(graphics_item)
 
     def export(self):
-        directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
-        if directory != '':
-            export_to = self.comboBoxFormat.currentText()
-            validation_split = self.doubleSpinBoxSplit.value()
-            module_loaded = False
-            if export_to == 'Tensorflow Record':
-                try:
-                    from andenet.exporter.tfrecord import Exporter
-                    module_loaded = True
-                except ModuleNotFoundError:
-                    QtWidgets.QMessageBox.critical(self, 'Export', 'Required Tensorflow modules not found.\n\nPlease review install requirements.')
-            if module_loaded:
+        export_to = self.comboBoxFormat.currentText()
+        validation_split = self.doubleSpinBoxSplit.value()
+        module_loaded = False
+        if export_to == 'Tensorflow Record':
+            try:
+                from andenet.exporter.tfrecord import Exporter
+                module_loaded = True
+            except ModuleNotFoundError:
+                QtWidgets.QMessageBox.critical(self, 'Export', 'Required Tensorflow modules not found.\n\nPlease review install requirements.')
+        elif export_to == 'YOLOv3 Format':
+            try:
+                from andenet.exporter.yolo import Exporter
+                module_loaded = True
+            except ModuleNotFoundError:
+                QtWidgets.QMessageBox.critical(self, 'Export', 'Required Torch or Yolov3 modules not found.\n\nPlease review install requirements.')
+        if module_loaded:
+            directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
+            if directory != '':
                 self.exporter = Exporter(directory, self.metadata, self.image_data, self.labels, validation_split)
                 self.progressBar.setRange(0, len(self.metadata))
                 self.exporter.progress.connect(self.progressBar.setValue)

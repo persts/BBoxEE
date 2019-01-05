@@ -372,12 +372,8 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             self.image_list = []
             self.image_directory += os.path.sep
             files = glob.glob(self.image_directory + '*')
-            image_type = [".jpg", ".jpeg", ".png"]
-            for file in files:
-                ext = os.path.splitext(file)[1]
-                if ext.lower() in image_type:
-                    name = os.path.basename(file)
-                    self.image_list.append(name)
+            image_format = [".jpg", ".jpeg", ".png"]
+            self.image_list = list(filter(lambda x: os.path.splitext(x)[1].lower() in image_format, files))
             self.image_list = sorted(self.image_list)
             self.current_image = 1
             self.labelImages.setText('of ' + str(len(self.image_list)))
