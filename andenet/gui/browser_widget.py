@@ -27,7 +27,6 @@ import io
 import json
 from PIL import Image, ImageQt
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from andenet.export import TfrExporter
 
 BROWSER, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'browser_widget.ui'))
 
@@ -100,13 +99,19 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         if directory != '':
             export_to = self.comboBoxFormat.currentText()
             validation_split = self.doubleSpinBoxSplit.value()
-            print(export_to)
+            module_loaded = False
             if export_to == 'Tensorflow Record':
-                self.exporter = TfrExporter(directory, self.metadata, self.image_data, self.labels, validation_split)
-            self.progressBar.setRange(0, len(self.metadata))
-            self.exporter.progress.connect(self.progressBar.setValue)
-            self.exporter.exported.connect(self.export_finished)
-            self.exporter.start()
+                try:
+                    from andenet.exporter.tfrecord import Exporter
+                    module_loaded = True
+                except ModuleNotFoundError:
+                    QtWidgets.QMessageBox.critical(self, 'Export', 'Required Tensorflow modules not found.\n\nPlease review install requirements.')
+            if module_loaded:
+                self.exporter = Exporter(directory, self.metadata, self.image_data, self.labels, validation_split)
+                self.progressBar.setRange(0, len(self.metadata))
+                self.exporter.progress.connect(self.progressBar.setValue)
+                self.exporter.exported.connect(self.export_finished)
+                self.exporter.start()
 
     def export_finished(self):
         """(Slot) Re enable export button after export has finished."""

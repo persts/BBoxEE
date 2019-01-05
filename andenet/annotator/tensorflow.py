@@ -32,7 +32,7 @@ from utils import label_map_util
 
 
 class Annotator(QtCore.QThread):
-    """Threaded worker to keep gui from freezing while processing images."""
+    """Threaded worker to keep gui from freezing while annotating images."""
 
     progress = QtCore.pyqtSignal(int, str, dict)
     finished = QtCore.pyqtSignal(dict)

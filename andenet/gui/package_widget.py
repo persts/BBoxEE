@@ -28,7 +28,7 @@ import json
 import random
 import numpy as np
 from PyQt5 import QtCore, QtWidgets, uic
-from andenet.export import AndenetPackager
+from andenet.worker import AndenetPackager
 from andenet import schema
 
 PACK, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'package_widget.ui'))

@@ -29,9 +29,8 @@ import numpy as np
 from PIL import Image, ImageQt
 from andenet import schema
 from andenet.gui import AnnotationAssistant
-from andenet.annotate import Annotator
+from andenet.gui import AnnotatorDialog
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-import tensorflow as tf
 
 
 LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotation_widget.ui'))
@@ -57,8 +56,10 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.assistant = AnnotationAssistant(self)
         self.assistant.submitted.connect(self.update_annotation)
         self.image = None
-        self.detection_graph = tf.Graph()
+        
         self.annotator = None
+        self.annotator_selecter = AnnotatorDialog(self)
+        self.annotator_selecter.selected.connect(self.annotator_selected)
 
         self.graphicsScene = QtWidgets.QGraphicsScene()
         self.graphicsView.setScene(self.graphicsScene)
@@ -72,7 +73,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.pushButtonNext.clicked.connect(self.next_image)
         self.pushButtonPrevious.clicked.connect(self.previous_image)
         self.pushButtonClear.clicked.connect(self.clear_annotations)
-        self.pushButtonLoadModel.clicked.connect(self.load_model)
+        self.pushButtonSelectAnnotater.clicked.connect(self.select_annotator)
         self.pushButtonAnnotate.clicked.connect(self.annotate)
         self.pushButtonSave.clicked.connect(self.save)
         self.pushButtonSelectMask.clicked.connect(self.select_mask)
@@ -128,7 +129,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             self.pushButtonAnnotate.setEnabled(False)
             self.pushButtonDirectory.setEnabled(False)
             self.pushButtonLabelFile.setEnabled(False)
-            self.pushButtonLoadModel.setEnabled(False)
+            self.pushButtonSelectAnnotater.setEnabled(False)
             self.pushButtonSelectMask.setEnabled(False)
             self.pushButtonSave.setEnabled(False)
             self.pushButtonNext.setEnabled(False)
@@ -153,7 +154,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.pushButtonAnnotate.setEnabled(True)
         self.pushButtonDirectory.setEnabled(True)
         self.pushButtonLabelFile.setEnabled(True)
-        self.pushButtonLoadModel.setEnabled(True)
+        self.pushButtonSelectAnnotater.setEnabled(True)
         self.pushButtonSelectMask.setEnabled(True)
         self.pushButtonSave.setEnabled(True)
         self.pushButtonNext.setEnabled(True)
@@ -170,6 +171,12 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.progressBar.setValue(progress)
         self.data['images'][image] = annotations
         self.next_image()
+
+    def annotator_selected(self, annotator):
+        self.annotator = annotator
+        self.annotator.progress.connect(self.annotation_progress)
+        self.annotator.finished.connect(self.annotation_complete)
+        self.pushButtonAnnotate.setEnabled(True)
 
     def cell_changed(self, row, column):
         """(Slot) Update annotation data on change."""
@@ -297,7 +304,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
                 self.mask = None
                 self.load_image_list()
                 self.pushButtonSelectMask.setEnabled(True)
-                self.pushButtonLoadModel.setEnabled(True)
+                self.pushButtonSelectAnnotater.setEnabled(True)
                 self.set_dirty(False)
 
     def load_from_file(self):
@@ -329,7 +336,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
                     self.mask = None
                 self.load_image_list()
                 self.set_dirty(False)
-                self.pushButtonLoadModel.setEnabled(True)
+                self.pushButtonSelectAnnotater.setEnabled(True)
                 self.pushButtonSelectMask.setEnabled(True)
 
     def load_image(self):
@@ -376,15 +383,6 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             self.labelImages.setText('of ' + str(len(self.image_list)))
             self.lineEditCurrentImage.setText('1')
             self.load_image()
-
-    def load_model(self):
-        """Load a frozen inference graph and label map."""
-        directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Model Directory', self.image_directory)
-        if directory != '':
-            self.annotator = Annotator(directory)
-            self.annotator.progress.connect(self.annotation_progress)
-            self.annotator.finished.connect(self.annotation_complete)
-            self.pushButtonAnnotate.setEnabled(True)
 
     def next_annotated_image(self):
         """(Slot) Jump to the next image that has been annotated."""
@@ -464,6 +462,9 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             self.set_dirty(False)
             saved = True
         return saved
+
+    def select_annotator(self):
+        self.annotator_selecter.show()
 
     def select_mask(self):
         """(Slot) Select mask from disk."""

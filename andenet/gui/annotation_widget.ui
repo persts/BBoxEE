@@ -355,12 +355,12 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_3">
            <item>
-            <widget class="QPushButton" name="pushButtonLoadModel">
+            <widget class="QPushButton" name="pushButtonSelectAnnotater">
              <property name="enabled">
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>Load Model</string>
+              <string>Select AnnotaterLoad</string>
              </property>
             </widget>
            </item>
