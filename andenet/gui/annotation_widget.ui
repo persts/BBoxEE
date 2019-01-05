@@ -490,7 +490,7 @@
   <customwidget>
    <class>AnnotationGraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header location="global">andenet/annotation_graphicsview</header>
+   <header location="global">andenet/gui/annotation_graphicsview</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -33,7 +33,7 @@ from andenet import schema
 
 class AndenetPackager(QtCore.QThread):
     """
-    Packacges annotated image examples into the Andenet format.
+    Packages annotated image examples into the Andenet format.
 
     Andenet package format consists of two file:
     metadata.json

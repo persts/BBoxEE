@@ -28,8 +28,8 @@ import json
 import numpy as np
 from PIL import Image, ImageQt
 from andenet import schema
-from andenet import AnnotationAssistant
-from andenet import Annotator
+from andenet.gui import AnnotationAssistant
+from andenet.annotate import Annotator
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 import tensorflow as tf
 

@@ -27,7 +27,7 @@ import io
 import json
 from PIL import Image, ImageQt
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from andenet import TfrExporter
+from andenet.export import TfrExporter
 
 BROWSER, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'browser_widget.ui'))
 

@@ -25,9 +25,9 @@
 import sys
 from PyQt5 import QtWidgets
 
-from andenet import PackageWidget
-from andenet import AnnotationWidget
-from andenet import BrowserWidget
+from andenet.gui import PackageWidget
+from andenet.gui import AnnotationWidget
+from andenet.gui import BrowserWidget
 
 app = QtWidgets.QApplication(sys.argv)
 gui = QtWidgets.QMainWindow()
