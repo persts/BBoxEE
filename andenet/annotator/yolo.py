@@ -21,6 +21,10 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
+#
+# This file is largely based on code from https://github.com/ultralytics/yolov3/blob/master/detect.py
+#
+# --------------------------------------------------------------------------
 import os
 import torch
 import cv2
