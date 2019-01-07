@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Animal Detection Network (Andenet)
-# Copyright (C) 2017 Peter Ersts
-# ersts@amnh.org
+# Author: Peter Ersts (ersts@amnh.org)
 #
 # --------------------------------------------------------------------------
 #
@@ -19,7 +18,7 @@
 # GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License
-# along with with this software.  If not, see <http://www.gnu.org/licenses/>.
+# along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
 from PyQt5 import QtWidgets, QtCore, QtGui

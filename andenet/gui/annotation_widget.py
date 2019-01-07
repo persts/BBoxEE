@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Animal Detection Network (Andenet)
-# Copyright (C) 2017 Peter Ersts
-# ersts@amnh.org
+# Author: Peter Ersts (ersts@amnh.org)
 #
 # --------------------------------------------------------------------------
 #
@@ -374,6 +373,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             files = glob.glob(self.image_directory + '*')
             image_format = [".jpg", ".jpeg", ".png"]
             self.image_list = list(filter(lambda x: os.path.splitext(x)[1].lower() in image_format, files))
+            self.image_list = [os.path.basename(x) for x in self.image_list]
             self.image_list = sorted(self.image_list)
             self.current_image = 1
             self.labelImages.setText('of ' + str(len(self.image_list)))

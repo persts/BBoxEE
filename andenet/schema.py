@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # Animal Detection Network (Andenet)
-# Copyright (C) 2018 Peter Ersts
-# ersts@amnh.org
+# Author: Peter Ersts (ersts@amnh.org)
 #
 # --------------------------------------------------------------------------
 #

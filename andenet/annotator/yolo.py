@@ -96,6 +96,7 @@ class Annotator(QtCore.QThread):
         self.model.to(self.device).eval()
         dataloader = load_images(self.image_directory, batch_size=1, img_size=self.image_size)
         for count, (img_path, img) in enumerate(dataloader):
+            entry = schema.annotation_file_entry()
             with torch.no_grad():
                 image_name = os.path.split(img_path[0])[1]
                 img = torch.from_numpy(img).unsqueeze(0).to(self.device)
