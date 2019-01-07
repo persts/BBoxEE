@@ -47,7 +47,7 @@ This is all you need to do to begin using the base functionality of Andenet-Desk
 
 ## Assisted Annotation and Exporting
 
-Assisted Annotation is ability to load an object existing model and 
+Assisted Annotation is ability to load an existing object detection model and use the model's prediction(s) as initial annotated bounding box. Assisted Annotation is useful approach for visually assessing the accuracy and precision of your model as you continue to collect additional training data. 
 
 Exporting to some format may require additional libraries / frameworks. Exporting to the TFRecord format, for example, requires some functions from the TensorFlow Object Detection API .
 
