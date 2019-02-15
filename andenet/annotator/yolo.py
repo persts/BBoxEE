@@ -22,7 +22,8 @@
 #
 # --------------------------------------------------------------------------
 #
-# This file is largely based on code from https://github.com/ultralytics/yolov3/blob/master/detect.py
+# This file is largely based on code from:
+#  https://github.com/ultralytics/yolov3/blob/master/detect.py
 #
 # --------------------------------------------------------------------------
 import os
@@ -69,21 +70,21 @@ class Annotator(QtCore.QThread):
         unpad_w = self.image_size - pad_x
 
         entry = schema.annotation_file_entry()
-        for x1, y1, x2, y2, conf, cls_conf, cls_pred in detections:
+        for x_min, y_min, x_max, y_max, conf, cls_conf, cls_pred in detections:
             annotation = schema.annotation()
             annotation['created_by'] = 'machine'
             # Rescale coordinates to original dimensions
-            box_h = ((y2 - y1) / unpad_h) * img.shape[0]
-            box_w = ((x2 - x1) / unpad_w) * img.shape[1]
-            y1 = (((y1 - pad_y // 2) / unpad_h) * img.shape[0]).round().item()
-            x1 = (((x1 - pad_x // 2) / unpad_w) * img.shape[1]).round().item()
-            x2 = (x1 + box_w).round().item()
-            y2 = (y1 + box_h).round().item()
-            x1, y1, x2, y2 = max(x1, 0), max(y1, 0), max(x2, 0), max(y2, 0)
-            annotation['bbox']['xmin'] = x1 / img.shape[1]
-            annotation['bbox']['xmax'] = x2 / img.shape[1]
-            annotation['bbox']['ymin'] = y1 / img.shape[0]
-            annotation['bbox']['ymax'] = y2 / img.shape[0]
+            box_h = ((y_max - y_min) / unpad_h) * img.shape[0]
+            box_w = ((x_max - x_min) / unpad_w) * img.shape[1]
+            y_min = (((y_min - pad_y // 2) / unpad_h) * img.shape[0]).round().item()
+            x_min = (((x_min - pad_x // 2) / unpad_w) * img.shape[1]).round().item()
+            x_max = (x_min + box_w).round().item()
+            y_max = (y_min + box_h).round().item()
+            x_min, y_min, x_max, y_max = max(x_min, 0), max(y_min, 0), max(x_max, 0), max(y_max, 0)
+            annotation['bbox']['xmin'] = x_min / img.shape[1]
+            annotation['bbox']['xmax'] = x_max / img.shape[1]
+            annotation['bbox']['ymin'] = y_min / img.shape[0]
+            annotation['bbox']['ymax'] = y_max / img.shape[0]
             annotation['label'] = self.classes[int(cls_pred.item())]
             entry['annotations'].append(annotation)
         return entry
@@ -103,11 +104,11 @@ class Annotator(QtCore.QThread):
                 pred = self.model(img)
                 pred = pred[pred[:, :, 4] > conf_thres]
 
-                if len(pred) > 0:
+                if pred:
                     detections = non_max_suppression(pred.unsqueeze(0), conf_thres, nms_thres)
                     entry = self.scale_detections(img_path[0], detections[0])
-                
-                if len(entry['annotations']) > 0:
+
+                if entry['annotations']:
                     self.data['images'][image_name] = entry
             self.progress.emit(count + 1, image_name, entry)
         self.finished.emit(self.data)

@@ -24,6 +24,7 @@
 import os
 import io
 import json
+import datetime
 import numpy as np
 from PIL import Image
 from PyQt5 import QtCore
@@ -71,8 +72,8 @@ class AndenetPackager(QtCore.QThread):
         """
         counter = 0
         running_byte_count = 0
-        image_writer = open(self.directory + os.path.sep + 'images.bin', 'wb')
-        json_writer = open(self.directory + os.path.sep + 'metadata.json', 'w')
+        image_writer = open(os.path.join(self.directory, 'images.bin'), 'wb')
+        json_writer = open(os.path.join(self.directory, 'metadata.json'), 'w')
         examples_to_package = []
         for example in self.examples:
             # Remap the label names and drop exluded classes
@@ -84,8 +85,11 @@ class AndenetPackager(QtCore.QThread):
             example['annotations'] = annotations
             # TODO: Consider skipping image if any annotation was excluded
             # Only process images with more than on annotation remaining
-            if len(example['annotations']) > 0:
-                file_name = example['directory'] + os.path.sep + example['file_name']
+            if example['annotations']:
+                file_name = os.path.join(example['directory'], example['file_name'])
+                timestamp = os.path.getctime(file_name)
+                timestamp = datetime.datetime.fromtimestamp(timestamp)
+                example['date_captured'] = str(timestamp)
                 img = Image.open(file_name)
                 # Turn image into an array to remove metadata and apply mask if there is one
                 array = np.array(img)
@@ -101,7 +105,7 @@ class AndenetPackager(QtCore.QThread):
                 # Write image data to file and add metadata to example record
                 encoded_jpg = jpeg_file.getvalue()
                 bytes_out = image_writer.write(encoded_jpg)
-                example['image_data']['start'] =  running_byte_count
+                example['image_data']['start'] = running_byte_count
                 example['image_data']['size'] = bytes_out
                 example['image_data']['height'] = height
                 example['image_data']['width'] = width

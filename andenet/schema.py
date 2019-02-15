@@ -34,14 +34,14 @@ def annotation_file():
 
 
 def annotation_file_entry():
-    """Factor for the Animal Detection Network annotation file entry."""
-    return {'attribution': '', 'license': '', 'annotations': []}
+    """Factory for the Animal Detection Network annotation file entry."""
+    return {'attribution': '', 'license': '', 'license_url': '', 'annotations': []}
 
 
 def package_entry():
     """Factory for an entry in the Animal Detection Network package file."""
-    return {'image_data': {'size': 0, 'start': 0, 'height': 0, 'width': 0}, 'attribution': '', 'license': '', 'file_name': '', 'mask_name': '', 'directory': '', 'schema': '1.0.0', 'annotations': []}
+    return {'image_data': {'size': 0, 'start': 0, 'height': 0, 'width': 0}, 'date_captured': '', 'attribution': '', 'license': '', 'license_url': '', 'file_name': '', 'mask_name': '', 'directory': '', 'schema': '1.0.0', 'annotations': []}
 
 def package():
-	"""Factor Animal Detection Network package file."""
-	return {'labels': [], 'metadata': []}   
+    """Factory Animal Detection Network package file."""
+    return {'labels': [], 'metadata': []}

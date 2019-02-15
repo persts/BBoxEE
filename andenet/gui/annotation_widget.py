@@ -26,10 +26,10 @@ import glob
 import json
 import numpy as np
 from PIL import Image, ImageQt
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from andenet import schema
 from andenet.gui import AnnotationAssistant
 from andenet.gui import AnnotatorDialog
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
 
 
 LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotation_widget.ui'))
@@ -40,7 +40,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
 
     def __init__(self, parent=None):
         """Class init function."""
-        QtWidgets.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.image_directory = '.'
@@ -55,13 +55,15 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.assistant = AnnotationAssistant(self)
         self.assistant.submitted.connect(self.update_annotation)
         self.image = None
-        
+        self.qt_image = None
+        self.current_image_size = (0, 0)
+
         self.annotator = None
         self.annotator_selecter = AnnotatorDialog(self)
         self.annotator_selecter.selected.connect(self.annotator_selected)
 
-        self.graphicsScene = QtWidgets.QGraphicsScene()
-        self.graphicsView.setScene(self.graphicsScene)
+        self.graphics_scene = QtWidgets.QGraphicsScene()
+        self.graphicsView.setScene(self.graphics_scene)
         self.graphicsView.created.connect(self.bbox_created)
         self.graphicsView.resized.connect(self.update_bbox)
 
@@ -83,30 +85,36 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.checkBoxDisplayAnnotationData.clicked.connect(self.display_bboxes)
 
         self.tableWidgetLabels.horizontalHeader().setStretchLastSection(False)
-        self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, \
+            QtWidgets.QHeaderView.Stretch)
 
         # Create some key bindings to help navigate through images
         self.right_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Right), self)
         self.right_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.right_arrow.activated.connect(self.next_image)
 
-        self.right_arrow2 = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_Right), self)
+        self.right_arrow2 = QtWidgets.QShortcut( \
+            QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_Right), self)
         self.right_arrow2.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.right_arrow2.activated.connect(self.next_annotated_image)
 
-        self.left_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Left), self)
+        self.left_arrow = QtWidgets.QShortcut( \
+            QtGui.QKeySequence(QtCore.Qt.Key_Left), self)
         self.left_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.left_arrow.activated.connect(self.previous_image)
 
-        self.left_arrow2 = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_Left), self)
+        self.left_arrow2 = QtWidgets.QShortcut( \
+            QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_Left), self)
         self.left_arrow2.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.left_arrow2.activated.connect(self.previous_annotated_image)
 
-        self.clear = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_C), self)
+        self.clear = QtWidgets.QShortcut( \
+            QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_C), self)
         self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.clear.activated.connect(self.clear_annotations)
 
-        self.helper = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_A), self)
+        self.helper = QtWidgets.QShortcut( \
+            QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_A), self)
         self.helper.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.helper.activated.connect(self.assistant.show)
 
@@ -114,12 +122,13 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         """(SLOT) Start the automated annotator."""
         proceed = True
         if self.dirty:
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setText('Annotations have been modified.')
-            msgBox.setInformativeText('Do you want to save your changes?')
-            msgBox.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ignore)
-            msgBox.setDefaultButton(QtWidgets.QMessageBox.Save)
-            response = msgBox.exec()
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setText('Annotations have been modified.')
+            msg_box.setInformativeText('Do you want to save your changes?')
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save | \
+                QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ignore)
+            msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
+            response = msg_box.exec()
             if response == QtWidgets.QMessageBox.Save:
                 proceed = self.save()
             elif response == QtWidgets.QMessageBox.Cancel:
@@ -165,13 +174,14 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
 
     def annotation_progress(self, progress, image, annotations):
         """(SLOT) Show progress and current detections (annotations) as they are processed."""
-        if(progress == 1):
+        if progress == 1:
             self.current_image = 0
         self.progressBar.setValue(progress)
         self.data['images'][image] = annotations
         self.next_image()
 
     def annotator_selected(self, annotator):
+        """ (SLOT) save and hook up annotator."""
         self.annotator = annotator
         self.annotator.progress.connect(self.annotation_progress)
         self.annotator.finished.connect(self.annotation_complete)
@@ -181,7 +191,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         """(Slot) Update annotation data on change."""
         text = self.tableWidgetLabels.item(row, column).text()
         header = self.tableWidgetLabels.horizontalHeaderItem(column).text().lower()
-        if header == 'occluded' or header == 'truncated' or header == 'difficult':
+        if header in ('occluded', 'truncated', 'difficult'):
             if text in ['Y', 'y', 'N', 'n']:
                 text = text.upper()
             else:
@@ -224,36 +234,39 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             self.tableWidgetLabels.setRowCount(rows)
             for row in range(rows):
                 annotation = self.data['images'][self.current_file_name]['annotations'][row]
-                self.tableWidgetLabels.setItem(row, 0, QtWidgets.QTableWidgetItem(annotation['label']))
-                self.tableWidgetLabels.setItem(row, 1, QtWidgets.QTableWidgetItem(annotation['truncated']))
-                self.tableWidgetLabels.setItem(row, 2, QtWidgets.QTableWidgetItem(annotation['occluded']))
-                self.tableWidgetLabels.setItem(row, 3, QtWidgets.QTableWidgetItem(annotation['difficult']))
+                self.tableWidgetLabels.setItem(row, 0, \
+                    QtWidgets.QTableWidgetItem(annotation['label']))
+                self.tableWidgetLabels.setItem(row, 1, \
+                    QtWidgets.QTableWidgetItem(annotation['truncated']))
+                self.tableWidgetLabels.setItem(row, 2, \
+                    QtWidgets.QTableWidgetItem(annotation['occluded']))
+                self.tableWidgetLabels.setItem(row, 3, \
+                    QtWidgets.QTableWidgetItem(annotation['difficult']))
         # self.tableWidgetLabels.resizeColumnToContents(0)
         self.tableWidgetLabels.blockSignals(False)
 
     def display_bboxes(self):
         """Display bboxes in graphics scene."""
-        if len(self.bboxes) > 0:
+        if self.bboxes:
             for bbox in self.bboxes:
-                self.graphicsScene.removeItem(bbox)
+                self.graphics_scene.removeItem(bbox)
             self.bboxes = []
         if self.data is not None and self.current_file_name in self.data['images']:
             annotations = self.data['images'][self.current_file_name]['annotations']
-            for i in range(len(annotations)):
-                annotation = annotations[i]
+            for index, annotation in enumerate(annotations):
                 bbox = annotation['bbox']
                 width = self.current_image_size[0]
                 height = self.current_image_size[1]
                 top_left = QtCore.QPointF(bbox['xmin'] * width, bbox['ymin'] * height)
                 bottom_right = QtCore.QPointF(bbox['xmax'] * width, bbox['ymax'] * height)
                 rect = QtCore.QRectF(top_left, bottom_right)
-                if i == self.selected_row:
+                if index == self.selected_row:
                     self.graphicsView.show_bbox_editor(rect)
                 else:
                     pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3)
                     if annotation['created_by'] == 'machine' and annotation['updated_by'] == '':
                         pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.red, QtCore.Qt.SolidPattern), 3)
-                    graphics_item = self.graphicsScene.addRect(rect, pen)
+                    graphics_item = self.graphics_scene.addRect(rect, pen)
                     # display annotation data center in bounding box.
                     if self.checkBoxDisplayAnnotationData.isChecked():
                         font = QtGui.QFont()
@@ -285,12 +298,12 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         """(Slot) Load image data from directory."""
         load = True
         if self.dirty:
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setText('Annotations have been modified.')
-            msgBox.setInformativeText('Do you want to save your changes?')
-            msgBox.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ignore)
-            msgBox.setDefaultButton(QtWidgets.QMessageBox.Save)
-            response = msgBox.exec()
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setText('Annotations have been modified.')
+            msg_box.setInformativeText('Do you want to save your changes?')
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ignore)
+            msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
+            response = msg_box.exec()
             if response == QtWidgets.QMessageBox.Save:
                 load = self.save()
             elif response == QtWidgets.QMessageBox.Cancel:
@@ -310,12 +323,12 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         """(Slot) Load existing annotation data from file."""
         load = True
         if self.dirty:
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setText('Annotations have been modified.')
-            msgBox.setInformativeText('Do you want to save your changes?')
-            msgBox.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ignore)
-            msgBox.setDefaultButton(QtWidgets.QMessageBox.Save)
-            response = msgBox.exec()
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setText('Annotations have been modified.')
+            msg_box.setInformativeText('Do you want to save your changes?')
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ignore)
+            msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
+            response = msg_box.exec()
             if response == QtWidgets.QMessageBox.Save:
                 load = self.save()
             elif response == QtWidgets.QMessageBox.Cancel:
@@ -343,7 +356,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.graphicsView.bbox_editor.hide()
         self.graphicsView.points = []
         self.graphicsView.graphics_items = []
-        self.graphicsScene.clear()
+        self.graphics_scene.clear()
         self.bboxes = []
         self.selected_row = -1
         self.current_file_name = self.image_list[self.current_image - 1]
@@ -355,12 +368,12 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             img = self.image * self.mask
             img = Image.fromarray(img)
 
-        self.qImage = ImageQt.ImageQt(img)
-        self.graphicsScene.addPixmap(QtGui.QPixmap.fromImage(self.qImage))
+        self.qt_image = ImageQt.ImageQt(img)
+        self.graphics_scene.addPixmap(QtGui.QPixmap.fromImage(self.qt_image))
         img.close()
         img = None
-        self.graphicsView.fitInView(self.graphicsScene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
-        self.graphicsView.setSceneRect(self.graphicsScene.itemsBoundingRect())
+        self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
+        self.graphicsView.setSceneRect(self.graphics_scene.itemsBoundingRect())
         self.display_bboxes()
         self.display_annotation_data()
         self.graphicsView.setFocus()
@@ -383,9 +396,9 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
     def next_annotated_image(self):
         """(Slot) Jump to the next image that has been annotated."""
         index = self.current_image
-        while(index < len(self.image_list)):
+        while index < len(self.image_list):
             image_name = self.image_list[index]
-            if image_name in self.data['images'] and len(self.data['images'][image_name]['annotations']) > 0:
+            if image_name in self.data['images'] and self.data['images'][image_name]['annotations']:
                 self.current_image = index + 1
                 break
             else:
@@ -403,9 +416,9 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
     def previous_annotated_image(self):
         """(Slot) Jump to the previous image that has been annotated."""
         index = self.current_image - 2
-        while(index >= 0):
+        while index >= 0:
             image_name = self.image_list[index]
-            if image_name in self.data['images'] and len(self.data['images'][image_name]['annotations']) > 0:
+            if image_name in self.data['images'] and self.data['images'][image_name]['annotations']:
                 self.current_image = index + 1
                 break
             else:
@@ -422,7 +435,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
 
     def resizeEvent(self, event):
         """Overload resizeEvent to fit image in graphics view."""
-        self.graphicsView.fitInView(self.graphicsScene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
+        self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
 
     def bbox_created(self, rect, show_assistant=True):
         """(Slot) save the newly created bbox and display it."""
@@ -485,11 +498,11 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
 
     def selection_changed(self, selected, deselected):
         """(Slot) Listen for deselection of rows to hide BBox Editor."""
-        if len(selected.indexes()) == 0:
+        if selected.indexes():
+            self.selected_row = selected.indexes()[0].row()
+        else:
             self.graphicsView.bbox_editor.hide()
             self.selected_row = -1
-        else:
-            self.selected_row = selected.indexes()[0].row()
         self.display_bboxes()
 
     def set_dirty(self, is_dirty):

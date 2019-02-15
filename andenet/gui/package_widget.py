@@ -54,21 +54,25 @@ class PackageWidget(QtWidgets.QWidget, PACK):
 
     def __init__(self, parent=None):
         """Class init function."""
-        QtWidgets.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
         self.label_cache = {}
         self.remap = {}
         self.globber = Globber()
         self.globber.finished.connect(self.display)
 
+        self.packager = None
+
         self.pushButtonSelectDirectory.clicked.connect(self.load_annotation_files)
         self.pushButtonPackage.clicked.connect(self.package)
 
         self.tableWidgetFiles.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidgetFiles.selectionModel().selectionChanged.connect(self.refresh_remap_table)
-        self.tableWidgetFiles.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tableWidgetFiles.horizontalHeader().setSectionResizeMode(0, \
+            QtWidgets.QHeaderView.Stretch)
 
-        self.tableWidgetRemap.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tableWidgetRemap.horizontalHeader().setSectionResizeMode(0, \
+            QtWidgets.QHeaderView.Stretch)
         self.tableWidgetRemap.cellChanged.connect(self.update_remap_dictionary)
 
         self.checkBoxTruncated.stateChanged.connect(self.refresh_remap_table)
@@ -88,8 +92,8 @@ class PackageWidget(QtWidgets.QWidget, PACK):
             # TODO: Store labels in dictionary to prevent having to re read from file on changes
             labels = self.summarize_labels(file_name)
             string = ''
-            for c in labels:
-                string += c + ': ' + str(labels[c]) + "\n"
+            for class_name in labels:
+                string += class_name + ': ' + str(labels[class_name]) + "\n"
             item = QtWidgets.QTableWidgetItem(string)
             item.setFlags(QtCore.Qt.NoItemFlags)
             self.tableWidgetFiles.setItem(index, 1, item)
@@ -113,8 +117,6 @@ class PackageWidget(QtWidgets.QWidget, PACK):
         difficult = self.checkBoxDifficult.isChecked()
         examples = []
         masks = {}
-        train_examples = []
-        validation_examples = []
         # Loop through all of the selected rows
         for index in self.tableWidgetFiles.selectionModel().selectedRows():
             file_name = self.tableWidgetFiles.item(index.row(), 0).text()
@@ -145,7 +147,7 @@ class PackageWidget(QtWidgets.QWidget, PACK):
                         pass
                     else:
                         example['annotations'].append(annotation)
-                if len(example['annotations']) > 0:
+                if example['annotations']:
                     examples.append(example)
         random.shuffle(examples)
 
@@ -182,7 +184,8 @@ class PackageWidget(QtWidgets.QWidget, PACK):
         difficult = not self.checkBoxDifficult.isChecked()
         for index in self.tableWidgetFiles.selectionModel().selectedRows():
             file = self.tableWidgetFiles.item(index.row(), 0).text()
-            label_summary = self.summarize_labels(file, truncated=truncated, occluded=occluded, difficult=difficult)
+            label_summary = self.summarize_labels(file, truncated=truncated, \
+                occluded=occluded, difficult=difficult)
             for label in label_summary:
                 if label in labels:
                     labels[label] += label_summary[label]
@@ -215,7 +218,8 @@ class PackageWidget(QtWidgets.QWidget, PACK):
             for file in data['images']:
                 for annotation in data['images'][file]['annotations']:
                     if annotation['label'] not in self.label_cache[file_name]:
-                        self.label_cache[file_name][annotation['label']] = {'full': 0, 'truncated': 0, 'occluded': 0, 'difficult': 0}
+                        self.label_cache[file_name][annotation['label']] = {'full': 0, \
+                            'truncated': 0, 'occluded': 0, 'difficult': 0}
 
                     if annotation['truncated'] == 'Y':
                         self.label_cache[file_name][annotation['label']]['truncated'] += 1

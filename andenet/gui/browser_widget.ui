@@ -117,7 +117,12 @@
              </item>
              <item>
               <property name="text">
-               <string>YOLOv3 Format</string>
+               <string>Darknet YOLOv3</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>COCO</string>
               </property>
              </item>
             </widget>

@@ -23,7 +23,7 @@ Install GUI libraries:
 ``` bash
 sudo apt install python3-pyqt5 python3-tk
 ```
-install pip3 and install / upgrade dependencies:
+Install pip3 and install / upgrade dependencies:
 
 ```bash
 sudo apt install python3-pip

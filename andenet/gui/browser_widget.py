@@ -35,16 +35,19 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
 
     def __init__(self, parent=None):
         """Class init function."""
-        QtWidgets.QWidget.__init__(self)
+        QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
         self.labels = None
         self.metadata = None
         self.image_data = None
         self.current_record = 0
         self.exporter = None
+        self.qt_image = None
 
-        self.graphicsScene = QtWidgets.QGraphicsScene()
-        self.graphicsView.setScene(self.graphicsScene)
+        self.pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3)
+
+        self.graphics_scene = QtWidgets.QGraphicsScene()
+        self.graphicsView.setScene(self.graphics_scene)
 
         self.pushButtonSelectDirectory.clicked.connect(self.load)
         self.pushButtonNext.clicked.connect(self.next)
@@ -67,23 +70,26 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         width = img.size[0]
         height = img.size[1]
         # Display the image in the graphhics view
-        self.qImage = ImageQt.ImageQt(img)
-        self.graphicsScene.clear()
-        self.graphicsScene.addPixmap(QtGui.QPixmap.fromImage(self.qImage))
-        self.graphicsView.fitInView(self.graphicsScene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
-        self.graphicsView.setSceneRect(self.graphicsScene.itemsBoundingRect())
+        self.qt_image = ImageQt.ImageQt(img)
+        self.graphics_scene.clear()
+        self.graphics_scene.addPixmap(QtGui.QPixmap.fromImage(self.qt_image))
+        self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(), \
+            QtCore.Qt.KeepAspectRatio)
+        self.graphicsView.setSceneRect(self.graphics_scene.itemsBoundingRect())
         # Add bounding boxes and labels.
         for annotation in data['annotations']:
             bbox = annotation['bbox']
             top_left = QtCore.QPointF(bbox['xmin'] * width, bbox['ymin'] * height)
             bottom_right = QtCore.QPointF(bbox['xmax'] * width, bbox['ymax'] * height)
             rect = QtCore.QRectF(top_left, bottom_right)
-            graphics_item = self.graphicsScene.addRect(rect, QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3))
+            graphics_item = self.graphics_scene.addRect(rect, self.pen)
             # display annotation data center in bounding box.
             if self.checkBoxDisplayAnnotationData.isChecked():
                 font = QtGui.QFont()
                 font.setPointSize(int(rect.width() * 0.065))
-                content = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}".format(annotation['label'], annotation['truncated'], annotation['occluded'], annotation['difficult'])
+                content = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}".format( \
+                    annotation['label'], annotation['truncated'], \
+                    annotation['occluded'], annotation['difficult'])
                 text = QtWidgets.QGraphicsTextItem(content)
                 text.setFont(font)
                 text.setPos(rect.topLeft().toPoint())
@@ -102,17 +108,25 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
                 from andenet.exporter.tfrecord import Exporter
                 module_loaded = True
             except ModuleNotFoundError:
-                QtWidgets.QMessageBox.critical(self, 'Export', 'Required Tensorflow modules not found.\n\nPlease review install requirements.')
-        elif export_to == 'YOLOv3 Format':
+                QtWidgets.QMessageBox.critical(self, 'Export', \
+                    'Required Tensorflow modules not found.\n\n' \
+                    'Please review install requirements.')
+        elif export_to == 'Darknet YOLOv3':
             try:
                 from andenet.exporter.yolo import Exporter
                 module_loaded = True
             except ModuleNotFoundError:
-                QtWidgets.QMessageBox.critical(self, 'Export', 'Required Torch or Yolov3 modules not found.\n\nPlease review install requirements.')
+                QtWidgets.QMessageBox.critical(self, 'Export', \
+                    'Required Torch or Yolov3 modules not found.\n\n' \
+                    'Please review install requirements.')
+        elif export_to == 'COCO':
+            from andenet.exporter.coco import Exporter
+            module_loaded = True
         if module_loaded:
             directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
             if directory != '':
-                self.exporter = Exporter(directory, self.metadata, self.image_data, self.labels, validation_split)
+                self.exporter = Exporter(directory, self.metadata, \
+                    self.image_data, self.labels, validation_split)
                 self.progressBar.setRange(0, len(self.metadata))
                 self.exporter.progress.connect(self.progressBar.setValue)
                 self.exporter.exported.connect(self.export_finished)
@@ -162,5 +176,6 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
             self.display()
 
     def resizeEvent(self, event):
-        """Override of virtual function to resize contents of graphics view when widget is resized."""
-        self.graphicsView.fitInView(self.graphicsScene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
+        """Override of virtual function to resize contents of graphics view."""
+        self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(), \
+            QtCore.Qt.KeepAspectRatio)

@@ -28,7 +28,7 @@ from PyQt5 import QtCore
 
 
 class Exporter(QtCore.QThread):
-    """Export annotated image examples into the Tensorflow TFRecord format."""
+    """Export annotated images into the Darknet yolov3 format."""
 
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal()
@@ -41,7 +41,8 @@ class Exporter(QtCore.QThread):
             directory (str): Destination directory
             metadata (dict): List of all of the annotated examples to be used for trianing
             image_data (File): File handler to image data
-            split (float): Percent of training data to use for validation
+            labels (list): Class/label names
+            validation_split (float): Percent of training data to use for validation
         """
         QtCore.QThread.__init__(self)
         self.directory = directory
