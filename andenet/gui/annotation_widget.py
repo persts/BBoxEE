@@ -31,14 +31,14 @@ from andenet import schema
 from andenet.gui import AnnotationAssistant
 from andenet.gui import AnnotatorDialog
 
-
 LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotation_widget.ui'))
+# TODO: Break this class / widget up into multiple widgets / components.
 
 
 class AnnotationWidget(QtWidgets.QWidget, LABEL):
     """Widget for annotating images."""
 
-    def __init__(self, parent=None):
+    def __init__(self, config_data, parent=None):
         """Class init function."""
         QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
@@ -52,7 +52,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.mask = None
         self.data = None
         self.dirty = False
-        self.assistant = AnnotationAssistant(self)
+        self.assistant = AnnotationAssistant(config_data['labels'], self)
         self.assistant.submitted.connect(self.update_annotation)
         self.image = None
         self.qt_image = None
@@ -67,6 +67,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.graphicsView.created.connect(self.bbox_created)
         self.graphicsView.resized.connect(self.update_bbox)
 
+        self.pushButtonApplyLicense.clicked.connect(self.apply_license)
         self.pushButtonAnnotatedNext.clicked.connect(self.next_annotated_image)
         self.pushButtonAnnotatedPrevious.clicked.connect(self.previous_annotated_image)
         self.pushButtonDirectory.clicked.connect(self.load_from_directory)
@@ -83,6 +84,14 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.tableWidgetLabels.cellChanged.connect(self.cell_changed)
         self.tableWidgetLabels.cellDoubleClicked.connect(self.delete_row)
         self.checkBoxDisplayAnnotationData.clicked.connect(self.display_bboxes)
+
+        self.last_license_index = 0
+        self.last_license_attribution = ''
+        self.licenses = config_data['licenses']
+        for entry in self.licenses:
+            self.comboBoxLicense.addItem(entry['name'], entry['url'])
+        self.comboBoxLicense.currentIndexChanged.connect(self.update_license)
+        self.lineEditAttribution.textEdited.connect(self.update_license)
 
         self.tableWidgetLabels.horizontalHeader().setStretchLastSection(False)
         self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, \
@@ -187,6 +196,14 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.annotator.finished.connect(self.annotation_complete)
         self.pushButtonAnnotate.setEnabled(True)
 
+    def apply_license(self):
+        if self.data is not None:
+            for image in self.data['images']:
+                if 'annotations' in self.data['images'][image] and self.data['images'][image]['annotations']:
+                    self.data['images'][image]['attribution'] = self.last_license_attribution
+                    self.data['images'][image]['license'] = self.comboBoxLicense.itemText(self.last_license_index)
+                    self.data['images'][image]['license_url'] = self.comboBoxLicense.itemData(self.last_license_index)
+
     def cell_changed(self, row, column):
         """(Slot) Update annotation data on change."""
         text = self.tableWidgetLabels.item(row, column).text()
@@ -282,6 +299,25 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
                         text.setParentItem(graphics_item)
                     self.bboxes.append(graphics_item)
 
+    def display_license(self):
+        self.comboBoxLicense.blockSignals(True)
+        if self.current_file_name in self.data['images']:
+            record = self.data['images'][self.current_file_name]
+            if 'license' in record and record['license'] != '':
+                self.last_license_index = 0
+                self.last_license_attribution = record['attribution']
+                index = self.comboBoxLicense.findData(record['license_url'])
+                if index != -1:
+                    self.last_license_index = index
+                self.comboBoxLicense.setCurrentIndex(self.last_license_index)
+                self.lineEditAttribution.setText(self.last_license_attribution)
+            else: 
+                self.lineEditAttribution.setText('')
+                self.comboBoxLicense.setCurrentIndex(0)
+        else: 
+                self.lineEditAttribution.setText('')
+                self.comboBoxLicense.setCurrentIndex(0)
+        self.comboBoxLicense.blockSignals(False)
     def jump_to_image(self):
         """(Slot) Just to a specific image when when line edit changes."""
         try:
@@ -374,6 +410,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         img = None
         self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
         self.graphicsView.setSceneRect(self.graphics_scene.itemsBoundingRect())
+        self.display_license()
         self.display_bboxes()
         self.display_annotation_data()
         self.graphicsView.setFocus()
@@ -454,6 +491,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             self.display_annotation_data()
             self.selected_row = self.tableWidgetLabels.rowCount() - 1
         self.display_bboxes()
+        self.save_license(display=True)
         if show_assistant:
             pos = self.mapToGlobal(self.graphicsView.pos())
             self.assistant.move(pos.x() + (self.graphicsView.width() - self.assistant.width()) / 2, pos.y() + (self.graphicsView.height() - self.assistant.height()) / 2)
@@ -471,6 +509,15 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             self.set_dirty(False)
             saved = True
         return saved
+    
+    def save_license(self, display=False):
+        self.set_dirty(True)
+        if self.data is not None and self.current_file_name in self.data['images']:
+            self.data['images'][self.current_file_name]['attribution'] = self.last_license_attribution
+            self.data['images'][self.current_file_name]['license'] = self.comboBoxLicense.itemText(self.last_license_index)
+            self.data['images'][self.current_file_name]['license_url'] = self.comboBoxLicense.itemData(self.last_license_index)
+        if display:
+            self.display_license()
 
     def select_annotator(self):
         self.annotator_selecter.show()
@@ -536,3 +583,8 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             annotation['bbox']['xmax'] = rect.right() / self.current_image_size[0]
             annotation['bbox']['ymin'] = rect.top() / self.current_image_size[1]
             annotation['bbox']['ymax'] = rect.bottom() / self.current_image_size[1]
+
+    def update_license(self, index = 0):
+        self.last_license_index = self.comboBoxLicense.currentIndex()
+        self.last_license_attribution = self.lineEditAttribution.text()
+        self.save_license()

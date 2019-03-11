@@ -23,6 +23,7 @@
 # --------------------------------------------------------------------------
 from .annotation_assistant import AnnotationAssistant
 from .annotator_dialog import AnnotatorDialog
+from .coco_dialog import CocoDialog
 
 from .annotation_widget import AnnotationWidget
 from .package_widget import PackageWidget

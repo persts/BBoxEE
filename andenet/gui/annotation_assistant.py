@@ -32,16 +32,14 @@ class AnnotationAssistant(QtWidgets.QDialog, LABEL):
 
     submitted = QtCore.pyqtSignal(dict)
 
-    def __init__(self, parent=None):
+    def __init__(self, labels, parent=None):
         """Class init function."""
-        QtWidgets.QWidget.__init__(self)
+        QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
         self.setWindowTitle('Annotation Assitant')
         self.setModal(True)
-        file = open('labels.txt')
-        for line in file:
-            self.comboBoxLabels.addItem(line.rstrip())
-        file.close()
+        for entry in labels:
+            self.comboBoxLabels.addItem(entry)
         self.pushButtonSubmit.clicked.connect(self.submit)
 
     def submit(self):

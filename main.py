@@ -22,20 +22,31 @@
 #
 # --------------------------------------------------------------------------
 import sys
+import json
 from PyQt5 import QtWidgets
 
 from andenet.gui import PackageWidget
 from andenet.gui import AnnotationWidget
 from andenet.gui import BrowserWidget
 
-app = QtWidgets.QApplication(sys.argv)
-gui = QtWidgets.QMainWindow()
-gui.setWindowTitle('Animal Detection Network')
-widget = QtWidgets.QTabWidget()
-widget.addTab(AnnotationWidget(), "Annotate")
-widget.addTab(PackageWidget(), 'Package')
-widget.addTab(BrowserWidget(), 'Browse && Export')
-gui.setCentralWidget(widget)
-gui.setGeometry(10, 10, 1200, 700)
-gui.show()
-sys.exit(app.exec_())
+if __name__ == "__main__":
+    try:
+        FILE = open("config.json", 'r')
+        try:
+            CONFIG = json.load(FILE)
+            APP = QtWidgets.QApplication(sys.argv)
+            GUI = QtWidgets.QMainWindow()
+            GUI.setWindowTitle('Animal Detection Network')
+            WIDGET = QtWidgets.QTabWidget()
+            WIDGET.addTab(AnnotationWidget(CONFIG), "Annotate")
+            WIDGET.addTab(PackageWidget(), 'Package')
+            WIDGET.addTab(BrowserWidget(), 'Browse && Export')
+            GUI.setCentralWidget(WIDGET)
+            GUI.setGeometry(10, 10, 1200, 700)
+            GUI.show()
+            sys.exit(APP.exec_())
+        except json.decoder.JSONDecodeError as error:
+            print('Error found in config file: {}'.format(error))
+        FILE.close()
+    except FileNotFoundError:
+        print('Config file was not found.')

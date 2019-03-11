@@ -51,6 +51,7 @@ class Exporter(QtCore.QThread):
         self.image_data = image_data
         self.labels = labels
         self.train_size = int((1.0 - validation_split) * len(self.metadata))
+        self.info = {}
 
     def run(self):
         """
@@ -74,9 +75,9 @@ class Exporter(QtCore.QThread):
 
         prefix = 'train_'
         img_path = os.path.join(image_train_path, prefix)
-        train = {'info': {}, 'images': [], 'annotations': [], \
+        train = {'info': self.info, 'images': [], 'annotations': [], \
             'licenses': [], 'categories': categories}
-        val = {'info': {}, 'images': [], 'annotations': [], \
+        val = {'info': self.info, 'images': [], 'annotations': [], \
             'licenses': [], 'categories': categories}
 
         current = train

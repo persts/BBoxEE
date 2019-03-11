@@ -137,6 +137,7 @@ class PackageWidget(QtWidgets.QWidget, PACK):
                 example['mask_name'] = data['mask_name']
                 example['attribution'] = data['images'][file]['attribution']
                 example['license'] = data['images'][file]['license']
+                example['license_url'] = data['images'][file]['license_url']
                 # Loop through annotations and filter
                 for annotation in data['images'][file]['annotations']:
                     if truncated and annotation['truncated'] == 'Y':

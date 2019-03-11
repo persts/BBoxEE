@@ -26,6 +26,7 @@ import io
 import json
 from PIL import Image, ImageQt
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from andenet.gui import CocoDialog
 
 BROWSER, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'browser_widget.ui'))
 
@@ -43,6 +44,7 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         self.current_record = 0
         self.exporter = None
         self.qt_image = None
+        self.coco_info = {}
 
         self.pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), 3)
 
@@ -127,6 +129,10 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
             if directory != '':
                 self.exporter = Exporter(directory, self.metadata, \
                     self.image_data, self.labels, validation_split)
+                if export_to == 'COCO':
+                    diag = CocoDialog()
+                    diag.exec_()
+                    self.exporter.info = diag.info
                 self.progressBar.setRange(0, len(self.metadata))
                 self.exporter.progress.connect(self.progressBar.setValue)
                 self.exporter.exported.connect(self.export_finished)
