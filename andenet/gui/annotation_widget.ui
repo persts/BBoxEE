@@ -377,7 +377,7 @@
               <bool>false</bool>
              </property>
              <property name="text">
-              <string>Select AnnotaterLoad</string>
+              <string>Select Model</string>
              </property>
             </widget>
            </item>
