@@ -100,6 +100,8 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.comboBoxLicense.currentIndexChanged.connect(self.update_license)
         self.lineEditAttribution.textEdited.connect(self.update_license)
 
+        self.tableWidgetLabels.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
+        self.tableWidgetLabels.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tableWidgetLabels.horizontalHeader().setStretchLastSection(False)
         self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, \
             QtWidgets.QHeaderView.Stretch)
@@ -242,7 +244,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
             if text in ['Y', 'y', 'N', 'n']:
                 text = text.upper()
             else:
-                text = self.data['images'][self.current_file_name][row][header]
+                text = self.data['images'][self.current_file_name]['annotations'][row][header]
                 self.tableWidgetLabels.setItem(row, column, QtWidgets.QTableWidgetItem(text))
         self.data['images'][self.current_file_name]['annotations'][row][header] = text
         self.set_dirty(True)
