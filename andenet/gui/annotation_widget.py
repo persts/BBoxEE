@@ -75,9 +75,9 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
         self.pushButtonLabelFile.clicked.connect(self.load_from_file)
         self.pushButtonLabelFile.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pushButtonLabelFile.setIcon(QtGui.QIcon(':/icons/edit.svg'))
+        self.pushButtonLabelFile.setIcon(QtGui.QIcon(':/icons/file.svg'))
 
-        self.pushButtonEditMode.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonEditMode.clicked.connect(self.toggle_edit_mode)
         self.pushButtonEditMode.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pushButtonEditMode.setIcon(QtGui.QIcon(':/icons/edit.svg'))
 
