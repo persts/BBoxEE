@@ -100,7 +100,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.comboBoxLicense.currentIndexChanged.connect(self.update_license)
         self.lineEditAttribution.textEdited.connect(self.update_license)
 
-        self.tableWidgetLabels.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectItems)
+        self.tableWidgetLabels.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.tableWidgetLabels.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.tableWidgetLabels.horizontalHeader().setStretchLastSection(False)
         self.tableWidgetLabels.horizontalHeader().setSectionResizeMode(0, \
@@ -232,9 +232,7 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.display_bboxes()
         self.save_license(display=True)
         if show_assistant:
-            pos = self.mapToGlobal(self.graphicsView.pos())
-            self.assistant.move(pos.x() + (self.graphicsView.width() - self.assistant.width()) / 2, pos.y() + (self.graphicsView.height() - self.assistant.height()) / 2)
-            self.assistant.show()
+            self.show_assistant()
 
     def cell_changed(self, row, column):
         """(Slot) Update annotation data on change."""
@@ -575,9 +573,11 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.load_image()
 
     def selection_changed(self, selected, deselected):
-        """(Slot) Listen for deselection of rows to hide BBox Editor."""
+        """(Slot) Listen for deselection of rows."""
         if selected.indexes():
             self.selected_row = selected.indexes()[0].row()
+            if self.checkBoxAnnotationAssistant.isChecked():
+                self.show_assistant()
         else:
             self.selected_row = -1
         self.display_bboxes()
@@ -594,6 +594,11 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         else:
             self.dirty = False
             self.pushButtonSave.setEnabled(False)
+
+    def show_assistant(self):
+        pos = self.mapToGlobal(self.graphicsView.pos())
+        self.assistant.move(pos.x() + (self.graphicsView.width() - self.assistant.width()) / 2, pos.y() + (self.graphicsView.height() - self.assistant.height()) / 2)
+        self.assistant.show()
 
     def toggle_edit_mode(self):
         if self.pushButtonEditMode.isChecked():

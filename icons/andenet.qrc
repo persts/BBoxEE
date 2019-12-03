@@ -11,5 +11,7 @@
     <file>skip_previous.svg</file>
     <file>delete.svg</file>
     <file>remove.svg</file>
+    <file>file.svg</file>
+    <file>folder.svg</file>
   </qresource>
 </RCC>
