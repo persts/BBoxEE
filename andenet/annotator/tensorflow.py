@@ -36,7 +36,7 @@ class Annotator(QtCore.QThread):
     progress = QtCore.pyqtSignal(int, str, dict)
     finished = QtCore.pyqtSignal(dict)
 
-    def __init__(self, directory):
+    def __init__(self, inference_graph, label_map):
         """Class init function."""
         QtCore.QThread.__init__(self)
         self.image_list = []
@@ -44,13 +44,13 @@ class Annotator(QtCore.QThread):
         self.image_directory = ''
         self.data = None
         self.detection_graph = tf.Graph()
-        self.label_map = label_map_util.load_labelmap(directory + os.path.sep + 'label_map.pbtxt')
+        self.label_map = label_map_util.load_labelmap(label_map)
         self.categories = label_map_util.convert_label_map_to_categories(self.label_map, max_num_classes=100, use_display_name=True)
         self.category_index = label_map_util.create_category_index(self.categories)
         od_graph_def = tf.GraphDef()
         with self.detection_graph.as_default():
             od_graph_def = tf.GraphDef()
-            with tf.gfile.GFile(directory + os.path.sep + 'frozen_inference_graph.pb', 'rb') as fid:
+            with tf.gfile.GFile(inference_graph, 'rb') as fid:
                 serialized_graph = fid.read()
                 od_graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(od_graph_def, name='')

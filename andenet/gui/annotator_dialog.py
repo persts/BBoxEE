@@ -41,8 +41,12 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
 
         # TODO: Split this up into smaller components to avoid future name collison
         self.pushButtonTensorflow.clicked.connect(self.tensorflow_selected)
-        self.pushButtonYolo.clicked.connect(self.yolo_selected)
+        self.pushButtonTFGraph.clicked.connect(self.get_inference_graph)
+        self.interence_graph = None
+        self.pushButtonLabelMap.clicked.connect(self.get_label_map)
+        self.label_map = None
 
+        self.pushButtonYolo.clicked.connect(self.yolo_selected)
         self.data_config = None
         self.pushButtonDataConfig.clicked.connect(self.get_data_config)
         self.network_config = None
@@ -54,11 +58,11 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
         """Load a frozen inference graph and label map."""
         try:
             from andenet.annotator.tensorflow import Annotator
-            directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select Model Directory')
-            if directory != '':
-                self.annotator = Annotator(directory)
-                self.selected.emit(self.annotator)
-                self.hide()
+            graph = self.lineEditTFGraph.text()
+            label_map = self.lineEditLabelMap.text()
+            self.annotator = Annotator(graph, label_map)
+            self.selected.emit(self.annotator)
+            self.hide()
         except ModuleNotFoundError:
             QtWidgets.QMessageBox.critical(self, 'Export', 'Required Tensorflow modules not found.\n\nPlease review install requirements.')
 
@@ -77,6 +81,20 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
 
 
     # Helper functions
+    def get_inference_graph(self):
+        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Frozen Inference Graph', self.last_dir, 'TF Graph (*.pb)')
+        if file_name[0] != '':
+            self.lineEditTFGraph.setText(file_name[0])
+            self.last_dir = os.path.split(file_name[0])[0]
+            self.pushButtonLabelMap.setDisabled(False)
+        
+    def get_label_map(self):
+        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Label Map', self.last_dir, 'Label Map (*.pbtxt)')
+        if file_name[0] != '':
+            self.lineEditLabelMap.setText(file_name[0])
+            self.last_dir = os.path.split(file_name[0])[0]
+            self.pushButtonTensorflow.setDisabled(False)
+
     def get_data_config(self):
         file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Data Config', self.last_dir, 'Data (*.data)')
         if file_name[0] != '':
