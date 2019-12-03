@@ -35,15 +35,19 @@ if __name__ == "__main__":
         try:
             CONFIG = json.load(FILE)
             APP = QtWidgets.QApplication(sys.argv)
+            screen = APP.desktop().availableGeometry()
             GUI = QtWidgets.QMainWindow()
             GUI.setWindowTitle('Animal Detection Network')
             WIDGET = QtWidgets.QTabWidget()
-            WIDGET.addTab(AnnotationWidget(CONFIG), "Annotate")
+            icon_size = int(screen.height() * 0.03)
+            WIDGET.addTab(AnnotationWidget(CONFIG, icon_size), 'Annotate')
             WIDGET.addTab(PackageWidget(), 'Package')
             WIDGET.addTab(BrowserWidget(), 'Browse && Export')
             GUI.setCentralWidget(WIDGET)
-            GUI.setGeometry(10, 10, 1200, 700)
+            GUI.resize(int(screen.width() * .95), screen.height() * 0.95)
+            GUI.move(int(screen.width() * .05) // 2, 0)
             GUI.show()
+
             sys.exit(APP.exec_())
         except json.decoder.JSONDecodeError as error:
             print('Error found in config file: {}'.format(error))

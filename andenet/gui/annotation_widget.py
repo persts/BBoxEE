@@ -31,14 +31,14 @@ from andenet import schema
 from andenet.gui import AnnotationAssistant
 from andenet.gui import AnnotatorDialog
 
-LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotation_widget.ui'))
+WIDGET, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotation_widget.ui'))
 # TODO: Break this class / widget up into multiple widgets / components.
 
 
-class AnnotationWidget(QtWidgets.QWidget, LABEL):
+class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     """Widget for annotating images."""
 
-    def __init__(self, config_data, parent=None):
+    def __init__(self, config_data, icon_size=24, parent=None):
         """Class init function."""
         QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
@@ -69,19 +69,51 @@ class AnnotationWidget(QtWidgets.QWidget, LABEL):
         self.graphicsView.select_bbox.connect(self.select_bbox)
         self.graphicsView.zoom_event.connect(self.disable_edit_mode)
 
-        self.pushButtonEditMode.clicked.connect(self.toggle_edit_mode)
+        self.pushButtonDirectory.clicked.connect(self.load_from_directory)
+        self.pushButtonDirectory.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonDirectory.setIcon(QtGui.QIcon(':/icons/folder.svg'))
+
+        self.pushButtonLabelFile.clicked.connect(self.load_from_file)
+        self.pushButtonLabelFile.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonLabelFile.setIcon(QtGui.QIcon(':/icons/edit.svg'))
+
+        self.pushButtonEditMode.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonEditMode.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonEditMode.setIcon(QtGui.QIcon(':/icons/edit.svg'))
+
         self.pushButtonClearPoints.clicked.connect(self.graphicsView.clear_points)
+        self.pushButtonClearPoints.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonClearPoints.setIcon(QtGui.QIcon(':/icons/clear.svg'))
+
         self.pushButtonZoomIn.clicked.connect(self.graphicsView.zoom_in)
+        self.pushButtonZoomIn.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonZoomIn.setIcon(QtGui.QIcon(':/icons/zoom_in.svg'))
+
         self.pushButtonZoomOut.clicked.connect(self.graphicsView.zoom_out)
+        self.pushButtonZoomOut.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonZoomOut.setIcon(QtGui.QIcon(':/icons/zoom_out.svg'))
+
+        self.pushButtonAnnotatedNext.clicked.connect(self.next_annotated_image)
+        self.pushButtonAnnotatedNext.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonAnnotatedNext.setIcon(QtGui.QIcon(':/icons/skip_next.svg'))
+
+        self.pushButtonAnnotatedPrevious.clicked.connect(self.previous_annotated_image)
+        self.pushButtonAnnotatedPrevious.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonAnnotatedPrevious.setIcon(QtGui.QIcon(':/icons/skip_previous.svg'))
+        
+        self.pushButtonNext.clicked.connect(self.next_image)
+        self.pushButtonNext.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonNext.setIcon(QtGui.QIcon(':/icons/next.svg'))
+
+        self.pushButtonPrevious.clicked.connect(self.previous_image)
+        self.pushButtonPrevious.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonPrevious.setIcon(QtGui.QIcon(':/icons/previous.svg'))
+
+        self.pushButtonClear.clicked.connect(self.clear_annotations)
+        self.pushButtonClear.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonClear.setIcon(QtGui.QIcon(':/icons/delete.svg'))
 
         self.pushButtonApplyLicense.clicked.connect(self.apply_license)
-        self.pushButtonAnnotatedNext.clicked.connect(self.next_annotated_image)
-        self.pushButtonAnnotatedPrevious.clicked.connect(self.previous_annotated_image)
-        self.pushButtonDirectory.clicked.connect(self.load_from_directory)
-        self.pushButtonLabelFile.clicked.connect(self.load_from_file)
-        self.pushButtonNext.clicked.connect(self.next_image)
-        self.pushButtonPrevious.clicked.connect(self.previous_image)
-        self.pushButtonClear.clicked.connect(self.clear_annotations)
         self.pushButtonSelectAnnotater.clicked.connect(self.select_annotator)
         self.pushButtonAnnotate.clicked.connect(self.annotate)
         self.pushButtonSave.clicked.connect(self.save)
