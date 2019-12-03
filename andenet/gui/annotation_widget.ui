@@ -30,149 +30,152 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_2">
+   <item row="0" column="1" rowspan="2">
+    <layout class="QVBoxLayout" name="verticalLayout_3">
      <item>
-      <widget class="QPushButton" name="pushButtonPrevious">
-       <property name="maximumSize">
-        <size>
-         <width>50</width>
-         <height>16777215</height>
-        </size>
-       </property>
-       <property name="toolTip">
-        <string>Previous image</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>icons/go-previous.png</normaloff>icons/go-previous.png</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer">
+      <spacer name="verticalSpacer">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Vertical</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
-         <height>20</height>
+         <width>20</width>
+         <height>40</height>
         </size>
        </property>
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButtonAnnotatedPrevious">
+      <widget class="QPushButton" name="pushButtonEditMode">
        <property name="toolTip">
-        <string>Previous Annotated Image</string>
+        <string>Toggle edit mode</string>
+       </property>
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
        </property>
        <property name="text">
         <string/>
        </property>
        <property name="icon">
-        <iconset>
-         <normaloff>icons/go-first.png</normaloff>icons/go-first.png</iconset>
+        <iconset resource="../../icons/andenet.qrc">
+         <normaloff>:/icons/edit.svg</normaloff>:/icons/edit.svg</iconset>
        </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_4">
-       <property name="text">
-        <string>Image:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLineEdit" name="lineEditCurrentImage">
-       <property name="maximumSize">
+       <property name="iconSize">
         <size>
-         <width>50</width>
-         <height>16777215</height>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+       <property name="shortcut">
+        <string>Ctrl+S</string>
+       </property>
+       <property name="checkable">
+        <bool>true</bool>
+       </property>
+       <property name="checked">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonClearPoints">
+       <property name="toolTip">
+        <string>Clear points</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../../icons/andenet.qrc">
+         <normaloff>:/icons/remove.svg</normaloff>:/icons/remove.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
         </size>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QLabel" name="labelImages">
-       <property name="text">
-        <string>of 0</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QPushButton" name="pushButtonAnnotatedNext">
-       <property name="toolTip">
-        <string>Next Annotated Image</string>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
-       <property name="icon">
-        <iconset>
-         <normaloff>icons/go-last.png</normaloff>icons/go-last.png</iconset>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <spacer name="horizontalSpacer_2">
+      <spacer name="verticalSpacer_3">
        <property name="orientation">
-        <enum>Qt::Horizontal</enum>
+        <enum>Qt::Vertical</enum>
        </property>
        <property name="sizeHint" stdset="0">
         <size>
-         <width>40</width>
-         <height>20</height>
+         <width>20</width>
+         <height>40</height>
         </size>
        </property>
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButtonClear">
-       <property name="maximumSize">
-        <size>
-         <width>50</width>
-         <height>16777215</height>
-        </size>
-       </property>
+      <widget class="QPushButton" name="pushButtonZoomIn">
        <property name="toolTip">
-        <string>Clear Annotations</string>
+        <string>Zoom in</string>
        </property>
        <property name="text">
         <string/>
        </property>
        <property name="icon">
-        <iconset>
-         <normaloff>icons/edit-clear.png</normaloff>icons/edit-clear.png</iconset>
+        <iconset resource="../../icons/andenet.qrc">
+         <normaloff>:/icons/zoom_in.svg</normaloff>:/icons/zoom_in.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButtonNext">
-       <property name="maximumSize">
-        <size>
-         <width>50</width>
-         <height>16777215</height>
-        </size>
-       </property>
+      <widget class="QPushButton" name="pushButtonZoomOut">
        <property name="toolTip">
-        <string>Next image</string>
+        <string>Zoom out</string>
        </property>
        <property name="text">
         <string/>
        </property>
        <property name="icon">
-        <iconset>
-         <normaloff>icons/go-next.png</normaloff>icons/go-next.png</iconset>
+        <iconset resource="../../icons/andenet.qrc">
+         <normaloff>:/icons/zoom_out.svg</normaloff>:/icons/zoom_out.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
        </property>
       </widget>
+     </item>
+     <item>
+      <spacer name="verticalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>40</height>
+        </size>
+       </property>
+      </spacer>
      </item>
     </layout>
    </item>
-   <item row="0" column="1" rowspan="2">
+   <item row="0" column="2" rowspan="2">
+    <widget class="Line" name="line_5">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="3" rowspan="2">
     <widget class="QFrame" name="frame_2">
      <property name="minimumSize">
       <size>
@@ -501,6 +504,178 @@
      </layout>
     </widget>
    </item>
+   <item row="1" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QPushButton" name="pushButtonPrevious">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Previous image</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../../icons/andenet.qrc">
+         <normaloff>:/icons/previous.svg</normaloff>:/icons/previous.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonAnnotatedPrevious">
+       <property name="toolTip">
+        <string>Previous annotated image</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../../icons/andenet.qrc">
+         <normaloff>:/icons/skip_previous.svg</normaloff>:/icons/skip_previous.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_4">
+       <property name="text">
+        <string>Image:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLineEdit" name="lineEditCurrentImage">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="labelImages">
+       <property name="text">
+        <string>of 0</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonAnnotatedNext">
+       <property name="toolTip">
+        <string>Next annotated image</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../../icons/andenet.qrc">
+         <normaloff>:/icons/skip_next.svg</normaloff>:/icons/skip_next.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonClear">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Clear annotations</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../../icons/andenet.qrc">
+         <normaloff>:/icons/delete.svg</normaloff>:/icons/delete.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButtonNext">
+       <property name="maximumSize">
+        <size>
+         <width>50</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="toolTip">
+        <string>Next image</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="icon">
+        <iconset resource="../../icons/andenet.qrc">
+         <normaloff>:/icons/next.svg</normaloff>:/icons/next.svg</iconset>
+       </property>
+       <property name="iconSize">
+        <size>
+         <width>24</width>
+         <height>24</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -510,6 +685,8 @@
    <header location="global">andenet/gui/annotation_graphicsview</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="../../icons/andenet.qrc"/>
+ </resources>
  <connections/>
 </ui>

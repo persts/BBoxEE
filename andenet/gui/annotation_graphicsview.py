@@ -22,52 +22,19 @@
 #
 # --------------------------------------------------------------------------
 from PyQt5 import QtWidgets, QtCore, QtGui
+from enum import Enum
+
+class Quad(Enum):
+    TL = 0
+    TR = 1
+    BR = 2
+    BL = 3
 
 
-class BBoxSizeGrip(QtWidgets.QSizeGrip):
-    """Extended version of QSizeGrip."""
-
-    resized = QtCore.pyqtSignal()
-
-    def __init__(self, parent=None):
-        """Class init function."""
-        QtWidgets.QSizeGrip.__init__(self, parent)
-
-    def mouseReleaseEvent(self, event):
-        """Overload of mouseReleaseEvent to emit a resize signal."""
-        self.resized.emit()
-
-
-class BBoxWidget(QtWidgets.QFrame):
-    """Custom QFrame to allow resizing of annotation bounding boxes."""
-
-    resized = QtCore.pyqtSignal()
-
-    def __init__(self, parent=None):
-        """Class init function."""
-        QtWidgets.QFrame.__init__(self, parent)
-        self.setMouseTracking(True)
-        self.setWindowFlags(QtCore.Qt.SubWindow)
-        self.layout = QtWidgets.QHBoxLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.setStyleSheet("BBoxWidget { border: 1px solid rgb(255, 0, 255);}")
-        self.grip1 = BBoxSizeGrip(self)
-        self.grip2 = BBoxSizeGrip(self)
-        self.grip1.resized.connect(self.resize_complete)
-        self.layout.addWidget(self.grip1, 0, QtCore.Qt.AlignLeft | QtCore.Qt.AlignTop)
-        self.grip2.resized.connect(self.resize_complete)
-        self.layout.addWidget(self.grip2, 0, QtCore.Qt.AlignRight | QtCore.Qt.AlignBottom)
-        self.hide()
-
-    def resize_complete(self):
-        """(Slot) Receives the resize signal from the BBoxSizeGrip and emits a resized signal."""
-        self.resized.emit()
-
-    def resizeEvent(self, event):
-        """Overload of the base resizeEvent."""
-        self.setGeometry(self.pos().x(), self.pos().y(), self.width(), self.height())
-        rectf = QtCore.QRectF(self.geometry())
-        self.parent().updateScene([rectf])
+class Mode(Enum):
+    PAN = 0
+    EDIT = 1
+    RESIZE = 2
 
 
 class AnnotationGraphicsView(QtWidgets.QGraphicsView):
@@ -75,116 +42,139 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     created = QtCore.pyqtSignal(QtCore.QRectF)
     resized = QtCore.pyqtSignal(QtCore.QRectF)
+    select_bbox = QtCore.pyqtSignal(QtCore.QPointF)
+    zoom_event = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         """Class init function."""
         QtWidgets.QGraphicsView.__init__(self, parent)
+        self.mode = Mode.PAN
         self.points = []
-        self.graphics_items = []
-        self.bbox_editor = BBoxWidget(self)
-        self.bbox_editor_last_rect = QtCore.QRectF()
+        self.point_graphics_items = []
         self.bbox = QtCore.QRectF()
-        self.bbox_editor.resized.connect(self.bbox_resized)
+        self.selected_bbox = None
+        self.quad = Quad.TL
         self.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
         self.brushes = [QtGui.QBrush(QtCore.Qt.blue, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.green, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.red, QtCore.Qt.SolidPattern)]
         self.pens = [QtGui.QPen(self.brushes[0], 2), QtGui.QPen(self.brushes[1], 2), QtGui.QPen(self.brushes[2], 2), QtGui.QPen(self.brushes[3], 2)]
 
-        self.horizontalScrollBar().valueChanged.connect(self.refreshBboxPosition)
-        self.verticalScrollBar().valueChanged.connect(self.refreshBboxPosition)
+    def clear_points(self):
+        for item in self.point_graphics_items:
+            self.scene().removeItem(item)
+            self.point_graphics_items = []
+            self.points = []
 
-    def get_bbox(self):
-        """Map the ROI location from scene coordinates to image coordinates.
-
-        Returns:
-            QRectF: The location of the ROI in image coordinates.
-        """
-        if self.bbox_editor is not None:
-            rect = self.mapToScene(self.bbox_editor.pos().x(), self.bbox_editor.pos().y(), self.bbox_editor.width(), self.bbox_editor.height()).boundingRect()
-            adjusted = False
-            # Check to see if ROI is completely on the scene, if not adjust to fit on scene.
-            if rect.left() < 0:
-                rect.setLeft(0.0)
-                adjusted = True
-            if rect.top() < 0:
-                rect.setTop(0.0)
-                adjusted = True
-            if rect.right() > self.sceneRect().right():
-                rect.setRight(self.sceneRect().right())
-                adjusted = True
-            if rect.bottom() > self.sceneRect().bottom():
-                rect.setBottom(self.sceneRect().bottom())
-                adjusted = True
-            if adjusted:
-                rect2 = self.mapFromScene(rect).boundingRect()
-                self.bbox_editor.setGeometry(rect2.left(), rect2.top(), rect2.width(), rect2.height())
-            self.bbox_editor_last_rect = rect
-        return rect
+    def mouseMoveEvent(self, event):
+        if self.mode == Mode.RESIZE:
+            point = self.mapToScene(event.pos())
+            rect = self.selected_bbox.rect()
+            if self.quad == Quad.TL:
+                rect.setTopLeft(point)
+            elif self.quad == Quad.TR:
+                rect.setTopRight(point)
+            elif self.quad == Quad.BR:
+                rect.setBottomRight(point)
+            else:
+                rect.setBottomLeft(point)
+            self.selected_bbox.setRect(rect)
+        else:
+            QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
 
     def mousePressEvent(self, event):
         """Overload of the mousePressEvent that stores mouse click positions in a list."""
-        if event.button() == QtCore.Qt.MiddleButton:
-            for item in self.graphics_items:
-                self.scene().removeItem(item)
-            self.graphics_items = []
-            self.points = []
-        elif event.button() == QtCore.Qt.RightButton:
-            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
-            new_event = QtGui.QMouseEvent(event.type(), event.pos(), QtCore.Qt.LeftButton, QtCore.Qt.LeftButton, event.modifiers())
-            QtWidgets.QGraphicsView.mousePressEvent(self, new_event)
-        else:
-            if len(self.scene().items()) > 0:
+        if len(self.scene().items()) > 0:
+            if event.button() == QtCore.Qt.MiddleButton:
+                self.clear_points()
+            elif self.mode == Mode.PAN:
+                self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+                QtWidgets.QGraphicsView.mousePressEvent(self, event)
+            else: # mode = Mode.EDIT
                 point = self.mapToScene(event.pos())
-                self.graphics_items.append(self.scene().addEllipse(QtCore.QRectF(point.x() - 5, point.y() - 5, 11, 11), self.pens[len(self.points)], self.brushes[len(self.points)]))
-                self.points.append(event.pos())
+                collect_points = True
+                if len(self.points) == 0:
+                    if self.selected_bbox is not None and self.selected_bbox.boundingRect().contains(point):
+                        self.mode = Mode.RESIZE
+                        center = self.selected_bbox.boundingRect().center()
+                        if point.x() < center.x() and point.y() < center.y():
+                            self.quad = Quad.TL
+                        elif point.x() > center.x() and point.y() < center.y():
+                            self.quad = Quad.TR
+                        elif point.x() > center.x() and point.y() > center.y():
+                            self.quad = Quad.BR
+                        else:
+                            self.quad = Quad.BL
+                    else:
+                        for graphic in self.scene().items():
+                            if type(graphic) == QtWidgets.QGraphicsRectItem:
+                                if graphic.boundingRect().contains(point):
+                                    collect_points = False
+                                    self.select_bbox.emit(point)
+                                    break
+                            
+                if collect_points and self.mode == Mode.EDIT:
+                    self.point_graphics_items.append(self.scene().addEllipse(QtCore.QRectF(point.x() - 5, point.y() - 5, 11, 11), self.pens[len(self.points)], self.brushes[len(self.points)]))
+                    self.points.append(event.pos())
             
 
     def mouseReleaseEvent(self, event):
         """Overload of the MouseReleaseEvent that will calculate the bounding box when four points are available."""
         self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
-        x_min = 100000000
-        y_min = 100000000
-        x_max = 0
-        y_max = 0
+        if self.mode == Mode.RESIZE:
+            rect = self.selected_bbox.rect()
+            self.verify_rect(rect)
+            self.selected_bbox.setRect(rect)
+            self.resized.emit(rect)
+            self.mode = Mode.EDIT
+        
         if len(self.points) == 4:
+            x_min = 100000000
+            y_min = 100000000
+            x_max = 0
+            y_max = 0
             for point in self.points:
                 x_min = min(x_min, point.x())
                 x_max = max(x_max, point.x())
                 y_min = min(y_min, point.y())
                 y_max = max(y_max, point.y())
-            for item in self.graphics_items:
+            for item in self.point_graphics_items:
                 self.scene().removeItem(item)
-            self.graphics_items = []
-            self.bbox_editor.setGeometry(x_min, y_min, x_max - x_min, y_max - y_min)
-            self.bbox_editor.show()
-            self.created.emit(self.get_bbox())
+            self.point_graphics_items = []
+            rect = QtCore.QRect(x_min, y_min, x_max - x_min, y_max - y_min)
+            rect = self.mapToScene(rect).boundingRect()
+            self.verify_rect(rect)
+            self.created.emit(rect)
             self.points = []
 
-    def bbox_resized(self):
-        """(Slot) Received bbox resized signal and emits another resize signal."""
-        self.resized.emit(self.get_bbox())
+    def set_edit_mode(self, enabled):
+        if enabled:
+            self.mode = Mode.EDIT
+        else:
+            self.mode = Mode.PAN
 
-    def refreshBboxPosition(self):
-        if self.bbox_editor.isVisible():
-            self.show_bbox_editor(self.bbox_editor_last_rect)
-
-    def resizeEvent(self, event):
-        self.refreshBboxPosition()
-
-    def show_bbox_editor(self, reference_rect):
-        """Redisplay the ROI editor.
-
-        Args:
-            reference_rect (QRectF): The geometry to use when redisplaying the ROI editor.
-        """
-        self.bbox_editor_last_rect = reference_rect
-        rect = self.mapFromScene(reference_rect).boundingRect()
-        self.bbox_editor.setGeometry(rect.left(), rect.top(), rect.width(), rect.height())
-        self.bbox_editor.show()
+    def verify_rect(self, rect):
+        if rect.left() < 0:
+            rect.setLeft(0.0)
+        if rect.top() < 0:
+            rect.setTop(0.0)
+        if rect.right() > self.sceneRect().right():
+            rect.setRight(self.sceneRect().right())
+        if rect.bottom() > self.sceneRect().bottom():
+            rect.setBottom(self.sceneRect().bottom())
 
     def wheelEvent(self, event):
         if len(self.scene().items()) > 0:
             if event.angleDelta().y() > 0:
-                self.scale(1.1, 1.1)
+                self.zoom_in()
             else:
-                self.scale(0.9, 0.9)
-            self.refreshBboxPosition()
+                self.zoom_out()
+
+    def zoom_in(self):
+        if len(self.scene().items()) > 0:
+            self.scale(1.1, 1.1)
+            self.zoom_event.emit()
+
+    def zoom_out(self):
+        if len(self.scene().items()) > 0:
+            self.scale(0.9, 0.9)
+            self.zoom_event.emit()
+
