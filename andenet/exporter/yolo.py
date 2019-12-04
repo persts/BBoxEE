@@ -82,36 +82,37 @@ class Exporter(QtCore.QThread):
         val = []
         current = train
         for count, rec in enumerate(self.metadata):
-            if count > self.train_size:
-                img_path = os.path.join(image_val_path, 'val_')
-                label_path = os.path.join(label_val_path, 'val_')
-                current = val
-            img_file = img_path + '{:010d}.jpg'.format(count)
-            label_file = label_path + '{:010d}.txt'.format(count)
-            current.append(img_file)
-            # Seek to the start of the data block then read in the image data
-            self.image_data.seek(rec['image_data']['start'])
-            raw = self.image_data.read(rec['image_data']['size'])
-            # Turn into a virtual file stream and load the image as if from disk
-            stream = io.BytesIO(raw)
-            img = Image.open(stream)
-            img.save(img_file)
-            img.close()
-            
-            file = open(label_file, 'w')
-            nl = ""
-            for a in rec['annotations']:
-                bbox = a['bbox']
-                label = self.labels.index(a['label'])
-                width = bbox['xmax'] - bbox['xmin']
-                height = bbox['ymax'] - bbox['ymin']
-                x = bbox['xmin'] + (width / 2.0)
-                y = bbox['ymin'] + (height / 2.0)
-                file.write("{}{} {} {} {} {}".format(nl, label, x, y, width, height))
-                nl = "\n"
-            file.close()
+            if 'flagged' not in rec or rec['flagged'] == False:
+                if count > self.train_size:
+                    img_path = os.path.join(image_val_path, 'val_')
+                    label_path = os.path.join(label_val_path, 'val_')
+                    current = val
+                img_file = img_path + '{:010d}.jpg'.format(count)
+                label_file = label_path + '{:010d}.txt'.format(count)
+                current.append(img_file)
+                # Seek to the start of the data block then read in the image data
+                self.image_data.seek(rec['image_data']['start'])
+                raw = self.image_data.read(rec['image_data']['size'])
+                # Turn into a virtual file stream and load the image as if from disk
+                stream = io.BytesIO(raw)
+                img = Image.open(stream)
+                img.save(img_file)
+                img.close()
+                
+                file = open(label_file, 'w')
+                nl = ""
+                for a in rec['annotations']:
+                    bbox = a['bbox']
+                    label = self.labels.index(a['label'])
+                    width = bbox['xmax'] - bbox['xmin']
+                    height = bbox['ymax'] - bbox['ymin']
+                    x = bbox['xmin'] + (width / 2.0)
+                    y = bbox['ymin'] + (height / 2.0)
+                    file.write("{}{} {} {} {} {}".format(nl, label, x, y, width, height))
+                    nl = "\n"
+                file.close()
 
-            # TODO: Really need to export the license information for each file
+                # TODO: Really need to export the license information for each file
 
             self.progress.emit(count + 1)
 

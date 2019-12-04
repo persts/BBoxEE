@@ -83,58 +83,59 @@ class Exporter(QtCore.QThread):
         current = train
         annotation_count = 0
         for count, rec in enumerate(self.metadata):
-            if count > self.train_size:
-                current = val
-                prefix = 'val_'
-                img_path = os.path.join(image_val_path, prefix)
-            img_file = img_path + '{:010d}.jpg'.format(count)
-            # Seek to the start of the data block then read in the image data
-            self.image_data.seek(rec['image_data']['start'])
-            raw = self.image_data.read(rec['image_data']['size'])
-            # Turn into a virtual file stream and load the image as if from disk
-            stream = io.BytesIO(raw)
-            img = Image.open(stream)
-            img.save(img_file)
-            size = img.size
-            img.close()
+            if 'flagged' not in rec or rec['flagged'] == False:
+                if count > self.train_size:
+                    current = val
+                    prefix = 'val_'
+                    img_path = os.path.join(image_val_path, prefix)
+                img_file = img_path + '{:010d}.jpg'.format(count)
+                # Seek to the start of the data block then read in the image data
+                self.image_data.seek(rec['image_data']['start'])
+                raw = self.image_data.read(rec['image_data']['size'])
+                # Turn into a virtual file stream and load the image as if from disk
+                stream = io.BytesIO(raw)
+                img = Image.open(stream)
+                img.save(img_file)
+                size = img.size
+                img.close()
 
-            # Build license object
-            if rec['license'] != '' and rec['license'] not in license_name:
-                licenses.append({'id': len(license_name), \
-                    'name': rec['license'], 'url': rec['license_url']})
-                license_name.append(rec['license'])
-            if rec['license'] == '':
-                license_num = 0
-            else:
-                license_num = license_name.index(rec['license'])
+                # Build license object
+                if rec['license'] != '' and rec['license'] not in license_name:
+                    licenses.append({'id': len(license_name), \
+                        'name': rec['license'], 'url': rec['license_url']})
+                    license_name.append(rec['license'])
+                if rec['license'] == '':
+                    license_num = 0
+                else:
+                    license_num = license_name.index(rec['license'])
 
-            # Store image entry
-            image_rec = {}
-            image_rec['id'] = count
-            image_rec['width'] = size[0]
-            image_rec['height'] = size[1]
-            image_rec['file_name'] = prefix + '{:010d}.jpg'.format(count)
-            image_rec['license'] = license_num
-            image_rec['attribution'] = rec['attribution']
-            image_rec['flickr_url'] = ''
-            image_rec['coco_url'] = ''
-            image_rec['date_captured'] = rec['date_captured']
-            current['images'].append(image_rec)
+                # Store image entry
+                image_rec = {}
+                image_rec['id'] = count
+                image_rec['width'] = size[0]
+                image_rec['height'] = size[1]
+                image_rec['file_name'] = prefix + '{:010d}.jpg'.format(count)
+                image_rec['license'] = license_num
+                image_rec['attribution'] = rec['attribution']
+                image_rec['flickr_url'] = ''
+                image_rec['coco_url'] = ''
+                image_rec['date_captured'] = rec['date_captured']
+                current['images'].append(image_rec)
 
-            for ann in rec['annotations']:
-                annotation_count += 1
-                bbox = ann['bbox']
-                width = (bbox['xmax'] - bbox['xmin']) * size[0]
-                height = (bbox['ymax'] - bbox['ymin']) * size[1]
-                annotation = {}
-                annotation['id'] = annotation_count
-                annotation['image_id'] = count
-                annotation['category_id'] = self.labels.index(ann['label'])
-                annotation['segmentation'] = []
-                annotation['area'] = 0.0
-                annotation['bbox'] = [bbox['xmin'] * size[0], bbox['ymin'] * size[1], width, height]
-                annotation['iscrowd'] = 0
-                current['annotations'].append(annotation)
+                for ann in rec['annotations']:
+                    annotation_count += 1
+                    bbox = ann['bbox']
+                    width = (bbox['xmax'] - bbox['xmin']) * size[0]
+                    height = (bbox['ymax'] - bbox['ymin']) * size[1]
+                    annotation = {}
+                    annotation['id'] = annotation_count
+                    annotation['image_id'] = count
+                    annotation['category_id'] = self.labels.index(ann['label'])
+                    annotation['segmentation'] = []
+                    annotation['area'] = 0.0
+                    annotation['bbox'] = [bbox['xmin'] * size[0], bbox['ymin'] * size[1], width, height]
+                    annotation['iscrowd'] = 0
+                    current['annotations'].append(annotation)
 
             self.progress.emit(count + 1)
         train['licenses'] = licenses

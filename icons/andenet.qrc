@@ -13,5 +13,7 @@
     <file>remove.svg</file>
     <file>file.svg</file>
     <file>folder.svg</file>
+    <file>flag.svg</file>
+    <file>flagged.svg</file>
   </qresource>
 </RCC>

@@ -42,7 +42,7 @@ if __name__ == "__main__":
             icon_size = int(screen.height() * 0.03)
             WIDGET.addTab(AnnotationWidget(CONFIG, icon_size), 'Annotate')
             WIDGET.addTab(PackageWidget(), 'Package')
-            WIDGET.addTab(BrowserWidget(), 'Browse && Export')
+            WIDGET.addTab(BrowserWidget(icon_size), 'Browse && Export')
             GUI.setCentralWidget(WIDGET)
             GUI.resize(int(screen.width() * .95), screen.height() * 0.95)
             GUI.move(int(screen.width() * .05) // 2, 0)

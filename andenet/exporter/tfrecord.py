@@ -66,70 +66,71 @@ class Exporter(QtCore.QThread):
         train_writer = tf.python_io.TFRecordWriter(os.path.join(self.directory, 'training.record'))
         validation_writer = tf.python_io.TFRecordWriter(os.path.join(self.directory, 'validation.record'))
         for example in self.metadata:
-            file_name = os.path.join(example['directory'], example['file_name'])
-            # Seek to the start of the data block then read in the image data
-            self.image_data.seek(example['image_data']['start'])
-            raw = self.image_data.read(example['image_data']['size'])
-            # Turn into a virtual file stream and load the image as if from disk
-            jpeg_file = io.BytesIO(raw)
-            encoded_jpg = jpeg_file.getvalue()
-            key = hashlib.sha256(encoded_jpg).hexdigest()
-            
-            xmins = []
-            ymins = []
-            xmaxs = []
-            ymaxs = []
-            classes = []
-            classes_text = []
-            occluded = []
-            truncated = []
-            difficult = []
-            for annotation in example['annotations']:
-                label = annotation['label']
-                xmins.append(annotation['bbox']['xmin'])
-                ymins.append(annotation['bbox']['ymin'])
-                xmaxs.append(annotation['bbox']['xmax'])
-                ymaxs.append(annotation['bbox']['ymax'])
-                classes_text.append(label.encode('utf8'))
-                classes.append(self.labels.index(label) + 1)
-                if annotation['occluded'] == 'Y':
-                    occluded.append(1)
-                else:
-                    occluded.append(0)
+            if 'flagged' not in example or example['flagged'] == False:
+                file_name = os.path.join(example['directory'], example['file_name'])
+                # Seek to the start of the data block then read in the image data
+                self.image_data.seek(example['image_data']['start'])
+                raw = self.image_data.read(example['image_data']['size'])
+                # Turn into a virtual file stream and load the image as if from disk
+                jpeg_file = io.BytesIO(raw)
+                encoded_jpg = jpeg_file.getvalue()
+                key = hashlib.sha256(encoded_jpg).hexdigest()
+                
+                xmins = []
+                ymins = []
+                xmaxs = []
+                ymaxs = []
+                classes = []
+                classes_text = []
+                occluded = []
+                truncated = []
+                difficult = []
+                for annotation in example['annotations']:
+                    label = annotation['label']
+                    xmins.append(annotation['bbox']['xmin'])
+                    ymins.append(annotation['bbox']['ymin'])
+                    xmaxs.append(annotation['bbox']['xmax'])
+                    ymaxs.append(annotation['bbox']['ymax'])
+                    classes_text.append(label.encode('utf8'))
+                    classes.append(self.labels.index(label) + 1)
+                    if annotation['occluded'] == 'Y':
+                        occluded.append(1)
+                    else:
+                        occluded.append(0)
 
-                if annotation['truncated'] == 'Y':
-                    truncated.append(1)
-                else:
-                    truncated.append(0)
+                    if annotation['truncated'] == 'Y':
+                        truncated.append(1)
+                    else:
+                        truncated.append(0)
 
-                if annotation['difficult'] == 'Y':
-                    difficult.append(1)
-                else:
-                    difficult.append(0)
+                    if annotation['difficult'] == 'Y':
+                        difficult.append(1)
+                    else:
+                        difficult.append(0)
 
-            feature_dict = {
-                'image/height': dataset_util.int64_feature(example['image_data']['height']),
-                'image/width': dataset_util.int64_feature(example['image_data']['width']),
-                'image/filename': dataset_util.bytes_feature(file_name.encode('utf8')),
-                'image/source_id': dataset_util.bytes_feature(file_name.encode('utf8')),
-                'image/key/sha256': dataset_util.bytes_feature(key.encode('utf8')),
-                'image/encoded': dataset_util.bytes_feature(encoded_jpg),
-                'image/format': dataset_util.bytes_feature('jpeg'.encode('utf8')),
-                'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
-                'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
-                'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
-                'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
-                'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
-                'image/object/class/label': dataset_util.int64_list_feature(classes),
-                'image/object/difficult': dataset_util.int64_list_feature(difficult),
-                'image/object/truncated': dataset_util.int64_list_feature(truncated),
-                'image/object/occluded': dataset_util.int64_list_feature(occluded),
-            }
-            tf_example = tf.train.Example(features=tf.train.Features(feature=feature_dict))
-            if counter <= self.train_size:
-                train_writer.write(tf_example.SerializeToString())
-            else:
-                validation_writer.write(tf_example.SerializeToString())
+                feature_dict = {
+                    'image/height': dataset_util.int64_feature(example['image_data']['height']),
+                    'image/width': dataset_util.int64_feature(example['image_data']['width']),
+                    'image/filename': dataset_util.bytes_feature(file_name.encode('utf8')),
+                    'image/source_id': dataset_util.bytes_feature(file_name.encode('utf8')),
+                    'image/key/sha256': dataset_util.bytes_feature(key.encode('utf8')),
+                    'image/encoded': dataset_util.bytes_feature(encoded_jpg),
+                    'image/format': dataset_util.bytes_feature('jpeg'.encode('utf8')),
+                    'image/object/bbox/xmin': dataset_util.float_list_feature(xmins),
+                    'image/object/bbox/xmax': dataset_util.float_list_feature(xmaxs),
+                    'image/object/bbox/ymin': dataset_util.float_list_feature(ymins),
+                    'image/object/bbox/ymax': dataset_util.float_list_feature(ymaxs),
+                    'image/object/class/text': dataset_util.bytes_list_feature(classes_text),
+                    'image/object/class/label': dataset_util.int64_list_feature(classes),
+                    'image/object/difficult': dataset_util.int64_list_feature(difficult),
+                    'image/object/truncated': dataset_util.int64_list_feature(truncated),
+                    'image/object/occluded': dataset_util.int64_list_feature(occluded),
+                }
+                tf_example = tf.train.Example(features=tf.train.Features(feature=feature_dict))
+                if counter <= self.train_size:
+                    train_writer.write(tf_example.SerializeToString())
+                else:
+                    validation_writer.write(tf_example.SerializeToString())
             counter += 1
             self.progress.emit(counter)
         train_writer.close()

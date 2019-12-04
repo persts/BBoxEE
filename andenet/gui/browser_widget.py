@@ -27,6 +27,7 @@ import json
 from PIL import Image, ImageQt
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from andenet.gui import CocoDialog
+from andenet import schema
 
 BROWSER, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'browser_widget.ui'))
 
@@ -34,10 +35,11 @@ BROWSER, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'browser_wid
 class BrowserWidget(QtWidgets.QWidget, BROWSER):
     """Browser to view data stored in the Andenet format."""
 
-    def __init__(self, parent=None):
+    def __init__(self, icon_size=24, parent=None):
         """Class init function."""
         QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
+        self.metadata_file = None
         self.labels = None
         self.metadata = None
         self.image_data = None
@@ -51,9 +53,23 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         self.graphics_scene = QtWidgets.QGraphicsScene()
         self.graphicsView.setScene(self.graphics_scene)
 
-        self.pushButtonSelectDirectory.clicked.connect(self.load)
         self.pushButtonNext.clicked.connect(self.next)
+        self.pushButtonNext.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonNext.setIcon(QtGui.QIcon(':/icons/next.svg'))
+
         self.pushButtonPrevious.clicked.connect(self.previous)
+        self.pushButtonPrevious.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonPrevious.setIcon(QtGui.QIcon(':/icons/previous.svg'))
+
+        self.pushButtonSelectDirectory.clicked.connect(self.load)
+        self.pushButtonSelectDirectory.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonSelectDirectory.setIcon(QtGui.QIcon(':/icons/folder.svg'))
+
+        self.pushButtonFlag.clicked.connect(self.flag)
+        self.pushButtonFlag.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pushButtonFlag.setIcon(QtGui.QIcon(':/icons/flag.svg'))
+
+
         self.pushButtonExport.clicked.connect(self.export)
         self.lineEditCurrentRecord.editingFinished.connect(self.jump_to_image)
         self.checkBoxDisplayAnnotationData.clicked.connect(self.display)
@@ -78,6 +94,13 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(), \
             QtCore.Qt.KeepAspectRatio)
         self.graphicsView.setSceneRect(self.graphics_scene.itemsBoundingRect())
+        # Set flagged button
+        if 'flagged' in data and data['flagged'] == True:
+            self.pushButtonFlag.setChecked(True)
+            self.pushButtonFlag.setIcon(QtGui.QIcon(':/icons/flagged.svg'))
+        else:
+            self.pushButtonFlag.setChecked(False)
+            self.pushButtonFlag.setIcon(QtGui.QIcon(':/icons/flag.svg'))
         # Add bounding boxes and labels.
         for annotation in data['annotations']:
             bbox = annotation['bbox']
@@ -142,6 +165,35 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         """(Slot) Re enable export button after export has finished."""
         self.pushButtonExport.setEnabled(True)
 
+    def flag(self):
+        if self.metadata is None:
+            self.pushButtonFlag.setChecked(False)
+            self.pushButtonFlag.setIcon(QtGui.QIcon(':/icons/flag.svg'))
+        else:
+            if self.pushButtonFlag.isChecked():
+                self.pushButtonFlag.setIcon(QtGui.QIcon(':/icons/flagged.svg'))
+                data = self.metadata[self.current_record - 1]['flagged'] = True
+            else:
+                self.pushButtonFlag.setIcon(QtGui.QIcon(':/icons/flag.svg'))
+                data = self.metadata[self.current_record - 1]['flagged'] = False
+            self.display()
+            try:
+                package = schema.package()
+                package['labels'] = self.labels
+                package['metadata'] = self.metadata
+                file = open(self.metadata_file, 'w')
+                json.dump(package, file)
+                file.close()
+            except PermissionError:
+                msg_box = QtWidgets.QMessageBox()
+                msg_box.setWindowTitle('Save Error')
+                msg_box.setText('Changes not saved. Permission Error.')
+                msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg_box.setDefaultButton(QtWidgets.QMessageBox.Ok)
+                msg_box.setMinimumWidth(600)
+                msg_box.exec()
+                
+
     def jump_to_image(self):
         """(Slot) Jump to image after editing has finished in line edit."""
         try:
@@ -159,7 +211,8 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         directory = QtWidgets.QFileDialog.getExistingDirectory(self, 'Select destination')
         if directory != '':
             self.image_data = open(directory + os.path.sep + 'images.bin', 'rb')
-            file = open(directory + os.path.sep + 'metadata.json')
+            self.metadata_file = directory + os.path.sep + 'metadata.json'
+            file = open(self.metadata_file)
             obj = json.load(file)
             self.metadata = obj['metadata']
             self.labels = obj['labels']
