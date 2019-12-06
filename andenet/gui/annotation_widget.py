@@ -25,7 +25,7 @@ import os
 import glob
 import json
 import numpy as np
-from PIL import Image, ImageQt
+from PIL import Image
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from andenet import schema
 from andenet.gui import AnnotationAssistant
@@ -54,7 +54,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.dirty = False
         self.assistant = AnnotationAssistant(config_data['labels'], self)
         self.assistant.submitted.connect(self.update_annotation)
-        self.image = None
         self.qt_image = None
         self.current_image_size = (0, 0)
 
@@ -469,15 +468,18 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         file = os.path.join(self.image_directory, self.current_file_name)
         img = Image.open(file)
         self.current_image_size = img.size
-        self.image = np.array(img)
-        if self.mask is not None:
-            img = self.image * self.mask
-            img = Image.fromarray(img)
-
-        self.qt_image = ImageQt.ImageQt(img)
-        self.graphics_scene.addPixmap(QtGui.QPixmap.fromImage(self.qt_image))
+        array = np.array(img)
         img.close()
-        img = None
+        if self.mask is not None:
+            array = self.image * self.mask
+
+        bpl = int(array.nbytes / array.shape[0])
+        if array.shape[2] == 4:
+            self.qt_image = QtGui.QImage(array.data, array.shape[1], array.shape[0], QtGui.QImage.Format_RGBA8888)
+        else:
+            self.qt_image = QtGui.QImage(array.data, array.shape[1], array.shape[0], bpl, QtGui.QImage.Format_RGB888)
+        array = None
+        self.graphics_scene.addPixmap(QtGui.QPixmap.fromImage(self.qt_image))
         self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(), QtCore.Qt.KeepAspectRatio)
         self.graphicsView.setSceneRect(self.graphics_scene.itemsBoundingRect())
         self.display_license()

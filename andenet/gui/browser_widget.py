@@ -24,7 +24,8 @@
 import os
 import io
 import json
-from PIL import Image, ImageQt
+import numpy as np
+from PIL import Image
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from andenet.gui import CocoDialog
 from andenet import schema
@@ -69,7 +70,6 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         self.pushButtonFlag.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pushButtonFlag.setIcon(QtGui.QIcon(':/icons/flag.svg'))
 
-
         self.pushButtonExport.clicked.connect(self.export)
         self.lineEditCurrentRecord.editingFinished.connect(self.jump_to_image)
         self.checkBoxDisplayAnnotationData.clicked.connect(self.display)
@@ -88,7 +88,12 @@ class BrowserWidget(QtWidgets.QWidget, BROWSER):
         width = img.size[0]
         height = img.size[1]
         # Display the image in the graphhics view
-        self.qt_image = ImageQt.ImageQt(img)
+        array = np.array(img)
+        bpl = int(array.nbytes / array.shape[0])
+        if array.shape[2] == 4:
+            self.qt_image = QtGui.QImage(array.data, array.shape[1], array.shape[0], QtGui.QImage.Format_RGBA8888)
+        else:
+            self.qt_image = QtGui.QImage(array.data, array.shape[1], array.shape[0], bpl, QtGui.QImage.Format_RGB888)
         self.graphics_scene.clear()
         self.graphics_scene.addPixmap(QtGui.QPixmap.fromImage(self.qt_image))
         self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(), \
