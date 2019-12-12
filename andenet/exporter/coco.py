@@ -22,8 +22,11 @@
 #
 # --------------------------------------------------------------------------
 import os
-import io
 import json
+import random
+import datetime
+import numpy as np
+from shutil import copyfile
 from PIL import Image
 from PyQt5 import QtCore
 
@@ -34,38 +37,62 @@ class Exporter(QtCore.QThread):
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal()
 
-    def __init__(self, directory, metadata, image_data, labels, validation_split):
+    def __init__(self,
+                 directory,
+                 images,
+                 label_map,
+                 validation_split,
+                 masks={},
+                 strip_metadata=False):
         """
         Class init function.
 
         Args:
             directory (str): Destination directory
-            metadata (dict): List of all of the annotated examples to be used for trianing
-            image_data (File): File handler to image data
-            labels (list): Class/label names
-            validation_split (float): Percent of training data to use for validation
+            image_data (File): Image and Annotation List
+            labels_map (dict): Class/label names
+            validation_split (float): Percent to use for validation
+            masks (dict): Binary arrays for masking metadata
+            strip_metadata (bool): Flag for stripping metadata
         """
         QtCore.QThread.__init__(self)
-        self.directory = directory
-        self.metadata = metadata
-        self.image_data = image_data
-        self.labels = labels
-        self.train_size = int((1.0 - validation_split) * len(self.metadata))
         self.info = {}
+        self.directory = directory
+        self.images = images
+        self.label_map = label_map
+        self.train_size = int((1.0 - validation_split) * len(self.images))
+
+        self.masks = masks
+        self.strip_metadata = strip_metadata
+
+        for mask in masks:
+            m = np.array(masks[mask], dtype='uint8')
+            self.masks[mask] = np.dstack((m, m, m))
+
+        self.labels = []
+        for label in label_map:
+            if label_map[label].lower() != 'exclude':
+                if label_map[label] == '':
+                    label_map[label] = label
+                self.labels.append(label_map[label])
 
     def run(self):
         """
         The starting point for the thread.
 
-        After creating and instance of the class, calling start() will call this
-        function which exports all of the annotaiton examples to disk.
+        After creating and instance of the class, calling start() will call
+        this function which exports all of the annotaiton examples to disk.
         """
+        random.shuffle(self.images)
+
         license_name = ['No License']
         licenses = [{'id': 0, 'name': 'No License', 'url': ''}]
 
         # Build categories
-        categories = [{"id": i, "name": l, "supercategory": "none"} \
-            for i, l in enumerate(self.labels)]
+        categories = [{"id": i,
+                       "name": l,
+                       "supercategory": "none"} for i, l in enumerate(
+                           self.labels)]
 
         # Create new directories
         image_train_path = os.path.join(self.directory, 'train')
@@ -75,67 +102,85 @@ class Exporter(QtCore.QThread):
 
         prefix = 'train_'
         img_path = os.path.join(image_train_path, prefix)
-        train = {'info': self.info, 'images': [], 'annotations': [], \
-            'licenses': [], 'categories': categories}
-        val = {'info': self.info, 'images': [], 'annotations': [], \
-            'licenses': [], 'categories': categories}
+        train = {'info': self.info,
+                 'images': [],
+                 'annotations': [],
+                 'licenses': [],
+                 'categories': categories}
+        val = {'info': self.info,
+               'images': [],
+               'annotations': [],
+               'licenses': [],
+               'categories': categories}
 
         current = train
         annotation_count = 0
-        for count, rec in enumerate(self.metadata):
-            if 'flagged' not in rec or rec['flagged'] == False:
-                if count > self.train_size:
-                    current = val
-                    prefix = 'val_'
-                    img_path = os.path.join(image_val_path, prefix)
-                img_file = img_path + '{:010d}.jpg'.format(count)
-                # Seek to the start of the data block then read in the image data
-                self.image_data.seek(rec['image_data']['start'])
-                raw = self.image_data.read(rec['image_data']['size'])
-                # Turn into a virtual file stream and load the image as if from disk
-                stream = io.BytesIO(raw)
-                img = Image.open(stream)
-                img.save(img_file)
-                size = img.size
+        for count, rec in enumerate(self.images):
+            if count > self.train_size:
+                current = val
+                prefix = 'val_'
+                img_path = os.path.join(image_val_path, prefix)
+            img_file = img_path + '{:010d}.jpg'.format(count)
+
+            src_file = os.path.join(rec['directory'], rec['file_name'])
+            timestamp = os.path.getctime(src_file)
+            timestamp = datetime.datetime.fromtimestamp(timestamp)
+            rec['date_captured'] = str(timestamp)
+            img = Image.open(src_file)
+            size = img.size  # PIL (width, height)
+            if self.strip_metadata:
+                array = np.array(img)
                 img.close()
+                if rec['mask_name'] in self.masks:
+                    array = array * self.masks[rec['mask_name']]
+                img = Image.fromarray(array)
+                img.save(img_file)
+                img.close()
+            else:
+                img.close()
+                copyfile(src_file, img_file)
 
-                # Build license object
-                if rec['license'] != '' and rec['license'] not in license_name:
-                    licenses.append({'id': len(license_name), \
-                        'name': rec['license'], 'url': rec['license_url']})
-                    license_name.append(rec['license'])
-                if rec['license'] == '':
-                    license_num = 0
-                else:
-                    license_num = license_name.index(rec['license'])
+            # Build license object
+            if rec['license'] != '' and rec['license'] not in license_name:
+                licenses.append({'id': len(license_name),
+                                 'name': rec['license'],
+                                 'url': rec['license_url']})
+                license_name.append(rec['license'])
+            if rec['license'] == '':
+                license_num = 0
+            else:
+                license_num = license_name.index(rec['license'])
 
-                # Store image entry
-                image_rec = {}
-                image_rec['id'] = count
-                image_rec['width'] = size[0]
-                image_rec['height'] = size[1]
-                image_rec['file_name'] = prefix + '{:010d}.jpg'.format(count)
-                image_rec['license'] = license_num
-                image_rec['attribution'] = rec['attribution']
-                image_rec['flickr_url'] = ''
-                image_rec['coco_url'] = ''
-                image_rec['date_captured'] = rec['date_captured']
-                current['images'].append(image_rec)
+            # Store image entry
+            image_rec = {}
+            image_rec['id'] = count
+            image_rec['width'] = size[0]
+            image_rec['height'] = size[1]
+            image_rec['file_name'] = prefix + '{:010d}.jpg'.format(count)
+            image_rec['license'] = license_num
+            image_rec['attribution'] = rec['attribution']
+            image_rec['flickr_url'] = ''
+            image_rec['coco_url'] = ''
+            image_rec['date_captured'] = rec['date_captured']
+            current['images'].append(image_rec)
 
-                for ann in rec['annotations']:
-                    annotation_count += 1
-                    bbox = ann['bbox']
-                    width = (bbox['xmax'] - bbox['xmin']) * size[0]
-                    height = (bbox['ymax'] - bbox['ymin']) * size[1]
-                    annotation = {}
-                    annotation['id'] = annotation_count
-                    annotation['image_id'] = count
-                    annotation['category_id'] = self.labels.index(ann['label'])
-                    annotation['segmentation'] = []
-                    annotation['area'] = 0.0
-                    annotation['bbox'] = [bbox['xmin'] * size[0], bbox['ymin'] * size[1], width, height]
-                    annotation['iscrowd'] = 0
-                    current['annotations'].append(annotation)
+            for ann in rec['annotations']:
+                annotation_count += 1
+                bbox = ann['bbox']
+                width = (bbox['xmax'] - bbox['xmin']) * size[0]
+                height = (bbox['ymax'] - bbox['ymin']) * size[1]
+                annotation = {}
+                annotation['id'] = annotation_count
+                annotation['image_id'] = count
+                remap = self.label_map[ann['label']]
+                annotation['category_id'] = self.labels.index(remap)
+                annotation['segmentation'] = []
+                annotation['area'] = 0.0
+                x = bbox['xmin'] * size[0]
+                y = bbox['ymin'] * size[1]
+                annotation['bbox'] = [x, y, width, height]
+                annotation['iscrowd'] = 0
+                current['annotations'].append(annotation)
 
             self.progress.emit(count + 1)
         train['licenses'] = licenses

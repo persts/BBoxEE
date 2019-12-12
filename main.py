@@ -25,9 +25,8 @@ import sys
 import json
 from PyQt5 import QtWidgets
 
-from andenet.gui import PackageWidget
+from andenet.gui import ExportWidget
 from andenet.gui import AnnotationWidget
-from andenet.gui import BrowserWidget
 
 if __name__ == "__main__":
     try:
@@ -41,8 +40,7 @@ if __name__ == "__main__":
             WIDGET = QtWidgets.QTabWidget()
             icon_size = int(screen.height() * 0.03)
             WIDGET.addTab(AnnotationWidget(CONFIG, icon_size), 'Annotate')
-            WIDGET.addTab(PackageWidget(), 'Package')
-            WIDGET.addTab(BrowserWidget(icon_size), 'Browse && Export')
+            WIDGET.addTab(ExportWidget(icon_size), 'Export')
             GUI.setCentralWidget(WIDGET)
             GUI.resize(int(screen.width() * .95), screen.height() * 0.95)
             GUI.move(int(screen.width() * .05) // 2, 0)

@@ -298,6 +298,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             del self.data['images'][self.current_file_name]
         self.tableWidgetLabels.selectionModel().blockSignals(False)
         self.selected_row = -1
+        self.graphicsView.selected_bbox = None
         self.display_bboxes()
         self.set_dirty(True)
 
@@ -471,7 +472,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         array = np.array(img)
         img.close()
         if self.mask is not None:
-            array = self.image * self.mask
+            array = array * self.mask
 
         bpl = int(array.nbytes / array.shape[0])
         if array.shape[2] == 4:
@@ -614,6 +615,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.show_assistant()
         else:
             self.selected_row = -1
+            self.graphicsView.selected_bbox = None
         self.display_bboxes()
 
     def set_dirty(self, is_dirty):
@@ -645,6 +647,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def update_annotation(self, annotation_data):
         """(Slot) Update table with data submitted from assistant widget."""
         if self.selected_row >= 0:
+            self.set_dirty(True)
             for key in annotation_data.keys():
                 self.data['images'][self.current_file_name]['annotations'][self.selected_row][key] = annotation_data[key]
                 self.data['images'][self.current_file_name]['annotations'][self.selected_row]['updated_by'] = 'human'

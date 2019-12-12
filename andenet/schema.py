@@ -30,19 +30,39 @@ def annotation_file():
 
 def annotation_file_entry():
     """Factory for the Animal Detection Network annotation file entry."""
-    return {'attribution': '', 'license': '', 'license_url': '', 'annotations': []}
+    return {'attribution': '',
+            'license': '',
+            'license_url': '',
+            'annotations': []}
 
 
 def annotation():
     """Factory for an annotation block."""
-    return {'created_by': '', 'updated_by': '', 'bbox': {'xmin': 0, 'xmax': 0, 'ymin': 0, 'ymax': 0}, 'label': 'N/A', 'occluded': 'N', 'truncated': 'N', 'difficult': 'N', 'schema': '1.0.0'}
+    return {'created_by': '',
+            'updated_by': '',
+            'bbox': {'xmin': 0,
+                     'xmax': 0,
+                     'ymin': 0,
+                     'ymax': 0},
+            'label': 'N/A',
+            'occluded': 'N',
+            'truncated': 'N',
+            'difficult': 'N',
+            'schema': '1.0.0'}
 
 
 def package():
-    """Factory Animal Detection Network package file."""
+    """Factory Animal Detection Network package."""
     return {'labels': [], 'metadata': []}
 
 
 def package_entry():
-    """Factory for an entry in the Animal Detection Network package file."""
-    return {'image_data': {'size': 0, 'start': 0, 'height': 0, 'width': 0}, 'flagged': False, 'date_captured': '', 'attribution': '', 'license': '', 'license_url': '', 'file_name': '', 'mask_name': '', 'directory': '', 'schema': '1.0.0', 'annotations': []}
+    """Factory for an entry in the Animal Detection Network package."""
+    return {'date_captured': '',
+            'attribution': '',
+            'license': '',
+            'license_url': '',
+            'file_name': '',
+            'mask_name': '',
+            'directory': '',
+            'annotations': []}

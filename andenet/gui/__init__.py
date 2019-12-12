@@ -26,5 +26,4 @@ from .annotator_dialog import AnnotatorDialog
 from .coco_dialog import CocoDialog
 
 from .annotation_widget import AnnotationWidget
-from .package_widget import PackageWidget
-from .browser_widget import BrowserWidget
+from .export_widget import ExportWidget

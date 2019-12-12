@@ -31,9 +31,13 @@ class CocoDialog(QtWidgets.QDialog):
         self.setWindowTitle('COCO Information')
         self.setMinimumSize(500, 0)
         self.setModal(True)
-        self.info = {'description': '', \
-            'url': '', 'version': '', 'year': '', 'contributor': '', \
-            'date_created': datetime.datetime.now().strftime('%Y-%m-%d %H:%S:%I')}
+        date_created = datetime.datetime.now().strftime('%Y-%m-%d %H:%S:%I')
+        self.info = {'description': '',
+                     'url': '',
+                     'version': '',
+                     'year': '',
+                     'contributor': '',
+                     'date_created': date_created}
         self.desc = QtWidgets.QLineEdit()
         self.desc.textChanged.connect(self.update)
         self.url = QtWidgets.QLineEdit()

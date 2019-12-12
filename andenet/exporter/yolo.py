@@ -22,7 +22,9 @@
 #
 # --------------------------------------------------------------------------
 import os
-import io
+import random
+import numpy as np
+from shutil import copyfile
 from PIL import Image
 from PyQt5 import QtCore
 
@@ -33,33 +35,55 @@ class Exporter(QtCore.QThread):
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal()
 
-    def __init__(self, directory, metadata, image_data, labels, validation_split):
+    def __init__(self,
+                 directory,
+                 images,
+                 label_map,
+                 validation_split,
+                 masks={},
+                 strip_metadata=False):
         """
         Class init function.
 
         Args:
             directory (str): Destination directory
-            metadata (dict): List of all of the annotated examples to be used for trianing
-            image_data (File): File handler to image data
-            labels (list): Class/label names
-            validation_split (float): Percent of training data to use for validation
+            image_data (File): Image and Annotation List
+            labels_map (dict): Class/label names
+            validation_split (float): Percent to use for validation
+            masks (dict): Binary arrays for masking metadata
+            strip_metadata (bool): Flag for stripping metadata
         """
         QtCore.QThread.__init__(self)
         self.directory = directory
-        self.metadata = metadata
-        self.image_data = image_data
-        self.labels = labels
-        self.train_size = int((1.0 - validation_split) * len(self.metadata))
+        self.images = images
+        self.label_map = label_map
+        self.train_size = int((1.0 - validation_split) * len(self.images))
+
+        self.masks = masks
+        self.strip_metadata = strip_metadata
+
+        for mask in masks:
+            m = np.array(masks[mask], dtype='uint8')
+            self.masks[mask] = np.dstack((m, m, m))
+
+        self.labels = []
+        for label in label_map:
+            if label_map[label].lower() != 'exclude':
+                if label_map[label] == '':
+                    label_map[label] = label
+                self.labels.append(label_map[label])
 
     def run(self):
         """
         The starting point for the thread.
 
-        After creating and instance of the class, calling start() will call this
-        function which exports all of the annotaiton examples to disk.
+        After creating and instance of the class, calling start() will call
+        this function which exports all of the annotaiton examples to disk.
         """
+        random.shuffle(self.images)
+
         # Create new directories
-        cfg_path  = os.path.join(self.directory, 'cfg')
+        cfg_path = os.path.join(self.directory, 'cfg')
         os.makedirs(cfg_path)
 
         image_path = os.path.join(self.directory, 'images')
@@ -81,38 +105,44 @@ class Exporter(QtCore.QThread):
         train = []
         val = []
         current = train
-        for count, rec in enumerate(self.metadata):
-            if 'flagged' not in rec or rec['flagged'] == False:
-                if count > self.train_size:
-                    img_path = os.path.join(image_val_path, 'val_')
-                    label_path = os.path.join(label_val_path, 'val_')
-                    current = val
-                img_file = img_path + '{:010d}.jpg'.format(count)
-                label_file = label_path + '{:010d}.txt'.format(count)
-                current.append(img_file)
-                # Seek to the start of the data block then read in the image data
-                self.image_data.seek(rec['image_data']['start'])
-                raw = self.image_data.read(rec['image_data']['size'])
-                # Turn into a virtual file stream and load the image as if from disk
-                stream = io.BytesIO(raw)
-                img = Image.open(stream)
+        for count, rec in enumerate(self.images):
+            if count > self.train_size:
+                img_path = os.path.join(image_val_path, 'val_')
+                label_path = os.path.join(label_val_path, 'val_')
+                current = val
+            img_file = img_path + '{:010d}.jpg'.format(count)
+            label_file = label_path + '{:010d}.txt'.format(count)
+            current.append(img_file)
+
+            src_file = os.path.join(rec['directory'], rec['file_name'])
+            if self.strip_metadata:
+                img = Image.open(src_file)
+                array = np.array(img)
+                img.close()
+                if rec['mask_name'] in self.masks:
+                    array = array * self.masks[rec['mask_name']]
+                img = Image.fromarray(array)
                 img.save(img_file)
                 img.close()
-                
-                file = open(label_file, 'w')
-                nl = ""
-                for a in rec['annotations']:
-                    bbox = a['bbox']
-                    label = self.labels.index(a['label'])
-                    width = bbox['xmax'] - bbox['xmin']
-                    height = bbox['ymax'] - bbox['ymin']
-                    x = bbox['xmin'] + (width / 2.0)
-                    y = bbox['ymin'] + (height / 2.0)
-                    file.write("{}{} {} {} {} {}".format(nl, label, x, y, width, height))
-                    nl = "\n"
-                file.close()
+            else:
+                copyfile(src_file, img_file)
 
-                # TODO: Really need to export the license information for each file
+            file = open(label_file, 'w')
+            nl = ""
+            for a in rec['annotations']:
+                bbox = a['bbox']
+                remap = self.label_map[a['label']]
+                label = self.labels.index(remap)
+                width = bbox['xmax'] - bbox['xmin']
+                height = bbox['ymax'] - bbox['ymin']
+                x = bbox['xmin'] + (width / 2.0)
+                y = bbox['ymin'] + (height / 2.0)
+                template = "{}{} {} {} {} {}"
+                file.write(template.format(nl, label, x, y, width, height))
+                nl = "\n"
+            file.close()
+
+            # TODO: Really need to export the license information for each file
 
             self.progress.emit(count + 1)
 
@@ -129,7 +159,7 @@ class Exporter(QtCore.QThread):
             file.write('{}{}'.format(nl, file_name))
             nl = "\n"
         file.close()
-        
+
         nl = ""
         file = open(os.path.join(self.directory, 'val.txt'), 'w')
         for file_name in val:
@@ -139,9 +169,13 @@ class Exporter(QtCore.QThread):
 
         file = open(os.path.join(cfg_path, 'andenet.data'), 'w')
         file.write('classes={}\n'.format(len(self.labels)))
-        file.write('train={}\n'.format(os.path.join(self.directory, 'train.txt')))
-        file.write('valid={}\n'.format(os.path.join(self.directory, 'val.txt')))
-        file.write('names={}\n'.format(os.path.join(self.directory, 'names.txt')))
+        file_name = os.path.join(self.directory, 'train.txt')
+        file.write('train={}\n'.format(file_name))
+        file_name = os.path.join(self.directory, 'val.txt')
+        file.write('valid={}\n'.format(file_name))
+        file_name = os.path.join(self.directory, 'names.txt')
+        file.write('names={}\n'.format(file_name))
         file.write('backup=backup/\n')
         file.write('eval=coco\n')
         file.close()
+        self.exported.emit()
