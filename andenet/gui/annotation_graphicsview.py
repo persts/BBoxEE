@@ -24,6 +24,7 @@
 from PyQt5 import QtWidgets, QtCore, QtGui
 from enum import Enum
 
+
 class Quad(Enum):
     TL = 0
     TR = 1
@@ -38,7 +39,8 @@ class Mode(Enum):
 
 
 class AnnotationGraphicsView(QtWidgets.QGraphicsView):
-    """Custom QGraphicsView for creating and editing annotation bounding boxes."""
+    """Custom QGraphicsView for creating and editing annotation
+    bounding boxes."""
 
     created = QtCore.pyqtSignal(QtCore.QRectF)
     resized = QtCore.pyqtSignal(QtCore.QRectF)
@@ -55,8 +57,14 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.selected_bbox = None
         self.quad = Quad.TL
         self.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
-        self.brushes = [QtGui.QBrush(QtCore.Qt.blue, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.green, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern), QtGui.QBrush(QtCore.Qt.red, QtCore.Qt.SolidPattern)]
-        self.pens = [QtGui.QPen(self.brushes[0], 2), QtGui.QPen(self.brushes[1], 2), QtGui.QPen(self.brushes[2], 2), QtGui.QPen(self.brushes[3], 2)]
+        self.brushes = [QtGui.QBrush(QtCore.Qt.blue, QtCore.Qt.SolidPattern),
+                        QtGui.QBrush(QtCore.Qt.green, QtCore.Qt.SolidPattern),
+                        QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern),
+                        QtGui.QBrush(QtCore.Qt.red, QtCore.Qt.SolidPattern)]
+        self.pens = [QtGui.QPen(self.brushes[0], 2),
+                     QtGui.QPen(self.brushes[1], 2),
+                     QtGui.QPen(self.brushes[2], 2),
+                     QtGui.QPen(self.brushes[3], 2)]
 
     def clear_points(self):
         for item in self.point_graphics_items:
@@ -81,18 +89,20 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
 
     def mousePressEvent(self, event):
-        """Overload of the mousePressEvent that stores mouse click positions in a list."""
+        """Overload of the mousePressEvent that stores mouse click
+        positions in a list."""
         if len(self.scene().items()) > 0:
             if event.button() == QtCore.Qt.MiddleButton:
                 self.clear_points()
             elif self.mode == Mode.PAN:
                 self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
                 QtWidgets.QGraphicsView.mousePressEvent(self, event)
-            else: # mode = Mode.EDIT
+            else:  # mode = Mode.EDIT
                 point = self.mapToScene(event.pos())
                 collect_points = True
                 if len(self.points) == 0:
-                    if self.selected_bbox is not None and self.selected_bbox.boundingRect().contains(point):
+                    if (self.selected_bbox is not None and
+                            self.selected_bbox.boundingRect().contains(point)):
                         self.mode = Mode.RESIZE
                         center = self.selected_bbox.boundingRect().center()
                         if point.x() < center.x() and point.y() < center.y():
@@ -110,14 +120,18 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                                     collect_points = False
                                     self.select_bbox.emit(point)
                                     break
-                            
+
                 if collect_points and self.mode == Mode.EDIT:
-                    self.point_graphics_items.append(self.scene().addEllipse(QtCore.QRectF(point.x() - 5, point.y() - 5, 11, 11), self.pens[len(self.points)], self.brushes[len(self.points)]))
+                    rect = QtCore.QRectF(point.x() - 5, point.y() - 5, 11, 11)
+                    pen = self.pens[len(self.points)]
+                    brush = self.brushes[len(self.points)]
+                    (self.point_graphics_items.
+                        append(self.scene().addEllipse(rect, pen, brush)))
                     self.points.append(event.pos())
-            
 
     def mouseReleaseEvent(self, event):
-        """Overload of the MouseReleaseEvent that will calculate the bounding box when four points are available."""
+        """Overload of the MouseReleaseEvent that will calculate the
+        bounding box when four points are available."""
         self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
         if self.mode == Mode.RESIZE:
             rect = self.selected_bbox.rect()
@@ -125,7 +139,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             self.selected_bbox.setRect(rect)
             self.resized.emit(rect)
             self.mode = Mode.EDIT
-        
+
         if len(self.points) == 4:
             x_min = 100000000
             y_min = 100000000
@@ -177,4 +191,3 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         if len(self.scene().items()) > 0:
             self.scale(0.9, 0.9)
             self.zoom_event.emit()
-

@@ -21,13 +21,12 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-import os
+import json
 from PIL import Image
 from PyQt5 import QtCore
 from andenet import schema
 import tensorflow as tf
 import numpy as np
-from utils import label_map_util
 
 
 class Annotator(QtCore.QThread):
@@ -44,16 +43,31 @@ class Annotator(QtCore.QThread):
         self.image_directory = ''
         self.data = None
         self.detection_graph = tf.Graph()
-        self.label_map = label_map_util.load_labelmap(label_map)
-        self.categories = label_map_util.convert_label_map_to_categories(self.label_map, max_num_classes=100, use_display_name=True)
-        self.category_index = label_map_util.create_category_index(self.categories)
-        od_graph_def = tf.GraphDef()
+        self.label_map = self.build_label_map(label_map)
         with self.detection_graph.as_default():
-            od_graph_def = tf.GraphDef()
-            with tf.gfile.GFile(inference_graph, 'rb') as fid:
+            graph_def = self.detection_graph.as_graph_def()
+            with tf.io.gfile.GFile(inference_graph, 'rb') as fid:
                 serialized_graph = fid.read()
-                od_graph_def.ParseFromString(serialized_graph)
-                tf.import_graph_def(od_graph_def, name='')
+                graph_def.ParseFromString(serialized_graph)
+                tf.import_graph_def(graph_def, name='')
+
+    def build_label_map(self, file_name):
+        # see if we can use this to eliminated the need for
+        # label_map_util dependency
+        a = open(file_name, 'r')
+        string = a.read()
+        a.close()
+        string = (string.replace('item ', '').
+                  replace('}', '},').
+                  replace('\n', '').
+                  replace(' name:', '"name":').
+                  replace(' id:', ', "id":'))
+        string = "[{}]".format(string[0:-1])
+        j = json.loads(string)
+        label_map = {}
+        for entry in j:
+            label_map[entry['id']] = entry['name']
+        return label_map
 
     def run(self):
         """The starting point for the thread."""
@@ -62,23 +76,37 @@ class Annotator(QtCore.QThread):
         with self.detection_graph.as_default():
             with tf.Session(graph=self.detection_graph) as sess:
                 # Definite input and output Tensors for detection_graph
-                image_tensor = self.detection_graph.get_tensor_by_name('image_tensor:0')
-                # Each box represents a part of the image where a particular object was detected.
-                detection_boxes = self.detection_graph.get_tensor_by_name('detection_boxes:0')
-                # Each score represent how level of confidence for each of the objects.
-                # Score is shown on the result image, together with the class label.
-                detection_scores = self.detection_graph.get_tensor_by_name('detection_scores:0')
-                detection_classes = self.detection_graph.get_tensor_by_name('detection_classes:0')
-                num_detections = self.detection_graph.get_tensor_by_name('num_detections:0')
+                image_tensor = (self.detection_graph.
+                                get_tensor_by_name('image_tensor:0'))
+                # Each box represents a part of the image where a
+                # particular object was detected.
+                d_boxes = (self.detection_graph.
+                           get_tensor_by_name('detection_boxes:0'))
+                # Each score represent how level of confidence for each of
+                # the objects. Score is shown on the result image,
+                # together with the class label.
+                d_scores = (self.detection_graph.
+                            get_tensor_by_name('detection_scores:0'))
+                d_classes = (self.detection_graph.
+                             get_tensor_by_name('detection_classes:0'))
+                num_detections = (self.detection_graph.
+                                  get_tensor_by_name('num_detections:0'))
                 for img in self.image_list:
                     image = Image.open(self.image_directory + img)
-                    # the array based representation of the image will be used later in order to prepare the
-                    # result image with boxes and labels on it.
+                    # the array based representation of the image will be
+                    # used later in order to prepare the result image with
+                    # boxes and labels on it.
                     image_np = np.array(image)
-                    # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
+                    # Expand dimensions since the model expects images
+                    # to have shape: [1, None, None, 3]
                     image_np_expanded = np.expand_dims(image_np, axis=0)
                     # Actual detection.
-                    (boxes, scores, classes, num) = sess.run([detection_boxes, detection_scores, detection_classes, num_detections], feed_dict={image_tensor: image_np_expanded})
+                    fd = {image_tensor: image_np_expanded}
+                    (boxes, scores, classes, num) = sess.run([d_boxes,
+                                                              d_scores,
+                                                              d_classes,
+                                                              num_detections],
+                                                             feed_dict=fd)
                     boxes = np.squeeze(boxes)
                     scores = np.squeeze(scores)
                     classes = np.squeeze(classes)
@@ -92,7 +120,12 @@ class Annotator(QtCore.QThread):
                             annotation['bbox']['xmax'] = float(bbox[3])
                             annotation['bbox']['ymin'] = float(bbox[0])
                             annotation['bbox']['ymax'] = float(bbox[2])
-                            annotation['label'] = self.category_index[classes[i]]['name']
+                            if classes[i] in self.label_map:
+                                label = self.label_map[classes[i]]
+                            else:
+                                label = 'unknown'
+                            # label = self.category_index[classes[i]]['name']
+                            annotation['label'] = label
                             entry['annotations'].append(annotation)
                     if len(entry['annotations']) > 0:
                         self.data['images'][img] = entry

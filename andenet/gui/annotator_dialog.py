@@ -24,7 +24,8 @@
 import os
 from PyQt5 import QtCore, QtWidgets, uic
 
-DIALOG, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotator_dialog.ui'))
+DIALOG, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
+                           'annotator_dialog.ui'))
 
 
 class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
@@ -39,7 +40,7 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
         self.setWindowTitle('Select Model')
         self.last_dir = '.'
 
-        # TODO: Split this up into smaller components to avoid future name collison
+        # TODO: Split this up into smaller components
         self.pushButtonTensorflow.clicked.connect(self.tensorflow_selected)
         self.pushButtonTFGraph.clicked.connect(self.get_inference_graph)
         self.interence_graph = None
@@ -64,7 +65,9 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
             self.selected.emit(self.annotator)
             self.hide()
         except ModuleNotFoundError:
-            QtWidgets.QMessageBox.critical(self, 'Export', 'Required Tensorflow modules not found.\n\nPlease review install requirements.')
+            message = 'Required Tensorflow modules not found.\n\n\
+                Please review install requirements.'
+            QtWidgets.QMessageBox.critical(self, 'Export', message)
 
     def yolo_selected(self):
         try:
@@ -73,44 +76,68 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
             net_config = self.lineEditNetworkConfig.text()
             weights = self.lineEditWeights.text()
             image_size = self.spinBoxImageSize.value()
-            self.annotator = Annotator(data_config, net_config, weights, image_size)
+            self.annotator = Annotator(data_config,
+                                       net_config,
+                                       weights,
+                                       image_size)
             self.selected.emit(self.annotator)
             self.hide()
         except ModuleNotFoundError:
-            QtWidgets.QMessageBox.critical(self, 'Export', 'Required Torch or YOLOv3 modules not found.\n\nPlease review install requirements.')
-
+            message = 'Required Torch or YOLOv3 modules not found.\n\n\
+                Please review install requirements.'
+            QtWidgets.QMessageBox.critical(self, 'Export', message)
 
     # Helper functions
     def get_inference_graph(self):
-        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Frozen Inference Graph', self.last_dir, 'TF Graph (*.pb)')
+        file_name = (QtWidgets.
+                     QFileDialog.
+                     getOpenFileName(self,
+                                     'Load Frozen Inference Graph',
+                                     self.last_dir, 'TF Graph (*.pb)'))
         if file_name[0] != '':
             self.lineEditTFGraph.setText(file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
             self.pushButtonLabelMap.setDisabled(False)
-        
+
     def get_label_map(self):
-        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Label Map', self.last_dir, 'Label Map (*.pbtxt)')
+        file_name = (QtWidgets.
+                     QFileDialog.
+                     getOpenFileName(self,
+                                     'Load Label Map',
+                                     self.last_dir, 'Label Map (*.pbtxt)'))
         if file_name[0] != '':
             self.lineEditLabelMap.setText(file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
             self.pushButtonTensorflow.setDisabled(False)
 
     def get_data_config(self):
-        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Data Config', self.last_dir, 'Data (*.data)')
+        file_name = (QtWidgets.
+                     QFileDialog.
+                     getOpenFileName(self,
+                                     'Load Data Config',
+                                     self.last_dir, 'Data (*.data)'))
         if file_name[0] != '':
             self.lineEditDataConfig.setText(file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
             self.pushButtonNetworkConfig.setDisabled(False)
-    
+
     def get_network_config(self):
-        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Network Config', self.last_dir, 'Config (*.cfg)')
+        file_name = (QtWidgets.
+                     QFileDialog.
+                     getOpenFileName(self,
+                                     'Load Network Config',
+                                     self.last_dir, 'Config (*.cfg)'))
         if file_name[0] != '':
             self.lineEditNetworkConfig.setText(file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
             self.pushButtonWeights.setDisabled(False)
 
     def get_weights(self):
-        file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load weights', self.last_dir, 'PyTorch (*.pt)')
+        file_name = (QtWidgets.
+                     QFileDialog.
+                     getOpenFileName(self,
+                                     'Load weights',
+                                     self.last_dir, 'PyTorch (*.pt)'))
         if file_name[0] != '':
             self.lineEditWeights.setText(file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]

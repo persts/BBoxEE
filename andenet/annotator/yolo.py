@@ -37,6 +37,7 @@ from utils.parse_config import parse_data_config
 from utils.utils import load_classes, non_max_suppression
 from utils.datasets import load_images
 
+
 class Annotator(QtCore.QThread):
     """Threaded worker to keep gui from freezing while annotating images."""
 
@@ -52,9 +53,13 @@ class Annotator(QtCore.QThread):
         self.data = None
         self.image_size = image_size
 
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        if torch.cuda.is_available():
+            self.device = torch.device('cuda:0')
+        else:
+            self.device = torch.device('cpu')
         self.data_config = parse_data_config(data_config)
-        self.classes = load_classes(self.data_config['names'])  # Extracts class labels from file
+        # Extracts class labels from file
+        self.classes = load_classes(self.data_config['names'])
         self.model = Darknet(net_config, image_size)
 
         checkpoint = torch.load(weights, map_location='cpu')
@@ -63,8 +68,9 @@ class Annotator(QtCore.QThread):
     def scale_detections(self, image, detections):
         img = cv2.imread(image)
         # The amount of padding that was added
-        pad_x = max(img.shape[0] - img.shape[1], 0) * (self.image_size / max(img.shape))
-        pad_y = max(img.shape[1] - img.shape[0], 0) * (self.image_size / max(img.shape))
+        scale = self.image_size / max(img.shape)
+        pad_x = max(img.shape[0] - img.shape[1], 0) * scale
+        pad_y = max(img.shape[1] - img.shape[0], 0) * scale
         # Image height and width after padding is removed
         unpad_h = self.image_size - pad_y
         unpad_w = self.image_size - pad_x
@@ -76,11 +82,16 @@ class Annotator(QtCore.QThread):
             # Rescale coordinates to original dimensions
             box_h = ((y_max - y_min) / unpad_h) * img.shape[0]
             box_w = ((x_max - x_min) / unpad_w) * img.shape[1]
-            y_min = (((y_min - pad_y // 2) / unpad_h) * img.shape[0]).round().item()
-            x_min = (((x_min - pad_x // 2) / unpad_w) * img.shape[1]).round().item()
+            y_min = (((y_min - pad_y // 2) / unpad_h) *
+                     img.shape[0]).round().item()
+            x_min = (((x_min - pad_x // 2) / unpad_w) *
+                     img.shape[1]).round().item()
             x_max = (x_min + box_w).round().item()
             y_max = (y_min + box_h).round().item()
-            x_min, y_min, x_max, y_max = max(x_min, 0), max(y_min, 0), max(x_max, 0), max(y_max, 0)
+            x_min = max(x_min, 0)
+            y_min = max(y_min, 0)
+            x_max = max(x_max, 0)
+            y_max = max(y_max, 0)
             annotation['bbox']['xmin'] = x_min / img.shape[1]
             annotation['bbox']['xmax'] = x_max / img.shape[1]
             annotation['bbox']['ymin'] = y_min / img.shape[0]
@@ -95,7 +106,9 @@ class Annotator(QtCore.QThread):
         nms_thres = 0.45
         self.data = schema.annotation_file()
         self.model.to(self.device).eval()
-        dataloader = load_images(self.image_directory, batch_size=1, img_size=self.image_size)
+        dataloader = load_images(self.image_directory,
+                                 batch_size=1,
+                                 img_size=self.image_size)
         for count, (img_path, img) in enumerate(dataloader):
             entry = schema.annotation_file_entry()
             with torch.no_grad():
@@ -105,7 +118,9 @@ class Annotator(QtCore.QThread):
                 pred = pred[pred[:, :, 4] > conf_thres]
 
                 if pred:
-                    detections = non_max_suppression(pred.unsqueeze(0), conf_thres, nms_thres)
+                    detections = non_max_suppression(pred.unsqueeze(0),
+                                                     conf_thres,
+                                                     nms_thres)
                     entry = self.scale_detections(img_path[0], detections[0])
 
                 if entry['annotations']:

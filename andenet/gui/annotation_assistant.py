@@ -24,11 +24,13 @@
 import os
 from PyQt5 import QtCore, QtWidgets, uic
 
-LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__), 'annotation_assistant.ui'))
+LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
+                          'annotation_assistant.ui'))
 
 
 class AnnotationAssistant(QtWidgets.QDialog, LABEL):
-    """Helper widget that displays label and metadata choices after creating a bounding box."""
+    """Helper widget that displays label and metadata choices
+    after creating a bounding box."""
 
     submitted = QtCore.pyqtSignal(dict)
 
@@ -39,15 +41,15 @@ class AnnotationAssistant(QtWidgets.QDialog, LABEL):
         self.setWindowTitle('Annotation Assitant')
         self.setModal(True)
         for entry in labels:
-            self.comboBoxLabels.addItem(entry)
-        self.pushButtonSubmit.clicked.connect(self.submit)
+            self.cbb_labels.addItem(entry)
+        self.pb_submit.clicked.connect(self.submit)
 
     def submit(self):
         """(Slot) Emit bounding box label data."""
         metadata = {}
-        metadata['label'] = self.comboBoxLabels.currentText()
-        metadata['truncated'] = self.checkBoxTruncated.isChecked() and 'Y' or 'N'
-        metadata['occluded'] = self.checkBoxOccluded.isChecked() and 'Y' or 'N'
-        metadata['difficult'] = self.checkBoxDifficult.isChecked() and 'Y' or 'N'
+        metadata['label'] = self.cbb_labels.currentText()
+        metadata['truncated'] = self.cb_truncated.isChecked() and 'Y' or 'N'
+        metadata['occluded'] = self.cb_occluded.isChecked() and 'Y' or 'N'
+        metadata['difficult'] = self.cb_difficult.isChecked() and 'Y' or 'N'
         self.submitted.emit(metadata)
         self.hide()

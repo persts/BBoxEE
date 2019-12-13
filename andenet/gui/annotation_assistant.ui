@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>LabelAssistant</class>
+ <class>AnnotationAssistant</class>
  <widget class="QWidget" name="AnnotationAssistant">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>293</width>
-    <height>137</height>
+    <height>164</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,24 +15,24 @@
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
    <item>
-    <widget class="QComboBox" name="comboBoxLabels"/>
+    <widget class="QComboBox" name="cbb_labels"/>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBoxTruncated">
+    <widget class="QCheckBox" name="cb_truncated">
      <property name="text">
       <string>Truncated</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBoxOccluded">
+    <widget class="QCheckBox" name="cb_occluded">
      <property name="text">
       <string>Occluded</string>
      </property>
     </widget>
    </item>
    <item>
-    <widget class="QCheckBox" name="checkBoxDifficult">
+    <widget class="QCheckBox" name="cb_difficult">
      <property name="text">
       <string>Difficult</string>
      </property>
@@ -54,7 +54,7 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButtonSubmit">
+      <widget class="QPushButton" name="pb_submit">
        <property name="text">
         <string>Submit</string>
        </property>
