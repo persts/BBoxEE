@@ -14,9 +14,9 @@ Andenet is actively under development by Peter Ersts and Ned Horning of the [Cen
 Andenet is being developed on Ubuntu 18.04 with the following libraries:
 
 * PyQt5 (5.10.1)
-* TKinter (3.6.7)
-* Pillow (5.4.1)
-* Numpy (1.15.4)
+* TKinter (3.6.9)
+* Pillow (6.1.0)
+* Numpy (1.17.0)
 
 Install GUI libraries:
 
@@ -58,7 +58,7 @@ Exporting to some format may require additional libraries / frameworks. Exportin
 ### Additional Dependencies:
 * Torch (1.0.0)
 * Matplotlib (3.0.2)
-* Opencv-python
+* Opencv-python (3.4.5.20)
 
 ``` bash
 sudo -H pip3 install torch
@@ -84,8 +84,8 @@ Note: This export command needs to run from every new terminal you start. If you
 ## Assisted Annotation with Tensorflow and TFRecord Export
 
 ### Additional Dependencies:
-* lxml (4.3.0)
-* TensorFlow (1.12.0)
+* lxml (4.4.2)
+* TensorFlow (1.15.0)
 
 ```bash
 sudo -H pip3 install --upgrade lxml
@@ -96,35 +96,6 @@ For detailed steps to install TensorFlow, follow the [TensorFlow installation in
 
 ``` bash
 # For CPU
-sudo -H pip3 install tensorflow
+sudo -H pip3 install tensorflow==1.15
 # For GPU
-sudo -H pip3 install tensorflow-gpu
-```
-Clone TensorFlow's models repo:
-
-``` bash
-git clone https://github.com/tensorflow/models
-```
-### Protobuf Compilation
-The TensorFlow Object Detection API uses Protobufs to configure model and training parameters. Before the framework can be used, the Protobuf libraries must be compiled. This should be done by running the following command from the models/research/ directory:
-
-``` bash
-sudo apt install protobuf-compiler
-# From models/research/
-protoc object_detection/protos/*.proto --python_out=.
-```
-
-### Add Libraries to PYTHONPATH
-When running locally, the tensorflow/models/research/ and slim directories should be appended to PYTHONPATH. This can be done by running the following from tensorflow/models/research/:
-
-``` bash
-# From tensorflow/models/research/
-export PYTHONPATH=`pwd`:`pwd`/slim:`pwd`/object_detection
-```
-Note: This export command needs to run from every new terminal you start. If you wish to avoid running this manually, you can 
-``` bash
-echo $PYTHONPATH
-```
-add the export command as a new line to the end of your ~/.bashrc file.
-
-
+sudo -H pip3 install tensorflow-gpu==1.15

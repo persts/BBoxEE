@@ -105,20 +105,32 @@ class Exporter(QtCore.QThread):
         random.shuffle(self.images)
 
         counter = 0
-        train_writer = tf.python_io.TFRecordWriter(
+        train_writer = tf.io.TFRecordWriter(
             os.path.join(self.directory, 'training.record'))
-        validation_writer = tf.python_io.TFRecordWriter(
+        validation_writer = tf.io.TFRecordWriter(
             os.path.join(self.directory, 'validation.record'))
         for example in self.images:
             file_name = os.path.join(
                 example['directory'], example['file_name'])
 
-            with tf.gfile.GFile(file_name, 'rb') as fid:
+            with tf.io.gfile.GFile(file_name, 'rb') as fid:
                 encoded_jpg = fid.read()
             encoded_jpg_io = io.BytesIO(encoded_jpg)
             image = Image.open(encoded_jpg_io)
             if image.format != 'JPEG':
                 raise ValueError('Image format not JPEG')
+
+            if self.strip_metadata:
+                array = np.array(image)
+                if example['mask_name'] in self.masks:
+                    array = array * self.masks[example['mask_name']]
+                img = Image.fromarray(array)
+                buf = io.BytesIO()
+                img.save(buf, format='JPEG')
+                encoded_jpg = buf.getvalue()
+                buf.close()
+                img.close()
+
             key = hashlib.sha256(encoded_jpg).hexdigest()
             size = image.size  # PIL (width, height)
             image.close()
