@@ -24,7 +24,7 @@
      </property>
      <widget class="QWidget" name="tensorflow">
       <attribute name="title">
-       <string>Tensorflow</string>
+       <string>Tensorflow v1.X</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -111,7 +111,7 @@
      </widget>
      <widget class="QWidget" name="yolo">
       <attribute name="title">
-       <string>YOLOv3</string>
+       <string>YOLO v3</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_3">
        <item>

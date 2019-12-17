@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 #
-# Animal Detection Network (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 # Author: Peter Ersts (ersts@amnh.org)
 #
 # --------------------------------------------------------------------------
 #
-# This file is part of Animal Detection Network (Andenet).
+# This file is part of Animal Detection Network's (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 #
-# Andenet is free software: you can redistribute it and/or modify
+# BBoxEE is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Andenet is distributed in the hope that it will be useful,
+# BBoxEE is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -21,16 +22,11 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-#
-# This file is largely based on code from:
-#  https://github.com/ultralytics/yolov3/blob/master/detect.py
-#
-# --------------------------------------------------------------------------
 import os
 import torch
 import cv2
 from PyQt5 import QtCore
-from andenet import schema
+from bboxee import schema
 
 from models import Darknet
 from utils.parse_config import parse_data_config

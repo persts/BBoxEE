@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 #
-# Animal Detection Network (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 # Author: Peter Ersts (ersts@amnh.org)
 #
 # --------------------------------------------------------------------------
 #
-# This file is part of Animal Detection Network (Andenet).
+# This file is part of Animal Detection Network's (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 #
-# Andenet is free software: you can redistribute it and/or modify
+# BBoxEE is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Andenet is distributed in the hope that it will be useful,
+# BBoxEE is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -25,8 +26,8 @@ import sys
 import json
 from PyQt5 import QtWidgets
 
-from andenet.gui import ExportWidget
-from andenet.gui import AnnotationWidget
+from bboxee.gui import ExportWidget
+from bboxee.gui import AnnotationWidget
 
 if __name__ == "__main__":
     try:

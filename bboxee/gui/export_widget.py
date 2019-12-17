@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 #
-# Animal Detection Network (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 # Author: Peter Ersts (ersts@amnh.org)
 #
 # --------------------------------------------------------------------------
 #
-# This file is part of Animal Detection Network (Andenet).
+# This file is part of Animal Detection Network's (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 #
-# Andenet is free software: you can redistribute it and/or modify
+# BBoxEE is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Andenet is distributed in the hope that it will be useful,
+# BBoxEE is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -25,8 +26,8 @@ import os
 import glob
 import json
 from PyQt5 import QtCore, QtWidgets, QtGui, uic
-from andenet.gui import CocoDialog
-from andenet import schema
+from bboxee.gui import CocoDialog
+from bboxee import schema
 
 EXPORT, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
                            'export_widget.ui'))
@@ -203,7 +204,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         module_loaded = False
         if export_to == 'Tensorflow Record':
             try:
-                from andenet.exporter.tfrecord import Exporter
+                from bboxee.exporter.tfrecord import Exporter
                 module_loaded = True
             except ModuleNotFoundError:
                 message = 'Required Tensorflow modules not found.' \
@@ -211,14 +212,14 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                 QtWidgets.QMessageBox.critical(self, 'Export', message)
         elif export_to == 'Darknet YOLOv3':
             try:
-                from andenet.exporter.yolo import Exporter
+                from bboxee.exporter.yolo import Exporter
                 module_loaded = True
             except ModuleNotFoundError:
                 message = 'Required Torch or Yolov3 modules not found.\n\n' \
                     'Please review install requirements.'
                 QtWidgets.QMessageBox.critical(self, 'Export', message)
         elif export_to == 'COCO':
-            from andenet.exporter.coco import Exporter
+            from bboxee.exporter.coco import Exporter
             module_loaded = True
         if module_loaded:
             directory = (QtWidgets.

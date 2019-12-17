@@ -66,7 +66,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/previous.svg</normaloff>:/icons/previous.svg</iconset>
            </property>
            <property name="iconSize">
@@ -99,7 +99,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/skip_previous.svg</normaloff>:/icons/skip_previous.svg</iconset>
            </property>
            <property name="iconSize">
@@ -143,7 +143,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/skip_next.svg</normaloff>:/icons/skip_next.svg</iconset>
            </property>
            <property name="iconSize">
@@ -182,7 +182,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/delete.svg</normaloff>:/icons/delete.svg</iconset>
            </property>
            <property name="iconSize">
@@ -208,7 +208,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/next.svg</normaloff>:/icons/next.svg</iconset>
            </property>
            <property name="iconSize">
@@ -232,7 +232,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/folder.svg</normaloff>:/icons/folder.svg</iconset>
            </property>
            <property name="iconSize">
@@ -252,7 +252,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/file.svg</normaloff>:/icons/file.svg</iconset>
            </property>
            <property name="iconSize">
@@ -291,7 +291,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/edit.svg</normaloff>:/icons/edit.svg</iconset>
            </property>
            <property name="iconSize">
@@ -320,7 +320,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/remove.svg</normaloff>:/icons/remove.svg</iconset>
            </property>
            <property name="iconSize">
@@ -353,7 +353,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/zoom_in.svg</normaloff>:/icons/zoom_in.svg</iconset>
            </property>
            <property name="iconSize">
@@ -373,7 +373,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/andenet.qrc">
+            <iconset resource="../../icons/bboxee.qrc">
              <normaloff>:/icons/zoom_out.svg</normaloff>:/icons/zoom_out.svg</iconset>
            </property>
            <property name="iconSize">
@@ -697,11 +697,11 @@
   <customwidget>
    <class>AnnotationGraphicsView</class>
    <extends>QGraphicsView</extends>
-   <header location="global">andenet/gui/annotation_graphicsview</header>
+   <header location="global">bboxee/gui/annotation_graphicsview</header>
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="../../icons/andenet.qrc"/>
+  <include location="../../icons/bboxee.qrc"/>
  </resources>
  <connections/>
 </ui>

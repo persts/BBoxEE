@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 #
-# Animal Detection Network (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 # Author: Peter Ersts (ersts@amnh.org)
 #
 # --------------------------------------------------------------------------
 #
-# This file is part of Animal Detection Network (Andenet).
+# This file is part of Animal Detection Network's (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 #
-# Andenet is free software: you can redistribute it and/or modify
+# BBoxEE is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Andenet is distributed in the hope that it will be useful,
+# BBoxEE is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -27,9 +28,9 @@ import json
 import numpy as np
 from PIL import Image
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from andenet import schema
-from andenet.gui import AnnotationAssistant
-from andenet.gui import AnnotatorDialog
+from bboxee import schema
+from bboxee.gui import AnnotationAssistant
+from bboxee.gui import AnnotatorDialog
 
 WIDGET, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
                            'annotation_widget.ui'))
@@ -192,6 +193,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             elif response == QtWidgets.QMessageBox.Cancel:
                 proceed = False
         if proceed:
+            self.pb_license.setEnabled(False)
             self.pb_annotate.setEnabled(False)
             self.pb_directory.setEnabled(False)
             self.pb_label_file.setEnabled(False)
@@ -218,6 +220,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.data['images'] = data['images']
         self.current_image = 0
         self.next_image()
+        self.pb_license.setEnabled(True)
         self.pb_annotate.setEnabled(True)
         self.pb_directory.setEnabled(True)
         self.pb_label_file.setEnabled(True)

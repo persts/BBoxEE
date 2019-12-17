@@ -57,7 +57,7 @@
         <string/>
        </property>
        <property name="icon">
-        <iconset resource="../../icons/andenet.qrc">
+        <iconset resource="../../icons/bboxee.qrc">
          <normaloff>:/icons/folder.svg</normaloff>:/icons/folder.svg</iconset>
        </property>
        <property name="iconSize">
@@ -303,7 +303,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../icons/andenet.qrc"/>
+  <include location="../../icons/bboxee.qrc"/>
  </resources>
  <connections/>
 </ui>

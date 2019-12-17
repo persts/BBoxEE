@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 #
-# Animal Detection Network (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 # Author: Peter Ersts (ersts@amnh.org)
 #
 # --------------------------------------------------------------------------
 #
-# This file is part of Animal Detection Network (Andenet).
+# This file is part of Animal Detection Network's (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 #
-# Andenet is free software: you can redistribute it and/or modify
+# BBoxEE is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Andenet is distributed in the hope that it will be useful,
+# BBoxEE is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -167,7 +168,7 @@ class Exporter(QtCore.QThread):
             nl = "\n"
         file.close()
 
-        file = open(os.path.join(cfg_path, 'andenet.data'), 'w')
+        file = open(os.path.join(cfg_path, 'bboxee.data'), 'w')
         file.write('classes={}\n'.format(len(self.labels)))
         file_name = os.path.join(self.directory, 'train.txt')
         file.write('train={}\n'.format(file_name))

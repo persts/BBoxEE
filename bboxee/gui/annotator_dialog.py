@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
 #
-# Animal Detection Network (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 # Author: Peter Ersts (ersts@amnh.org)
 #
 # --------------------------------------------------------------------------
 #
-# This file is part of Animal Detection Network (Andenet).
+# This file is part of Animal Detection Network's (Andenet)
+# Bounding Box Editor and Exporter (BBoxEE)
 #
-# Andenet is free software: you can redistribute it and/or modify
+# BBoxEE is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# Andenet is distributed in the hope that it will be useful,
+# BBoxEE is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
@@ -57,8 +58,11 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
 
     def tensorflow_selected(self):
         """Load a frozen inference graph and label map."""
+        self.pushButtonTensorflow.setDisabled(True)
+        self.pushButtonLabelMap.setDisabled(True)
+        self.pushButtonTFGraph.setDisabled(True)
         try:
-            from andenet.annotator.tensorflow import Annotator
+            from bboxee.annotator.tensorflow import Annotator
             graph = self.lineEditTFGraph.text()
             label_map = self.lineEditLabelMap.text()
             self.annotator = Annotator(graph, label_map)
@@ -68,10 +72,15 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
             message = 'Required Tensorflow modules not found.\n\n\
                 Please review install requirements.'
             QtWidgets.QMessageBox.critical(self, 'Export', message)
+        self.pushButtonTensorflow.setDisabled(False)
+        self.pushButtonLabelMap.setDisabled(False)
+        self.pushButtonTFGraph.setDisabled(False)
 
     def yolo_selected(self):
+        """Load a YOLO v3 model."""
+        self.pushButtonYolo.setDisabled(True)
         try:
-            from andenet.annotator.yolo import Annotator
+            from bboxee.annotator.yolo import Annotator
             data_config = self.lineEditDataConfig.text()
             net_config = self.lineEditNetworkConfig.text()
             weights = self.lineEditWeights.text()
@@ -86,6 +95,7 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
             message = 'Required Torch or YOLOv3 modules not found.\n\n\
                 Please review install requirements.'
             QtWidgets.QMessageBox.critical(self, 'Export', message)
+        self.pushButtonYolo.setDisabled(False)
 
     # Helper functions
     def get_inference_graph(self):
