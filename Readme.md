@@ -2,7 +2,7 @@
 
 BBoxEE is an open source tool for annotating and exploring bounding box data for training object detectors.
 BBoxEE was specifically developed for the [Animal Detection Network (Andenet)](http://biodiversityinformatics.amnh.org/ml4conservation/animal-detection-network/) for use with camera trap data. 
-BBoxEE however, is not limited to annotating camera trap data it can be used for any bounding box annotation task. 
+BBoxEE, however, is not limited to annotating camera trap data and can be used for any bounding box annotation task. 
 
 BBoxEE is actively under development by Peter Ersts and Ned Horning of the [Center for Biodiversity and Conservation at the American Museum of Natural History](https://www.amnh.org/our-research/center-for-biodiversity-conservation). Additional documentation will be forthcoming.
 
