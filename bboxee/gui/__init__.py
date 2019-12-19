@@ -22,9 +22,9 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-from .annotation_assistant import AnnotationAssistant
-from .annotator_dialog import AnnotatorDialog
-from .coco_dialog import CocoDialog
+from .annotation_assistant import AnnotationAssistant  # noqa: F401
+from .annotator_dialog import AnnotatorDialog  # noqa: F401
+from .coco_dialog import CocoDialog  # noqa: F401
 
-from .annotation_widget import AnnotationWidget
-from .export_widget import ExportWidget
+from .annotation_widget import AnnotationWidget  # noqa: F401
+from .export_widget import ExportWidget  # noqa: F401
