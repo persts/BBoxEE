@@ -49,18 +49,18 @@ class Globber(QtCore.QThread):
     def run(self):
         """The starting point for the thread."""
         self.init_progress.emit(0, 'Scanning...')
-        file_list = glob.glob(self.directory + os.path.sep + '**/*.adn',
+        file_list = glob.glob(self.directory + os.path.sep + '**/*.bbx',
                               recursive=True)
         self.init_progress.emit(len(file_list), 'Parsing %p%')
         data = {}
         masks = {}
-        for p, adn_file in enumerate(file_list):
+        for p, bbx_file in enumerate(file_list):
             # Read labels from original annotaiton file and summarize by file.
-            file = open(adn_file, 'r')
+            file = open(bbx_file, 'r')
             contents = json.load(file)
             file.close()
 
-            data[adn_file] = {'summary': '',
+            data[bbx_file] = {'summary': '',
                               'labels': {},
                               'images': {},
                               'mask_name': ''}
@@ -69,10 +69,10 @@ class Globber(QtCore.QThread):
             if contents['mask_name'] != '':
                 if contents['mask_name'] not in masks:
                     masks[contents['mask_name']] = contents['mask']
-            data[adn_file]['mask_name'] = contents['mask_name']
+            data[bbx_file]['mask_name'] = contents['mask_name']
             # Loop through all of the images and summarize
             for entry in contents['images']:
-                data[adn_file]['images'][entry] = contents['images'][entry]
+                data[bbx_file]['images'][entry] = contents['images'][entry]
                 labels = {}
                 exclusions = {}
 
@@ -98,10 +98,10 @@ class Globber(QtCore.QThread):
                 tmp['exclusions'] = exclusions
                 tmp['labels'] = labels
             string = ''
-            data[adn_file]['labels'] = summary
+            data[bbx_file]['labels'] = summary
             for label in summary:
                 string += label + ': ' + str(summary[label]) + "\n"
-            data[adn_file]['summary'] = string
+            data[bbx_file]['summary'] = string
             self.progress.emit(p+1)
         self.finished.emit(data, masks)
 
@@ -153,12 +153,12 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         """(Slot) Display annotation files in table with summary count
         by label."""
         self.tw_files.setRowCount(len(data))
-        for index, adn_file in enumerate(data):
-            item = QtWidgets.QTableWidgetItem(adn_file)
+        for index, bbx_file in enumerate(data):
+            item = QtWidgets.QTableWidgetItem(bbx_file)
             item.setFlags(QtCore.Qt.ItemIsSelectable)
             self.tw_files.setItem(index, 0, item)
 
-            item = QtWidgets.QTableWidgetItem(data[adn_file]['summary'])
+            item = QtWidgets.QTableWidgetItem(data[bbx_file]['summary'])
             item.setFlags(QtCore.Qt.ItemIsSelectable)
             self.tw_files.setItem(index, 1, item)
             self.tw_files.resizeRowToContents(index)
@@ -175,16 +175,16 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         cbo = self.cb_occluded.isChecked()
         cbd = self.cb_difficult.isChecked()
         for index in self.tw_files.selectionModel().selectedRows():
-            adn_file = self.tw_files.item(index.row(), 0).text()
-            for label in self.base_data[adn_file]['labels']:
+            bbx_file = self.tw_files.item(index.row(), 0).text()
+            for label in self.base_data[bbx_file]['labels']:
                 if label not in labels:
-                    labels[label] = self.base_data[adn_file]['labels'][label]
+                    labels[label] = self.base_data[bbx_file]['labels'][label]
                 else:
-                    labels[label] += self.base_data[adn_file]['labels'][label]
+                    labels[label] += self.base_data[bbx_file]['labels'][label]
             # If something is checked find and subtract from total
             if cbt or cbo or cbd:
-                for image in self.base_data[adn_file]['images']:
-                    entry = self.base_data[adn_file]['images'][image]
+                for image in self.base_data[bbx_file]['images']:
+                    entry = self.base_data[bbx_file]['images'][image]
                     match = False
                     if cbt and 'truncated' in entry['exclusions']:
                         match = True
@@ -258,11 +258,11 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                 excludes.append(label)
         # Loop through all of the selected rows
         for index in self.tw_files.selectionModel().selectedRows():
-            adn_file = self.tw_files.item(index.row(), 0).text()
-            img_list = self.base_data[adn_file]['images']
+            bbx_file = self.tw_files.item(index.row(), 0).text()
+            img_list = self.base_data[bbx_file]['images']
 
             # Loop through images in annotation file
-            directory = os.path.split(adn_file)[0]
+            directory = os.path.split(bbx_file)[0]
             for img_name in img_list:
                 process = True
                 entry = img_list[img_name]
@@ -280,7 +280,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                     image = schema.package_entry()
                     image['directory'] = directory
                     image['file_name'] = img_name
-                    image['mask_name'] = self.base_data[adn_file]['mask_name']
+                    image['mask_name'] = self.base_data[bbx_file]['mask_name']
                     image['attribution'] = entry['attribution']
                     image['license'] = entry['license']
                     try:
@@ -316,12 +316,12 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
     def selection_changed(self):
         labels = {}
         for index in self.tw_files.selectionModel().selectedRows():
-            adn_file = self.tw_files.item(index.row(), 0).text()
-            for label in self.base_data[adn_file]['labels']:
+            bbx_file = self.tw_files.item(index.row(), 0).text()
+            for label in self.base_data[bbx_file]['labels']:
                 if label not in labels:
-                    labels[label] = self.base_data[adn_file]['labels'][label]
+                    labels[label] = self.base_data[bbx_file]['labels'][label]
                 else:
-                    labels[label] += self.base_data[adn_file]['labels'][label]
+                    labels[label] += self.base_data[bbx_file]['labels'][label]
         self.update_remap_table(labels)
 
     def update_label_map(self, row, column):

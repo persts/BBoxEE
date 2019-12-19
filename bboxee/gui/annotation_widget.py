@@ -507,7 +507,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                          getOpenFileName(self,
                                          'Load Annotations',
                                          self.image_directory,
-                                         'Andenet (*.adn)'))
+                                         'BBoxEE (*.bbx)'))
             if file_name[0] != '':
                 file = open(file_name[0], 'r')
                 self.data = json.load(file)
@@ -634,8 +634,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                      QFileDialog.
                      getSaveFileName(self,
                                      'Save Annotations',
-                                     self.image_directory + 'untitled.adn',
-                                     'Andenet (*.adn)'))
+                                     self.image_directory + 'untitled.bbx',
+                                     'BBoxEE (*.bbx)'))
         if file_name[0] != '':
             file = open(file_name[0], 'w')
             json.dump(self.data, file)
