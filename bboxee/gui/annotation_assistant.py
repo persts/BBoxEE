@@ -35,15 +35,20 @@ class AnnotationAssistant(QtWidgets.QDialog, LABEL):
 
     submitted = QtCore.pyqtSignal(dict)
 
-    def __init__(self, labels, parent=None):
+    def __init__(self, parent=None):
         """Class init function."""
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
         self.setWindowTitle('Annotation Assitant')
         self.setModal(True)
+        self.set_labels(['N/A'])
+        self.pb_submit.clicked.connect(self.submit)
+
+    def set_labels(self, labels):
+        """Populate base lables."""
+        self.cbb_labels.clear()
         for entry in labels:
             self.cbb_labels.addItem(entry)
-        self.pb_submit.clicked.connect(self.submit)
 
     def submit(self):
         """(Slot) Emit bounding box label data."""

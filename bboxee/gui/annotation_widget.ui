@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1036</width>
+    <width>1031</width>
     <height>660</height>
    </rect>
   </property>
@@ -25,7 +25,7 @@
      <property name="orientation">
       <enum>Qt::Horizontal</enum>
      </property>
-     <widget class="QFrame" name="frame">
+     <widget class="QFrame" name="main_frame">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>4</horstretch>
@@ -401,7 +401,7 @@
        </item>
       </layout>
      </widget>
-     <widget class="QFrame" name="frame_2">
+     <widget class="QFrame" name="right_frame">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
         <horstretch>1</horstretch>
@@ -435,7 +435,7 @@
       <property name="frameShadow">
        <enum>QFrame::Plain</enum>
       </property>
-      <layout class="QVBoxLayout" name="verticalLayout">
+      <layout class="QVBoxLayout" name="verticalLayout_4">
        <item>
         <widget class="QGroupBox" name="groupBox_2">
          <property name="title">
@@ -537,41 +537,105 @@
         </widget>
        </item>
        <item>
-        <widget class="QGroupBox" name="groupBox_3">
+        <widget class="LicenseGroupBox" name="license">
          <property name="title">
           <string>License and Attribution</string>
          </property>
-         <layout class="QGridLayout" name="gridLayout_2">
-          <item row="0" column="0">
-           <widget class="QLabel" name="label">
+        </widget>
+       </item>
+       <item>
+        <widget class="Line" name="line">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QFrame" name="table_frame">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="lineWidth">
+          <number>0</number>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QCheckBox" name="checkBoxDisplayAnnotationData">
             <property name="text">
-             <string>Attribution</string>
+             <string>Display annotation data in bounding box</string>
             </property>
            </widget>
           </item>
-          <item row="0" column="1">
-           <widget class="QLineEdit" name="lineEditAttribution"/>
-          </item>
-          <item row="1" column="0">
-           <widget class="QLabel" name="label_2">
+          <item>
+           <widget class="QCheckBox" name="checkBoxAnnotationAssistant">
             <property name="text">
-             <string>License</string>
+             <string>Open annotation assistant on select</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="1">
-           <widget class="QComboBox" name="cbb_license">
-            <item>
+          <item>
+           <widget class="QTableWidget" name="tw_labels">
+            <column>
              <property name="text">
-              <string/>
+              <string>Label</string>
              </property>
-            </item>
+            </column>
+            <column>
+             <property name="text">
+              <string>Truncated</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Occluded</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Difficult</string>
+             </property>
+            </column>
            </widget>
           </item>
-          <item row="2" column="0" colspan="2">
-           <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="Line" name="line_2">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout">
             <item>
-             <spacer name="horizontalSpacer_7">
+             <widget class="QPushButton" name="pb_mask">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>Select Mask</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_4">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
@@ -584,12 +648,12 @@
              </spacer>
             </item>
             <item>
-             <widget class="QPushButton" name="pb_license">
-              <property name="toolTip">
-               <string>Apply to all annotated images</string>
+             <widget class="QPushButton" name="pb_save">
+              <property name="enabled">
+               <bool>false</bool>
               </property>
               <property name="text">
-               <string>Apply To All </string>
+               <string>Save</string>
               </property>
              </widget>
             </item>
@@ -597,95 +661,6 @@
           </item>
          </layout>
         </widget>
-       </item>
-       <item>
-        <widget class="Line" name="line">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBoxDisplayAnnotationData">
-         <property name="text">
-          <string>Display annotation data in bounding box</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QCheckBox" name="checkBoxAnnotationAssistant">
-         <property name="text">
-          <string>Open annotation assistant on select</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QTableWidget" name="tw_labels">
-         <column>
-          <property name="text">
-           <string>Label</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Truncated</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Occluded</string>
-          </property>
-         </column>
-         <column>
-          <property name="text">
-           <string>Difficult</string>
-          </property>
-         </column>
-        </widget>
-       </item>
-       <item>
-        <widget class="Line" name="line_2">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <layout class="QHBoxLayout" name="horizontalLayout">
-         <item>
-          <widget class="QPushButton" name="pb_mask">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Select Mask</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <spacer name="horizontalSpacer_4">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pb_save">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="text">
-            <string>Save</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </item>
       </layout>
      </widget>
@@ -698,6 +673,12 @@
    <class>AnnotationGraphicsView</class>
    <extends>QGraphicsView</extends>
    <header location="global">bboxee/gui/annotation_graphicsview</header>
+  </customwidget>
+  <customwidget>
+   <class>LicenseGroupBox</class>
+   <extends>QGroupBox</extends>
+   <header location="global">bboxee/gui/license_groupbox</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources>

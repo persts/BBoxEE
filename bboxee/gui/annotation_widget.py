@@ -40,7 +40,7 @@ WIDGET, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
 class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     """Widget for annotating images."""
 
-    def __init__(self, config_data, icon_size=24, parent=None):
+    def __init__(self, icon_size=24, parent=None):
         """Class init function."""
         QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
@@ -54,7 +54,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.mask = None
         self.data = None
         self.dirty = False
-        self.assistant = AnnotationAssistant(config_data['labels'], self)
+        self.assistant = AnnotationAssistant(self)
         self.assistant.submitted.connect(self.update_annotation)
         self.qt_image = None
         self.current_img_size = (0, 0)
@@ -114,7 +114,9 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_clear.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_clear.setIcon(QtGui.QIcon(':/icons/delete.svg'))
 
-        self.pb_license.clicked.connect(self.apply_license)
+        self.license.license_changed.connect(self.update_license)
+        self.license.apply_license.connect(self.apply_license)
+
         self.pb_annotater.clicked.connect(self.select_annotator)
         self.pb_annotate.clicked.connect(self.annotate)
         self.pb_save.clicked.connect(self.save)
@@ -127,14 +129,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.tw_labels.cellChanged.connect(self.cell_changed)
         self.tw_labels.cellDoubleClicked.connect(self.delete_row)
         self.checkBoxDisplayAnnotationData.clicked.connect(self.display_bboxes)
-
-        self.last_license_index = 0
-        self.last_license_attribution = ''
-        self.licenses = config_data['licenses']
-        for entry in self.licenses:
-            self.cbb_license.addItem(entry['name'], entry['url'])
-        self.cbb_license.currentIndexChanged.connect(self.update_license)
-        self.lineEditAttribution.textEdited.connect(self.update_license)
 
         (self.tw_labels.
          setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows))
@@ -193,19 +187,12 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             elif response == QtWidgets.QMessageBox.Cancel:
                 proceed = False
         if proceed:
-            self.pb_license.setEnabled(False)
-            self.pb_annotate.setEnabled(False)
-            self.pb_directory.setEnabled(False)
-            self.pb_label_file.setEnabled(False)
-            self.pb_annotater.setEnabled(False)
-            self.pb_mask.setEnabled(False)
-            self.pb_save.setEnabled(False)
-            self.pb_next.setEnabled(False)
-            self.pb_next_ann.setEnabled(False)
-            self.pb_previous.setEnabled(False)
-            self.pb_previous_ann.setEnabled(False)
-            self.tw_labels.setEnabled(False)
             self.checkBoxDisplayAnnotationData.setChecked(True)
+            self.license.setDisabled(True)
+            self.main_frame.setDisabled(True)
+            self.table_frame.setDisabled(True)
+            self.pb_annotater.setDisabled(True)
+            self.pb_annotate.setDisabled(True)
 
             self.progressBar.setRange(0, len(self.image_list))
             self.progressBar.setValue(0)
@@ -220,18 +207,11 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.data['images'] = data['images']
         self.current_image = 0
         self.next_image()
-        self.pb_license.setEnabled(True)
-        self.pb_annotate.setEnabled(True)
-        self.pb_directory.setEnabled(True)
-        self.pb_label_file.setEnabled(True)
+        self.license.setEnabled(True)
+        self.main_frame.setEnabled(True)
+        self.table_frame.setEnabled(True)
         self.pb_annotater.setEnabled(True)
-        self.pb_mask.setEnabled(True)
-        self.pb_save.setEnabled(True)
-        self.pb_next.setEnabled(True)
-        self.pb_next_ann.setEnabled(True)
-        self.pb_previous.setEnabled(True)
-        self.pb_previous_ann.setEnabled(True)
-        self.tw_labels.setEnabled(True)
+        self.pb_annotate.setEnabled(True)
         self.set_dirty(True)
 
     def annotation_progress(self, progress, image, annotations):
@@ -250,17 +230,15 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.annotator.finished.connect(self.annotation_complete)
         self.pb_annotate.setEnabled(True)
 
-    def apply_license(self):
+    def apply_license(self, license):
         if self.data is not None:
             for image in self.data['images']:
                 if ('annotations' in self.data['images'][image] and
                         self.data['images'][image]['annotations']):
                     rec = self.data['images'][image]
-                    rec['attribution'] = self.last_license_attribution
-                    item = self.cbb_license.itemText(self.last_license_index)
-                    rec['license'] = item
-                    item = self.cbb_license.itemData(self.last_license_index)
-                    rec['license_url'] = item
+                    rec['attribution'] = license['attribution']
+                    rec['license'] = license['license']
+                    rec['license_url'] = license['license_url']
 
     def bbox_created(self, rect, show_assistant=True):
         """(Slot) save the newly created bbox and display it."""
@@ -280,8 +258,9 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.display_annotation_data()
             self.selected_row = self.tw_labels.rowCount() - 1
             self.tw_labels.selectRow(self.selected_row)
+
+            self.license.request()
         self.display_bboxes()
-        self.save_license(display=True)
         if show_assistant:
             self.show_assistant()
 
@@ -415,24 +394,14 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     self.graphicsView.selected_bbox = graphics_item
 
     def display_license(self):
-        self.cbb_license.blockSignals(True)
-        if self.current_file_name in self.data['images']:
-            record = self.data['images'][self.current_file_name]
-            if 'license' in record and record['license'] != '':
-                self.last_license_index = 0
-                self.last_license_attribution = record['attribution']
-                index = self.cbb_license.findData(record['license_url'])
-                if index != -1:
-                    self.last_license_index = index
-                self.cbb_license.setCurrentIndex(self.last_license_index)
-                self.lineEditAttribution.setText(self.last_license_attribution)
-            else:
-                self.lineEditAttribution.setText('')
-                self.cbb_license.setCurrentIndex(0)
-        else:
-            self.lineEditAttribution.setText('')
-            self.cbb_license.setCurrentIndex(0)
-        self.cbb_license.blockSignals(False)
+        lic = {'license': '', 'license_url': '', 'attribution': ''}
+        if (self.data is not None and
+                self.current_file_name in self.data['images']):
+            rec = self.data['images'][self.current_file_name]
+            lic['license'] = rec['license']
+            lic['license_url'] = rec['license_url']
+            lic['attribution'] = rec['attribution']
+        self.license.display_license(lic)
 
     def jump_to_image(self):
         """(Slot) Just to a specific image when when line edit changes."""
@@ -445,6 +414,44 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.lineEditCurrentImage.setText(str(self.current_image))
         except ValueError:
             self.lineEditCurrentImage.setText(str(self.current_image))
+
+    def load_config(self, directory):
+        dir_name = directory
+        file_name = os.path.join(dir_name, 'bboxee_config.json')
+        history = []
+        config = {}
+        while file_name not in history:
+            if os.path.exists(file_name):
+                try:
+                    f = open(file_name, 'r')
+                    config = json.load(f)
+                    f.close()
+                    if 'labels' in config and 'license' in config:
+                        self.assistant.set_labels(config['labels'])
+                        self.license.set_licenses(config['license'])
+                        break
+                except json.decoder.JSONDecodeError as error:
+                    f.close()
+                    msg_box = QtWidgets.QMessageBox()
+                    msg_box.setWindowTitle('Configuration')
+                    msg_box.setText('Found {}'.format(file_name))
+                    msg_box.setInformativeText(
+                        'Error found in config file: {}'.format(error))
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg_box.exec()
+                    break
+                except PermissionError as error:
+                    msg_box = QtWidgets.QMessageBox()
+                    msg_box.setWindowTitle('Configuration')
+                    msg_box.setText('Found {}'.format(file_name))
+                    msg_box.setInformativeText(
+                        'You do not have permission to read this file.')
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg_box.exec()
+                    break
+            history.append(file_name)
+            dir_name = os.path.split(dir_name)[0]
+            file_name = os.path.join(dir_name, 'bboxee_config.json')
 
     def load_from_directory(self):
         """(Slot) Load image data from directory."""
@@ -469,6 +476,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                                               'Select Directory',
                                               self.image_directory))
             if directory != '':
+                self.load_config(directory)
                 self.image_directory = directory
                 self.data = schema.annotation_file()
                 self.mask = None
@@ -505,7 +513,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.data = json.load(file)
                 file.close()
                 self.image_directory = os.path.split(file_name[0])[0]
-                # self.image_directory = self.data['directory']
+                self.load_config(self.image_directory)
+
                 if self.data['mask'] is not None:
                     tmp = np.array(self.data['mask'], dtype='uint8')
                     self.mask = np.dstack((tmp, tmp, tmp))
@@ -550,10 +559,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(),
                                     QtCore.Qt.KeepAspectRatio)
         self.graphicsView.setSceneRect(self.graphics_scene.itemsBoundingRect())
-        self.display_license()
         self.display_bboxes()
         self.display_annotation_data()
         self.graphicsView.setFocus()
+        self.display_license()
 
     def load_image_list(self):
         """Glob the image files and save to image list."""
@@ -635,19 +644,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             saved = True
         return saved
 
-    def save_license(self, display=False):
-        self.set_dirty(True)
-        if (self.data is not None and
-                self.current_file_name in self.data['images']):
-            rec = self.data['images'][self.current_file_name]
-            rec['attribution'] = self.last_license_attribution
-            item = self.cbb_license.itemText(self.last_license_index)
-            rec['license'] = item
-            item = self.cbb_license.itemData(self.last_license_index)
-            rec['license_url'] = item
-        if display:
-            self.display_license()
-
     def select_annotator(self):
         self.annotator_selecter.show()
 
@@ -719,7 +715,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.pb_save.setEnabled(True)
         else:
             self.dirty = False
-            self.pb_save.setEnabled(False)
+            self.pb_save.setDisabled(True)
 
     def show_assistant(self):
         pos = self.mapToGlobal(self.graphicsView.pos())
@@ -759,7 +755,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             ann['bbox']['ymin'] = rect.top() / self.current_img_size[1]
             ann['bbox']['ymax'] = rect.bottom() / self.current_img_size[1]
 
-    def update_license(self, index=0):
-        self.last_license_index = self.cbb_license.currentIndex()
-        self.last_license_attribution = self.lineEditAttribution.text()
-        self.save_license()
+    def update_license(self, license):
+        if (self.data is not None and
+                self.current_file_name in self.data['images']):
+            rec = self.data['images'][self.current_file_name]
+            rec['attribution'] = license['attribution']
+            rec['license'] = license['license']
+            rec['license_url'] = license['license_url']

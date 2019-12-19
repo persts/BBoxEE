@@ -23,33 +23,23 @@
 #
 # --------------------------------------------------------------------------
 import sys
-import json
 from PyQt5 import QtWidgets
 
 from bboxee.gui import ExportWidget
 from bboxee.gui import AnnotationWidget
 
 if __name__ == "__main__":
-    try:
-        FILE = open("config.json", 'r')
-        try:
-            CONFIG = json.load(FILE)
-            APP = QtWidgets.QApplication(sys.argv)
-            screen = APP.desktop().availableGeometry()
-            GUI = QtWidgets.QMainWindow()
-            GUI.setWindowTitle('Animal Detection Network')
-            WIDGET = QtWidgets.QTabWidget()
-            icon_size = int(screen.height() * 0.03)
-            WIDGET.addTab(AnnotationWidget(CONFIG, icon_size), 'Annotate')
-            WIDGET.addTab(ExportWidget(icon_size), 'Export')
-            GUI.setCentralWidget(WIDGET)
-            GUI.resize(int(screen.width() * .95), screen.height() * 0.95)
-            GUI.move(int(screen.width() * .05) // 2, 0)
-            GUI.show()
+    APP = QtWidgets.QApplication(sys.argv)
+    screen = APP.desktop().availableGeometry()
+    GUI = QtWidgets.QMainWindow()
+    GUI.setWindowTitle('Animal Detection Network')
+    WIDGET = QtWidgets.QTabWidget()
+    icon_size = int(screen.height() * 0.03)
+    WIDGET.addTab(AnnotationWidget(icon_size), 'Annotate')
+    WIDGET.addTab(ExportWidget(icon_size), 'Export')
+    GUI.setCentralWidget(WIDGET)
+    GUI.resize(int(screen.width() * .95), screen.height() * 0.95)
+    GUI.move(int(screen.width() * .05) // 2, 0)
+    GUI.show()
 
-            sys.exit(APP.exec_())
-        except json.decoder.JSONDecodeError as error:
-            print('Error found in config file: {}'.format(error))
-        FILE.close()
-    except FileNotFoundError:
-        print('Config file was not found.')
+    sys.exit(APP.exec_())
