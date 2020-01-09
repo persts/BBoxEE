@@ -44,13 +44,8 @@ class Annotator(QtCore.QThread):
         self.image_directory = ''
         self.data = None
         self.detection_graph = tf.Graph()
+        self.inference_graph = inference_graph
         self.label_map = self.build_label_map(label_map)
-        with self.detection_graph.as_default():
-            graph_def = self.detection_graph.as_graph_def()
-            with tf.io.gfile.GFile(inference_graph, 'rb') as fid:
-                serialized_graph = fid.read()
-                graph_def.ParseFromString(serialized_graph)
-                tf.import_graph_def(graph_def, name='')
 
     def build_label_map(self, file_name):
         # see if we can use this to eliminated the need for
@@ -75,6 +70,11 @@ class Annotator(QtCore.QThread):
         self.data = schema.annotation_file()
         counter = 0
         with self.detection_graph.as_default():
+            graph_def = self.detection_graph.as_graph_def()
+            with tf.io.gfile.GFile(self.inference_graph, 'rb') as fid:
+                serialized_graph = fid.read()
+                graph_def.ParseFromString(serialized_graph)
+                tf.import_graph_def(graph_def, name='')
             with tf.Session(graph=self.detection_graph) as sess:
                 # Definite input and output Tensors for detection_graph
                 image_tensor = (self.detection_graph.
