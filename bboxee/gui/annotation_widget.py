@@ -440,7 +440,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
                     msg_box.exec()
                     break
-                except PermissionError as error:
+                except PermissionError:
                     msg_box = QtWidgets.QMessageBox()
                     msg_box.setWindowTitle('Configuration')
                     msg_box.setText('Found {}'.format(file_name))
@@ -484,6 +484,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.pb_mask.setEnabled(True)
                 self.pb_annotater.setEnabled(True)
                 self.set_dirty(False)
+                self.label_image_directory.setText(self.image_directory)
 
     def load_from_file(self):
         """(Slot) Load existing annotation data from file."""
@@ -524,6 +525,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.set_dirty(False)
                 self.pb_annotater.setEnabled(True)
                 self.pb_mask.setEnabled(True)
+                self.label_image_directory.setText(self.image_directory)
 
     def load_image(self):
         """Load image into graphics scene."""
@@ -637,11 +639,21 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                                      self.image_directory + 'untitled.bbx',
                                      'BBoxEE (*.bbx)'))
         if file_name[0] != '':
-            file = open(file_name[0], 'w')
-            json.dump(self.data, file)
-            file.close()
-            self.set_dirty(False)
-            saved = True
+            if os.path.samefile(self.image_directory,
+                                os.path.split(file_name[0])[0]):
+                file = open(file_name[0], 'w')
+                json.dump(self.data, file)
+                file.close()
+                self.set_dirty(False)
+                saved = True
+            else:
+                message = ('You are attempting to save the annotations '
+                           'outside of the current image directory. '
+                           'Operation canceled.\nDATA NOT SAVED.')
+                QtWidgets.QMessageBox.warning(self.parent(),
+                                              'ERROR',
+                                              message,
+                                              QtWidgets.QMessageBox.Ok)
         return saved
 
     def select_annotator(self):
