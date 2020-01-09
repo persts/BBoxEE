@@ -68,8 +68,12 @@ class LicenseGroupBox(QtWidgets.QGroupBox, GBOX):
         if license['license'] != '' and license['attribution'] != '':
             self.last = license
         index = self.cbb_license.findData(license['license_url'])
-        self.le_attribution.setText(license['attribution'])
+        if index == -1:
+            self.cbb_license.addItem(license['license'],
+                                     license['license_url'])
+        index = self.cbb_license.findData(license['license_url'])
         self.cbb_license.setCurrentIndex(index)
+        self.le_attribution.setText(license['attribution'])
         self.cbb_license.blockSignals(False)
 
     def request(self):

@@ -529,42 +529,47 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def load_image(self):
         """Load image into graphics scene."""
-        self.graphicsView.points = []
-        self.graphicsView.graphics_items = []
-        self.graphicsView.selected_bbox = None
-        self.graphics_scene.clear()
-        self.bboxes = []
-        self.selected_row = -1
-        self.current_file_name = self.image_list[self.current_image - 1]
-        file = os.path.join(self.image_directory, self.current_file_name)
-        img = Image.open(file)
-        self.current_img_size = img.size
-        array = np.array(img)
-        img.close()
-        if self.mask is not None:
-            array = array * self.mask
+        if len(self.image_list) > 0:
+            self.graphicsView.points = []
+            self.graphicsView.graphics_items = []
+            self.graphicsView.selected_bbox = None
+            self.graphics_scene.clear()
+            self.bboxes = []
+            self.selected_row = -1
+            self.current_file_name = self.image_list[self.current_image - 1]
+            file = os.path.join(self.image_directory, self.current_file_name)
+            img = Image.open(file)
+            self.current_img_size = img.size
+            array = np.array(img)
+            img.close()
+            if self.mask is not None:
+                array = array * self.mask
 
-        bpl = int(array.nbytes / array.shape[0])
-        if array.shape[2] == 4:
-            self.qt_image = QtGui.QImage(array.data,
-                                         array.shape[1],
-                                         array.shape[0],
-                                         QtGui.QImage.Format_RGBA8888)
-        else:
-            self.qt_image = QtGui.QImage(array.data,
-                                         array.shape[1],
-                                         array.shape[0],
-                                         bpl,
-                                         QtGui.QImage.Format_RGB888)
-        array = None
-        self.graphics_scene.addPixmap(QtGui.QPixmap.fromImage(self.qt_image))
-        self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(),
-                                    QtCore.Qt.KeepAspectRatio)
-        self.graphicsView.setSceneRect(self.graphics_scene.itemsBoundingRect())
-        self.display_bboxes()
-        self.display_annotation_data()
-        self.graphicsView.setFocus()
-        self.display_license()
+            bpl = int(array.nbytes / array.shape[0])
+            if array.shape[2] == 4:
+                self.qt_image = QtGui.QImage(array.data,
+                                             array.shape[1],
+                                             array.shape[0],
+                                             QtGui.QImage.Format_RGBA8888)
+            else:
+                self.qt_image = QtGui.QImage(array.data,
+                                             array.shape[1],
+                                             array.shape[0],
+                                             bpl,
+                                             QtGui.QImage.Format_RGB888)
+            array = None
+            self.graphics_scene.addPixmap(
+                QtGui.QPixmap.fromImage(self.qt_image))
+            (self.
+                graphicsView.
+                fitInView(self.graphics_scene.itemsBoundingRect(),
+                          QtCore.Qt.KeepAspectRatio))
+            self.graphicsView.setSceneRect(
+                self.graphics_scene.itemsBoundingRect())
+            self.display_bboxes()
+            self.display_annotation_data()
+            self.graphicsView.setFocus()
+            self.display_license()
 
     def load_image_list(self):
         """Glob the image files and save to image list."""
