@@ -239,6 +239,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     rec['attribution'] = license['attribution']
                     rec['license'] = license['license']
                     rec['license_url'] = license['license_url']
+                    self.set_dirty(True)
 
     def bbox_created(self, rect, show_assistant=True):
         """(Slot) save the newly created bbox and display it."""
