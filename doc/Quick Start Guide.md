@@ -83,7 +83,7 @@ When you begin a new project, copy the default bboxee_config.json file to the to
 
 ### Loading Data
 
-There are two way to load data into BBoxEE:
+There are two ways to load data into BBoxEE:
 
 1. Select a directory (![Folder Icon](../icons/folder.svg))
 2. Select an existing annotation file (![file icon](../icons/file.svg))
@@ -149,7 +149,7 @@ Save often!
 
 * While you could use a mouse pad with BBoxEE, it is **highly** recommended that you use a good quality mouse with a wheel.
 * The annotation interface has been optimized for use with a stylus pen and touch screen computer. We used a Microsoft Surface Pro 6 during the optimization of BBoxEE and found it to be the most comfortable and efficient way to define or update bounding boxes.
-* If you have a situation where you will have one or more bound boxes completely contained within a larger bounding box, you have to create the smaller bounding boxes first.
+* If you have a situation where you will have one or more bounding boxes completely contained within a larger bounding box, you have to create the smaller bounding boxes first.
 * There are a number of keyboard short cuts that are not discussed in this quick start guide.
 
 ## Exporting Your Bounding Boxes
