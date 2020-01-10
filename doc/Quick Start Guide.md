@@ -30,7 +30,7 @@ Ersts,P.J. [Internet] BBoxEE (version 1.0.0). American Museum of Natural History
 <div style="page-break-after: always;"></div>
 ![CBC Logo](./images/CBC-AMNH-Logo.jpg)
 
-BBoxEE is a open-source tool for annotating bounding boxes and exporting data to training object detectors. BBoxEE was specifically developed for the Animal Detection Network (Andenet) initiative, however, it is not limited to annotating camera trap data and can be used for any bounding box annotation task.
+BBoxEE is a open-source tool for annotating bounding boxes and exporting data to training object detectors. BBoxEE was specifically developed for the [Animal Detection Network (Andenet)](http://biodiversityinformatics.amnh.org/ml4conservation/animal-detection-network/) initiative, however, it is not limited to annotating camera trap data and can be used for any bounding box annotation task.
 
 Source: https://github.com/persts/BBoxEE
 
