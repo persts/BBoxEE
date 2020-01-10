@@ -1,0 +1,19 @@
+The demo images include with BBoxEE were collected by Peter Ersts and 
+have been release into the Public Domain.
+
+BboxEE/demo
+├── 2020-01-01
+│   ├── DSCF0205.JPG
+│   ├── DSCF0206.JPG
+│   ├── DSCF0207.JPG
+│   ├── DSCF0232.JPG
+│   ├── DSCF0233.JPG
+│   └── DSCF0234.JPG
+├── 2020-01-02
+│   ├── DSCF0247.JPG
+│   ├── DSCF0248.JPG
+│   ├── DSCF0249.JPG
+│   ├── DSCF0250.JPG
+│   ├── DSCF0251.JPG
+│   └── DSCF0252.JPG
+

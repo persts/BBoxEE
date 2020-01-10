@@ -1,0 +1,23 @@
+{
+    "labels": [
+        "Human",
+        "Whitetale Deer"
+    ],
+    "license": {
+        "default": {
+            "attribution": "N/A",
+            "license": "Public Domain",
+            "license_url": "N/A"
+        },
+        "licenses": [
+            {
+                "name": "Public Domain",
+                "url": "N/A"
+            },
+            {
+                "name": "Attribution 4.0 International (CC BY 4.0)",
+                "url": "https://creativecommons.org/licenses/by/4.0/"
+            }
+        ]
+    }
+}
