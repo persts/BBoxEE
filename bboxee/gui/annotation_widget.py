@@ -289,7 +289,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.current_file_name in self.data['images']):
             del self.data['images'][self.current_file_name]
         self.tw_labels.selectionModel().blockSignals(False)
-        self.selected_row = -1
+        self.tw_labels.clearSelection()
         self.display_bboxes()
         self.set_dirty(True)
 
@@ -302,8 +302,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         if self.tw_labels.rowCount() == 0:
             del self.data['images'][self.current_file_name]
         self.tw_labels.selectionModel().blockSignals(False)
-        self.selected_row = -1
-        self.graphicsView.selected_bbox = None
+        self.tw_labels.clearSelection()
         self.display_bboxes()
         self.set_dirty(True)
 
@@ -712,14 +711,19 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.load_image()
 
     def selection_changed(self, selected, deselected):
-        """(Slot) Listen for deselection of rows."""
+        """(Slot) Listen for selection and deselection of rows."""
         if selected.indexes():
             self.selected_row = selected.indexes()[0].row()
+            if self.tw_labels.item(self.selected_row, 0).text() != 'N/A':
+                rec = self.data['images'][self.current_file_name]
+                label = rec['annotations'][self.selected_row]['label']
+                self.assistant.set_label(label)
             if self.checkBoxAnnotationAssistant.isChecked():
                 self.show_assistant()
         else:
             self.selected_row = -1
             self.graphicsView.selected_bbox = None
+
         self.display_bboxes()
 
     def set_dirty(self, is_dirty):

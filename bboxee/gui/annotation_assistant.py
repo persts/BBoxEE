@@ -44,11 +44,18 @@ class AnnotationAssistant(QtWidgets.QDialog, LABEL):
         self.set_labels(['N/A'])
         self.pb_submit.clicked.connect(self.submit)
 
+    def set_label(self, label):
+        """Set current lable in the combobox."""
+        index = self.cbb_labels.findText(label)
+        if index == -1:
+            self.cbb_labels.addItem(label)
+            index = self.cbb_labels.count() - 1
+        self.cbb_labels.setCurrentIndex(index)
+
     def set_labels(self, labels):
         """Populate base lables."""
         self.cbb_labels.clear()
-        for entry in labels:
-            self.cbb_labels.addItem(entry)
+        self.cbb_labels.addItems(labels)
 
     def submit(self):
         """(Slot) Emit bounding box label data."""
