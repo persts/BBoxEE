@@ -22,6 +22,7 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
+import os
 import json
 from PIL import Image
 from PyQt5 import QtCore
@@ -93,7 +94,8 @@ class Annotator(QtCore.QThread):
                 num_detections = (self.detection_graph.
                                   get_tensor_by_name('num_detections:0'))
                 for img in self.image_list:
-                    image = Image.open(self.image_directory + img)
+                    file_name = os.path.join(self.image_directory, img)
+                    image = Image.open(file_name)
                     # the array based representation of the image will be
                     # used later in order to prepare the result image with
                     # boxes and labels on it.
