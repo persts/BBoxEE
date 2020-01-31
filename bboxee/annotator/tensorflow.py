@@ -41,7 +41,7 @@ class Annotator(QtCore.QThread):
         """Class init function."""
         QtCore.QThread.__init__(self)
         self.image_list = []
-        self.threshold = 0.9
+        self.threshold = 0.95
         self.image_directory = ''
         self.data = None
         self.detection_graph = tf.Graph()

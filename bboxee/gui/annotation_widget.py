@@ -172,21 +172,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def annotate(self):
         """(SLOT) Start the automated annotator."""
-        proceed = True
-        if self.dirty:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setText('Annotations have been modified.')
-            msg_box.setInformativeText('Do you want to save your changes?')
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save |
-                                       QtWidgets.QMessageBox.Cancel |
-                                       QtWidgets.QMessageBox.Ignore)
-            msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
-            response = msg_box.exec()
-            if response == QtWidgets.QMessageBox.Save:
-                proceed = self.save()
-            elif response == QtWidgets.QMessageBox.Cancel:
-                proceed = False
-        if proceed:
+        if self.dirty_data_check():
             self.checkBoxDisplayAnnotationData.setChecked(True)
             self.license.setDisabled(True)
             self.main_frame.setDisabled(True)
@@ -305,6 +291,25 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.tw_labels.clearSelection()
         self.display_bboxes()
         self.set_dirty(True)
+
+    def dirty_data_check(self):
+        """Display alert of annotations are dirty and need to be saved before
+        proceeding to next step."""
+        proceed = True
+        if self.dirty:
+            msg_box = QtWidgets.QMessageBox()
+            msg_box.setText('Annotations have been modified.')
+            msg_box.setInformativeText('Do you want to save your changes?')
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save |
+                                       QtWidgets.QMessageBox.Cancel |
+                                       QtWidgets.QMessageBox.Ignore)
+            msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
+            response = msg_box.exec()
+            if response == QtWidgets.QMessageBox.Save:
+                proceed = self.save()
+            elif response == QtWidgets.QMessageBox.Cancel:
+                proceed = False
+        return proceed
 
     def disable_edit_mode(self):
         if self.pb_edit_mode.isChecked():
@@ -455,21 +460,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def load_from_directory(self):
         """(Slot) Load image data from directory."""
-        load = True
-        if self.dirty:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setText('Annotations have been modified.')
-            msg_box.setInformativeText('Do you want to save your changes?')
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save |
-                                       QtWidgets.QMessageBox.Cancel |
-                                       QtWidgets.QMessageBox.Ignore)
-            msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
-            response = msg_box.exec()
-            if response == QtWidgets.QMessageBox.Save:
-                load = self.save()
-            elif response == QtWidgets.QMessageBox.Cancel:
-                load = False
-        if load:
+        if self.dirty_data_check():
             directory = (QtWidgets.
                          QFileDialog.
                          getExistingDirectory(self,
@@ -488,21 +479,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def load_from_file(self):
         """(Slot) Load existing annotation data from file."""
-        load = True
-        if self.dirty:
-            msg_box = QtWidgets.QMessageBox()
-            msg_box.setText('Annotations have been modified.')
-            msg_box.setInformativeText('Do you want to save your changes?')
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save |
-                                       QtWidgets.QMessageBox.Cancel |
-                                       QtWidgets.QMessageBox.Ignore)
-            msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
-            response = msg_box.exec()
-            if response == QtWidgets.QMessageBox.Save:
-                load = self.save()
-            elif response == QtWidgets.QMessageBox.Cancel:
-                load = False
-        if load:
+        if self.dirty_data_check():
             file_name = (QtWidgets.
                          QFileDialog.
                          getOpenFileName(self,

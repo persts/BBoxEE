@@ -22,18 +22,26 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-import sys
 from PyQt5 import QtWidgets
 
-from bboxee.gui import MainWindow
+from bboxee.gui import ExportWidget
+from bboxee.gui import AnnotationWidget
+from bboxee import __version__
 
-if __name__ == "__main__":
-    APP = QtWidgets.QApplication(sys.argv)
-    screen = APP.desktop().availableGeometry()
-    icon_size = int(screen.height() * 0.03)
-    GUI = MainWindow(icon_size)
-    GUI.resize(int(screen.width() * .95), screen.height() * 0.95)
-    GUI.move(int(screen.width() * .05) // 2, 0)
-    GUI.show()
 
-    sys.exit(APP.exec_())
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self, icon_size, parent=None):
+        super(MainWindow, self).__init__(parent)
+        template = 'Bounding Box Editor and Exporter [BBoxEE v{}]'
+        self.setWindowTitle(template.format(__version__))
+        self.annotation_widget = AnnotationWidget(icon_size)
+        widget = QtWidgets.QTabWidget()
+        widget.addTab(self.annotation_widget, 'Annotate')
+        widget.addTab(ExportWidget(icon_size), 'Export')
+        self.setCentralWidget(widget)
+
+    def closeEvent(self, event):
+        if self.annotation_widget.dirty_data_check():
+            event.accept()
+        else:
+            event.ignore()

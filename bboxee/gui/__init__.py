@@ -28,3 +28,4 @@ from .coco_dialog import CocoDialog  # noqa: F401
 
 from .annotation_widget import AnnotationWidget  # noqa: F401
 from .export_widget import ExportWidget  # noqa: F401
+from .main_window import MainWindow  # noqa: F401
