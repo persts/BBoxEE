@@ -69,6 +69,7 @@ class Annotator(QtCore.QThread):
     def run(self):
         """The starting point for the thread."""
         self.data = schema.annotation_file()
+        self.data['analysts'].append('Machine Generated')
         counter = 0
         with self.detection_graph.as_default():
             graph_def = self.detection_graph.as_graph_def()

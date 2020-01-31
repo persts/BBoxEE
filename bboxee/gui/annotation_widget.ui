@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1031</width>
-    <height>660</height>
+    <width>1188</width>
+    <height>713</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -582,6 +582,46 @@
         </widget>
        </item>
        <item>
+        <widget class="QGroupBox" name="analysts">
+         <property name="title">
+          <string>Creator and Reviewer History</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_5">
+          <item>
+           <widget class="QLabel" name="label_analysts">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_6">
+            <item>
+             <spacer name="horizontalSpacer_7">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QPushButton" name="pb_add_analyst">
+              <property name="text">
+               <string>Add Analyst</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+         </layout>
+        </widget>
+       </item>
+       <item>
         <widget class="QFrame" name="table_frame">
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
@@ -608,6 +648,13 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
+          <item>
+           <widget class="Line" name="line_3">
+            <property name="orientation">
+             <enum>Qt::Horizontal</enum>
+            </property>
+           </widget>
+          </item>
           <item>
            <widget class="QCheckBox" name="checkBoxDisplayAnnotationData">
             <property name="text">

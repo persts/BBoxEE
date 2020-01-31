@@ -101,6 +101,7 @@ class Annotator(QtCore.QThread):
         conf_thres = 0.3
         nms_thres = 0.45
         self.data = schema.annotation_file()
+        self.data['analysts'].append('Machine Generated')
         self.model.to(self.device).eval()
         dataloader = load_images(self.image_directory,
                                  batch_size=1,

@@ -26,7 +26,11 @@
 
 def annotation_file():
     """Factory for the Animal Detection Network annotation file."""
-    return {'mask': None, 'mask_name': '', 'images': {}, 'schema': '1.0.0'}
+    return {'mask': None,
+            'mask_name': '',
+            'images': {},
+            'analysts': [],
+            'schema': '1.0.0'}
 
 
 def annotation_file_entry():

@@ -31,6 +31,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from bboxee import schema
 from bboxee.gui import AnnotationAssistant
 from bboxee.gui import AnnotatorDialog
+from bboxee.gui import AnalystDialog
 
 WIDGET, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
                            'annotation_widget.ui'))
@@ -117,6 +118,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.license.license_changed.connect(self.update_license)
         self.license.apply_license.connect(self.apply_license)
 
+        self.analyst_dialog = AnalystDialog(self)
+        self.analyst_dialog.name.connect(self.add_analyst)
+        self.pb_add_analyst.clicked.connect(self.add_analyst_dialog)
+
         self.pb_annotater.clicked.connect(self.select_annotator)
         self.pb_annotate.clicked.connect(self.annotate)
         self.pb_save.clicked.connect(self.save)
@@ -170,11 +175,28 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.helper.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.helper.activated.connect(self.assistant.show)
 
+    def add_analyst(self, name):
+        if self.data is not None:
+            last_index = len(self.data['analysts']) - 1
+            if name not in self.data['analysts']:
+                self.data['analysts'].append(name)
+                self.set_dirty(True)
+            # Ignore add request of name is the same as the last entry
+            elif self.data['analysts'][last_index] != name:
+                self.data['analysts'].append(name)
+                self.set_dirty(True)
+            self.display_analysts()
+
+    def add_analyst_dialog(self):
+        if self.data is not None:
+            self.analyst_dialog.show()
+
     def annotate(self):
         """(SLOT) Start the automated annotator."""
         if self.dirty_data_check():
             self.checkBoxDisplayAnnotationData.setChecked(True)
             self.license.setDisabled(True)
+            self.analysts.setDisabled(True)
             self.main_frame.setDisabled(True)
             self.table_frame.setDisabled(True)
             self.pb_annotater.setDisabled(True)
@@ -190,10 +212,12 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def annotation_complete(self, data):
         """(SLOT) Automatic annotation complete, reenable gui and
         reset current image to 1."""
-        self.data['images'] = data['images']
+        self.data = data
+        self.display_analysts()
         self.current_image = 0
         self.next_image()
         self.license.setEnabled(True)
+        self.analysts.setEnabled(True)
         self.main_frame.setEnabled(True)
         self.table_frame.setEnabled(True)
         self.pb_annotater.setEnabled(True)
@@ -316,6 +340,18 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.pb_edit_mode.click()
             self.pb_edit_mode.setIcon(QtGui.QIcon(':/icons/edit.svg'))
 
+    def display_analysts(self):
+        if self.data is not None:
+            # Backward compatibility check
+            if 'analysts' not in self.data:
+                self.data['analysts'] = []
+            div = ''
+            string = ''
+            for a in self.data['analysts']:
+                string += "{}{}".format(div, a)
+                div = ' | '
+            self.label_analysts.setText(string)
+
     def display_annotation_data(self):
         """Display annotation data in table."""
         self.tw_labels.selectionModel().blockSignals(True)
@@ -334,7 +370,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.tw_labels.setItem(row, 2, item)
                 item = QtWidgets.QTableWidgetItem(annotation['difficult'])
                 self.tw_labels.setItem(row, 3, item)
-        # self.tw_labels.resizeColumnToContents(0)
+        self.tw_labels.resizeColumnToContents(0)
         self.tw_labels.blockSignals(False)
         self.tw_labels.selectionModel().blockSignals(False)
         self.tw_labels.selectRow(self.selected_row)
@@ -498,6 +534,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     self.mask = np.dstack((tmp, tmp, tmp))
                 else:
                     self.mask = None
+                self.display_analysts()
                 self.load_image_list()
                 self.set_dirty(False)
                 self.pb_annotater.setEnabled(True)
