@@ -54,16 +54,30 @@ class Annotator(QtCore.QThread):
         a = open(file_name, 'r')
         string = a.read()
         a.close()
-        string = (string.replace('item ', '').
-                  replace('}', '},').
-                  replace('\n', '').
-                  replace(' name:', '"name":').
-                  replace(' id:', ', "id":'))
-        string = "[{}]".format(string[0:-1])
+        lines = string.split("\n")
+        parsed = ''
+        comma = ''
+        for line in lines:
+            if line == '':
+                pass
+            elif line.find('item') != -1:
+                parsed += '{'
+            elif line.find('}') != -1:
+                comma = ''
+                parsed += '},'
+            else:
+                parts = line.split(':')
+                parsed += '{} "{}":{}'.format(comma, parts[0].lstrip(), parts[1])
+                comma = ','
+
+        string = "[{}]".format(parsed[0:-1])
         j = json.loads(string)
         label_map = {}
         for entry in j:
-            label_map[entry['id']] = entry['name']
+            if 'display_name' in entry:
+                label_map[entry['id']] = entry['display_name']
+            else:
+                label_map[entry['id']] = entry['name']
         return label_map
 
     def run(self):
