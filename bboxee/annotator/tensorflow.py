@@ -66,7 +66,7 @@ class Annotator(QtCore.QThread):
                 comma = ''
                 parsed += '},'
             else:
-                parts = line.split(':')
+                parts = line.replace('\\', '').split(':')
                 parsed += '{} "{}":{}'.format(comma, parts[0].lstrip(), parts[1])
                 comma = ','
 
