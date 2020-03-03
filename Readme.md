@@ -9,7 +9,7 @@ BBoxEE is actively under development by Peter Ersts and Ned Horning of the [Cent
 ## Installation
 
 ### Dependencies
-BBoxEE is being developed on Ubuntu 18.04 with the following libraries:
+BBoxEE is being developed with Python 3.6.9 on Ubuntu 18.04 with the following libraries:
 
 * PyQt5 (5.10.1)
 * TKinter (3.6.9)
@@ -36,6 +36,38 @@ cd BBoxEE
 python3 main.py
 ```
 This is all you need to do to begin using the base annotation functionality of BBoxEE.
+
+------
+### Windows Virtual Environment
+Download and install Python3 (tested with Python 3.6.7). During the install make sure
+to check the box that says "Add Python to environment variables".
+
+Once installed open a CMD window and type the following command to verify python is installed corretly.
+```bash
+python --version
+```
+Then build a virtual environment and install the dependencies:
+```bash
+cd c:\
+mkdir python
+cd python
+mkdir python-envs
+cd python-envs
+python -m venv bboxee-env
+bboxee-env\Scripts\activate.bat
+python -m pip install --upgrade pip
+pip install numpy
+pip install pillow
+pip install pyqt5
+```
+### Launching BBoxEE
+Clone or download BBoxEE (https://github.com/persts/BBoxEE) into c:\python
+
+```bash
+cd c:\python\bboxee
+python main.py
+```
+**Note you will need to activate you virtual environment each time you open an new CMD window.
 
 ------
 
