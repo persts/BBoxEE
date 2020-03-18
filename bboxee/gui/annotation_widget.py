@@ -140,9 +140,11 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         (self.tw_labels.
          setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection))
         self.tw_labels.horizontalHeader().setStretchLastSection(False)
-        (self.tw_labels.
-         horizontalHeader().
-         setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch))
+        self.tw_labels.horizontalHeader().ResizeMode = QtWidgets.QHeaderView.Interactive
+
+        # (self.tw_labels.
+        #  horizontalHeader().
+        #  setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch))
 
         # Create some key bindings to help navigate through images
         self.right_arrow = QtWidgets.QShortcut(
@@ -388,13 +390,17 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             width = self.current_img_size[0]
             height = self.current_img_size[1]
             for index, annotation in enumerate(annotations):
+
                 bbox = annotation['bbox']
-                x = annotation['bbox']['xmin'] * width
-                y = annotation['bbox']['ymin'] * height
+
+                x = bbox['xmin'] * width
+                y = bbox['ymin'] * height
+
                 top_left = QtCore.QPointF(x, y)
 
-                x = annotation['bbox']['xmax'] * width
-                y = annotation['bbox']['ymax'] * height
+                x = bbox['xmax'] * width
+                y = bbox['ymax'] * height
+
                 bottom_right = QtCore.QPointF(x, y)
 
                 rect = QtCore.QRectF(top_left, bottom_right)
