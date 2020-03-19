@@ -124,6 +124,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                             if type(graphic) == QtWidgets.QGraphicsRectItem:
                                 if graphic.boundingRect().contains(point):
                                     collect_points = False
+
+                                    # this activates select_bbox in annotation_widget
                                     self.select_bbox.emit(point)
                                     break
 
@@ -203,14 +205,15 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.fitInView(bounding_rect, QtCore.Qt.KeepAspectRatio)
         self.setSceneRect(bounding_rect)
 
-    def load_image(self, array, img_size):
+    def load_image(self, array):
 
         self.points = []
         self.graphics_items = []
         self.selected_bbox = None
         self.graphics_scene.clear()
         self.bboxes = []
-        self.img_size = img_size # TODO: get this from array
+        h, w, c = array.shape
+        self.img_size = (w, h)
 
 
         bpl = int(array.nbytes / array.shape[0])
