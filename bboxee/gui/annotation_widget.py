@@ -501,14 +501,13 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
 
             img = Image.open(filename)
-            img_size = img.size
             array = np.array(img)
             img.close()
 
             if self.mask is not None:
                 array = array * self.mask
 
-            self.graphicsView.load_image(array, img_size)
+            self.graphicsView.load_image(array)
 
             array = None
 
