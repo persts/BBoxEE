@@ -614,6 +614,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             width = self.graphicsView.img_size[0]
             height = self.graphicsView.img_size[1]
             rec = self.data['images'][self.current_file_name]
+            found = False
             for index, annotation in enumerate(rec['annotations']):
                 x = annotation['bbox']['xmin'] * width
                 y = annotation['bbox']['ymin'] * height
@@ -626,7 +627,11 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 rect = QtCore.QRectF(top_left, bottom_right)
                 if rect.contains(point):
                     self.tw_labels.selectRow(index)
+                    found = True
                     break
+
+            if not found:
+                self.tw_labels.clearSelection()
 
     def select_mask(self):
         """(Slot) Select mask from disk."""

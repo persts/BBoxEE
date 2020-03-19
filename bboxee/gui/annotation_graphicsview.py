@@ -71,6 +71,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.bboxes = []
         self.graphics_scene = QtWidgets.QGraphicsScene()
         self.setScene(self.graphics_scene)
+        # enable mouse move events when not dragging
+        self.setMouseTracking(True)
 
     def clear_points(self):
         for item in self.point_graphics_items:
@@ -91,6 +93,18 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             else:
                 rect.setBottomLeft(point)
             self.selected_bbox.setRect(rect)
+        elif self.mode == Mode.EDIT:
+
+            # select box when hovering over it
+            point = self.mapToScene(event.pos())
+            for graphic in self.scene().items():
+                if type(graphic) == QtWidgets.QGraphicsRectItem:
+                    if graphic.boundingRect().contains(point):
+
+                        # this activates select_bbox in annotation_widget
+                        self.select_bbox.emit(point)
+                        break
+            QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
         else:
             QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
 
