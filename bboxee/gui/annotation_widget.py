@@ -48,7 +48,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
         self.image_directory = '.'
         self.current_file_name = ''
-        self.bboxes = []
         self.selected_row = -1
         self.current_image = 1
         self.image_list = []
@@ -58,14 +57,11 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.assistant = AnnotationAssistant(self)
         self.assistant.submitted.connect(self.update_annotation)
         self.qt_image = None
-        self.current_img_size = (0, 0)
 
         self.annotator = None
         self.annotator_selecter = AnnotatorDialog(self)
         self.annotator_selecter.selected.connect(self.annotator_selected)
 
-        self.graphics_scene = QtWidgets.QGraphicsScene()
-        self.graphicsView.setScene(self.graphics_scene)
         self.graphicsView.created.connect(self.bbox_created)
         self.graphicsView.resized.connect(self.update_bbox)
         self.graphicsView.select_bbox.connect(self.select_bbox)
@@ -263,10 +259,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             rec = self.data['images'][self.current_file_name]
             metadata = schema.annotation()
             metadata['created_by'] = 'human'
-            metadata['bbox']['xmin'] = rect.left() / self.current_img_size[0]
-            metadata['bbox']['xmax'] = rect.right() / self.current_img_size[0]
-            metadata['bbox']['ymin'] = rect.top() / self.current_img_size[1]
-            metadata['bbox']['ymax'] = rect.bottom() / self.current_img_size[1]
+            metadata['bbox']['xmin'] = rect.left() / self.graphicsView.img_size[0]
+            metadata['bbox']['xmax'] = rect.right() / self.graphicsView.img_size[0]
+            metadata['bbox']['ymin'] = rect.top() / self.graphicsView.img_size[1]
+            metadata['bbox']['ymax'] = rect.bottom() / self.graphicsView.img_size[1]
             rec['annotations'].append(metadata)
             self.display_annotation_data()
             self.selected_row = self.tw_labels.rowCount() - 1
@@ -379,66 +375,14 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def display_bboxes(self):
         """Display bboxes in graphics scene."""
-        if self.bboxes:
-            for bbox in self.bboxes:
-                self.graphics_scene.removeItem(bbox)
-            self.bboxes = []
+
         if (self.data is not None and
                 self.current_file_name in self.data['images']):
             rec = self.data['images'][self.current_file_name]
             annotations = rec['annotations']
-            width = self.current_img_size[0]
-            height = self.current_img_size[1]
-            for index, annotation in enumerate(annotations):
 
-                bbox = annotation['bbox']
-
-                x = bbox['xmin'] * width
-                y = bbox['ymin'] * height
-
-                top_left = QtCore.QPointF(x, y)
-
-                x = bbox['xmax'] * width
-                y = bbox['ymax'] * height
-
-                bottom_right = QtCore.QPointF(x, y)
-
-                rect = QtCore.QRectF(top_left, bottom_right)
-                if index == self.selected_row:
-                    pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.red,
-                                                  QtCore.Qt.SolidPattern), 3)
-                else:
-                    pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow,
-                                                  QtCore.Qt.SolidPattern), 3)
-                    if (annotation['created_by'] == 'machine' and
-                            annotation['updated_by'] == ''):
-                        pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.green,
-                                                      QtCore.Qt.SolidPattern),
-                                         3)
-                graphics_item = self.graphics_scene.addRect(rect, pen)
-                # display annotation data center in bounding box.
-                if self.checkBoxDisplayAnnotationData.isChecked():
-                    font = QtGui.QFont()
-                    font.setPointSize(int(rect.width() * 0.065))
-                    s = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}"
-                    content = (s.
-                               format(annotation['label'],
-                                      annotation['truncated'],
-                                      annotation['occluded'],
-                                      annotation['difficult']))
-                    text = QtWidgets.QGraphicsTextItem(content)
-                    text.setFont(font)
-                    text.setPos(rect.topLeft().toPoint())
-                    text.setDefaultTextColor(QtCore.Qt.yellow)
-                    x_offset = text.boundingRect().width() / 2.0
-                    y_offset = text.boundingRect().height() / 2.0
-                    x = (rect.width() / 2.0) - x_offset
-                    y = (rect.height() / 2.0) - y_offset
-                    text.moveBy(x, y)
-                    text.setParentItem(graphics_item)
-                self.bboxes.append(graphics_item)
-                if index == self.selected_row:
-                    self.graphicsView.selected_bbox = graphics_item
+            # forward to graphicsView
+            self.graphicsView.display_bboxes(annotations, self.selected_row, self.checkBoxDisplayAnnotationData.isChecked())
 
     def display_license(self):
         lic = {'license': '', 'license_url': '', 'attribution': ''}
@@ -550,42 +494,24 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def load_image(self):
         """Load image into graphics scene."""
         if len(self.image_list) > 0:
-            self.graphicsView.points = []
-            self.graphicsView.graphics_items = []
-            self.graphicsView.selected_bbox = None
-            self.graphics_scene.clear()
-            self.bboxes = []
+
             self.selected_row = -1
             self.current_file_name = self.image_list[self.current_image - 1]
-            file = os.path.join(self.image_directory, self.current_file_name)
-            img = Image.open(file)
-            self.current_img_size = img.size
+            filename = os.path.join(self.image_directory, self.current_file_name)
+
+
+            img = Image.open(filename)
+            img_size = img.size
             array = np.array(img)
             img.close()
+
             if self.mask is not None:
                 array = array * self.mask
 
-            bpl = int(array.nbytes / array.shape[0])
-            if array.shape[2] == 4:
-                self.qt_image = QtGui.QImage(array.data,
-                                             array.shape[1],
-                                             array.shape[0],
-                                             QtGui.QImage.Format_RGBA8888)
-            else:
-                self.qt_image = QtGui.QImage(array.data,
-                                             array.shape[1],
-                                             array.shape[0],
-                                             bpl,
-                                             QtGui.QImage.Format_RGB888)
+            self.graphicsView.load_image(array, img_size)
+
             array = None
-            self.graphics_scene.addPixmap(
-                QtGui.QPixmap.fromImage(self.qt_image))
-            (self.
-                graphicsView.
-                fitInView(self.graphics_scene.itemsBoundingRect(),
-                          QtCore.Qt.KeepAspectRatio))
-            self.graphicsView.setSceneRect(
-                self.graphics_scene.itemsBoundingRect())
+
             self.display_bboxes()
             self.display_annotation_data()
             self.graphicsView.setFocus()
@@ -651,8 +577,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def resizeEvent(self, event):
         """Overload resizeEvent to fit image in graphics view."""
-        self.graphicsView.fitInView(self.graphics_scene.itemsBoundingRect(),
-                                    QtCore.Qt.KeepAspectRatio)
+        self.graphicsView.resize()
 
     def save(self):
         """(Slot) Save the annotations to disk."""
@@ -687,8 +612,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def select_bbox(self, point):
         if (self.data is not None and
                 self.current_file_name in self.data['images']):
-            width = self.current_img_size[0]
-            height = self.current_img_size[1]
+            width = self.graphicsView.img_size[0]
+            height = self.graphicsView.img_size[1]
             rec = self.data['images'][self.current_file_name]
             for index, annotation in enumerate(rec['annotations']):
                 x = annotation['bbox']['xmin'] * width
@@ -706,8 +631,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def select_mask(self):
         """(Slot) Select mask from disk."""
-        filter_string = '{}_{}.png'.format(self.current_img_size[0],
-                                           self.current_img_size[1])
+        filter_string = '{}_{}.png'.format(self.graphicsView.img_size[0],
+                                           self.graphicsView.img_size[1])
         file = (QtWidgets.
                 QFileDialog.getOpenFileName(self,
                                             'Select Mask',
@@ -715,7 +640,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                                             'PNG (*' + filter_string + ')'))
         if file[0] != '':
             img = Image.open(file[0])
-            if self.current_img_size == img.size:
+            if self.graphicsView.img_size == img.size:
                 img = np.array(img)
                 img = np.clip(img, 0, 1)
                 self.mask = img
@@ -792,10 +717,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             rec = self.data['images'][self.current_file_name]
             ann = rec['annotations'][self.selected_row]
             ann['updated_by'] = 'human'
-            ann['bbox']['xmin'] = rect.left() / self.current_img_size[0]
-            ann['bbox']['xmax'] = rect.right() / self.current_img_size[0]
-            ann['bbox']['ymin'] = rect.top() / self.current_img_size[1]
-            ann['bbox']['ymax'] = rect.bottom() / self.current_img_size[1]
+            ann['bbox']['xmin'] = rect.left() / self.graphicsView.img_size[0]
+            ann['bbox']['xmax'] = rect.right() / self.graphicsView.img_size[0]
+            ann['bbox']['ymin'] = rect.top() / self.graphicsView.img_size[1]
+            ann['bbox']['ymax'] = rect.bottom() / self.graphicsView.img_size[1]
 
     def update_license(self, license):
         if (self.data is not None and

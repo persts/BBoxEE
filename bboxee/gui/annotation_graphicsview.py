@@ -67,6 +67,11 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                      QtGui.QPen(self.brushes[2], 2),
                      QtGui.QPen(self.brushes[3], 2)]
 
+        self.img_size = (0, 0)
+        self.bboxes = []
+        self.graphics_scene = QtWidgets.QGraphicsScene()
+        self.setScene(self.graphics_scene)
+
     def clear_points(self):
         for item in self.point_graphics_items:
             self.scene().removeItem(item)
@@ -192,3 +197,100 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         if len(self.scene().items()) > 0:
             self.scale(0.9, 0.9)
             self.zoom_event.emit()
+
+    def resize(self):
+        bounding_rect = self.graphics_scene.itemsBoundingRect()
+        self.fitInView(bounding_rect, QtCore.Qt.KeepAspectRatio)
+        self.setSceneRect(bounding_rect)
+
+    def load_image(self, array, img_size):
+
+        self.points = []
+        self.graphics_items = []
+        self.selected_bbox = None
+        self.graphics_scene.clear()
+        self.bboxes = []
+        self.img_size = img_size # TODO: get this from array
+
+
+        bpl = int(array.nbytes / array.shape[0])
+        if array.shape[2] == 4:
+            self.qt_image = QtGui.QImage(array.data,
+                                         array.shape[1],
+                                         array.shape[0],
+                                         QtGui.QImage.Format_RGBA8888)
+        else:
+            self.qt_image = QtGui.QImage(array.data,
+                                         array.shape[1],
+                                         array.shape[0],
+                                         bpl,
+                                         QtGui.QImage.Format_RGB888)
+
+        self.graphics_scene.addPixmap(QtGui.QPixmap.fromImage(self.qt_image))
+
+        self.resize()
+        #self.setSceneRect(self.graphics_scene.itemsBoundingRect())
+
+    def display_bboxes(self, annotations, selected_row, display_details=False):
+
+        if self.bboxes:
+            for bbox in self.bboxes:
+                self.graphics_scene.removeItem(bbox)
+            self.bboxes = []
+
+        width = self.img_size[0]
+        height = self.img_size[1]
+
+
+        for index, annotation in enumerate(annotations):
+
+            bbox = annotation['bbox']
+
+            x = bbox['xmin'] * width
+            y = bbox['ymin'] * height
+
+            top_left = QtCore.QPointF(x, y)
+
+            x = bbox['xmax'] * width
+            y = bbox['ymax'] * height
+
+            bottom_right = QtCore.QPointF(x, y)
+
+            rect = QtCore.QRectF(top_left, bottom_right)
+            if index == selected_row:
+                pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.red,
+                                              QtCore.Qt.SolidPattern), 3)
+            else:
+                pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow,
+                                              QtCore.Qt.SolidPattern), 3)
+                if (annotation['created_by'] == 'machine' and
+                        annotation['updated_by'] == ''):
+                    pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.green,
+                                                  QtCore.Qt.SolidPattern),
+                                     3)
+            graphics_item = self.graphics_scene.addRect(rect, pen)
+
+            # display annotation data center in bounding box.
+            if display_details:
+                font = QtGui.QFont()
+                font.setPointSize(int(rect.width() * 0.065))
+                s = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}"
+                content = (s.
+                           format(annotation['label'],
+                                  annotation['truncated'],
+                                  annotation['occluded'],
+                                  annotation['difficult']))
+                text = QtWidgets.QGraphicsTextItem(content)
+                text.setFont(font)
+                text.setPos(rect.topLeft().toPoint())
+                text.setDefaultTextColor(QtCore.Qt.yellow)
+                x_offset = text.boundingRect().width() / 2.0
+                y_offset = text.boundingRect().height() / 2.0
+                x = (rect.width() / 2.0) - x_offset
+                y = (rect.height() / 2.0) - y_offset
+                text.moveBy(x, y)
+                text.setParentItem(graphics_item)
+            self.bboxes.append(graphics_item)
+
+            if index == selected_row:
+                self.selected_bbox = graphics_item
