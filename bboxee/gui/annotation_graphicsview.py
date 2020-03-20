@@ -82,6 +82,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def mouseMoveEvent(self, event):
         if self.mode == Mode.RESIZE:
+
+            # move currently selected corner point to clicked location
             point = self.mapToScene(event.pos())
             rect = self.selected_bbox.rect()
             if self.quad == Quad.TL:
@@ -93,17 +95,64 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             else:
                 rect.setBottomLeft(point)
             self.selected_bbox.setRect(rect)
+
         elif self.mode == Mode.EDIT:
+
+            # distance from edge at which to turn on resizing
+            EDGE_WIDTH = 13
 
             # select box when hovering over it
             point = self.mapToScene(event.pos())
-            for graphic in self.scene().items():
-                if type(graphic) == QtWidgets.QGraphicsRectItem:
-                    if graphic.boundingRect().contains(point):
+            # are we inside the currently selected box?
+            bbox = self.selected_bbox
+            if (bbox is not None and bbox.boundingRect().contains(point)):
+                rect = bbox.boundingRect()
+                # are we on an edge or corner
+                # https://doc.qt.io/qt-5/qt.html#CursorShape-enum
+                # https://doc.qt.io/qt-5/qcursor.html
+                # https://doc.qt.io/qt-5/qwidget.html#cursor-prop
+                cursor = QtCore.Qt.OpenHandCursor
+
+                # is it near an edge?
+                if(point.y() - EDGE_WIDTH < rect.top()):
+                    # top
+                    if(point.x() - EDGE_WIDTH < rect.left()):
+                        # top left
+                        cursor = QtCore.Qt.SizeFDiagCursor
+                    elif(point.x() + EDGE_WIDTH > rect.right()):
+                        # top right
+                        cursor = QtCore.Qt.SizeBDiagCursor
+                    else:
+                        # just top (and bottom)
+                        cursor = QtCore.Qt.SizeVerCursor
+                elif(point.y() + EDGE_WIDTH > rect.bottom()):
+                    # bottom
+                    if(point.x() - EDGE_WIDTH < rect.left()):
+                        # bottom left
+                        cursor = QtCore.Qt.SizeBDiagCursor
+                    elif(point.x() + EDGE_WIDTH > rect.right()):
+                        # bottom right
+                        cursor = QtCore.Qt.SizeFDiagCursor
+                    else:
+                        # just right
+                        cursor = QtCore.Qt.SizeVerCursor
+                elif(point.x() - EDGE_WIDTH < rect.left() or point.x() + EDGE_WIDTH > rect.right()):
+                    # left or right
+                    cursor = QtCore.Qt.SizeHorCursor
+
+
+                self.selected_bbox.setCursor(cursor)
+
+            else:
+                for graphic in self.scene().items():
+                    if type(graphic) == QtWidgets.QGraphicsRectItem and graphic.boundingRect().contains(point):
 
                         # this activates select_bbox in annotation_widget
                         self.select_bbox.emit(point)
                         break
+
+            # change cursor for edges and corners
+
             QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
         else:
             QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
@@ -113,7 +162,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         positions in a list."""
         if len(self.scene().items()) > 0:
             if event.button() == QtCore.Qt.MiddleButton:
-                self.clear_points()
+                #self.clear_points()
             elif self.mode == Mode.PAN:
                 self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
                 QtWidgets.QGraphicsView.mousePressEvent(self, event)
@@ -123,6 +172,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 if len(self.points) == 0:
                     if (self.selected_bbox is not None and
                             self.selected_bbox.boundingRect().contains(point)):
+
                         self.mode = Mode.RESIZE
                         center = self.selected_bbox.boundingRect().center()
                         if point.x() < center.x() and point.y() < center.y():
@@ -133,6 +183,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                             self.quad = Quad.BR
                         else:
                             self.quad = Quad.BL
+
                     else:
                         for graphic in self.scene().items():
                             if type(graphic) == QtWidgets.QGraphicsRectItem:
@@ -286,6 +337,15 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                                                   QtCore.Qt.SolidPattern),
                                      3)
             graphics_item = self.graphics_scene.addRect(rect, pen)
+
+            # https://doc.qt.io/qt-5/qt.html#CursorShape-enum
+            # https://doc.qt.io/qt-5/qcursor.html
+            # https://doc.qt.io/qt-5/qwidget.html#cursor-prop
+            #QtCore.Qt.SizeAllCursor -> pan
+            #QtCore.Qt.OpenHandCursor ->
+            # SizeVerCursor -> Vertical resize
+            # SizeHorCursor -> Horizontal resize
+            graphics_item.setCursor(QtCore.Qt.OpenHandCursor)
 
             # display annotation data center in bounding box.
             if display_details:
