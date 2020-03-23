@@ -591,7 +591,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             if os.path.samefile(self.image_directory,
                                 os.path.split(file_name[0])[0]):
                 file = open(file_name[0], 'w')
-                json.dump(self.data, file)
+                json.dump(self.data, file, indent=4)
                 file.close()
                 self.set_dirty(False)
                 saved = True
