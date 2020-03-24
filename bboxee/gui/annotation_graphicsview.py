@@ -46,6 +46,9 @@ class Mode(Enum):
 
 # distance from edge at which to turn on resizing
 EDGE_WIDTH = 8
+# minimum size side for creation of a new box, drags smaller 
+# than this in either dimension will be interpreted as clicks
+MIN_BOX_SIZE = 3
 
 # Hover: select a box
 # Click+Drag on box: move box
@@ -75,6 +78,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         QtWidgets.QGraphicsView.__init__(self, parent)
         self.mode = None
         self.selected_bbox = None
+        self.sticky_bbox = False
 
         # what part of the selected bbox are we in?
         self.region = None
@@ -258,7 +262,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                     self.mode = Mode.Resize
                     self.mouse_down = point
             else:
-                #not inside a box, initiate create (new box)
+                # not inside a box, initiate create (new box)
                 self.mode = Mode.Create
                 self.mouse_down = point
                 rect = QtCore.QRectF(point, point)
@@ -290,7 +294,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         bbox = self.selected_bbox
         if(bbox is None):
             pass
-        if(self.mode == Mode.Move):
+        elif(self.mode == Mode.Move):
             self.mode = None
             # update data in annotation_widget
             rect = AnnotationGraphicsView.sceneRectTransform(bbox)
@@ -314,14 +318,33 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             self.resized.emit(rect)
 
         elif(self.mode == Mode.Create):
+
             self.mode = None
             rect = AnnotationGraphicsView.sceneRectTransform(bbox)
+            if(rect.width() < MIN_BOX_SIZE or rect.height() < MIN_BOX_SIZE):
+                # just a click, delete box and do click things
+                self.mouse_down = None
+                self.selected_bbox = None
 
-            # clip to scene
-            self.verify_rect(rect)
-            item_rect = AnnotationGraphicsView.inverseRectTransform(bbox, rect)
-            bbox.setRect(item_rect)
-            self.created.emit(rect)
+                # do opposite of these
+                #graphics_item = self.graphics_scene.addRect(rect, pen)
+                #self.bboxes.append(graphics_item)
+                self.graphics_scene.removeItem(bbox)
+                self.bboxes.pop()
+
+                # just a click on background after sticky?
+                if(self.sticky_bbox):
+                    # deselect sticky box
+                    self.region = None
+                    self.sticky_bbox = False
+                    self.select_bbox.emit(point)
+            else:
+
+                # clip to scene
+                self.verify_rect(rect)
+                item_rect = AnnotationGraphicsView.inverseRectTransform(bbox, rect)
+                bbox.setRect(item_rect)
+                self.created.emit(rect)
 
         elif(self.mode == Mode.Delete):
             self.mode = None
@@ -427,6 +450,9 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             for bbox in self.bboxes:
                 self.graphics_scene.removeItem(bbox)
             self.bboxes = []
+
+        if(annotations is None):
+            return
 
         width = self.img_size[0]
         height = self.img_size[1]
