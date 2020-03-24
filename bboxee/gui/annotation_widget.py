@@ -77,9 +77,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_label_file.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_label_file.setIcon(QtGui.QIcon(':/icons/file.svg'))
 
-        #self.pb_clear_points.clicked.connect(self.graphicsView.clear_points)
-        self.pb_clear_points.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_clear_points.setIcon(QtGui.QIcon(':/icons/clear.svg'))
+        self.pb_visible.clicked.connect(self.graphicsView.toggle_visibility)
 
         self.pb_zoom_in.clicked.connect(self.graphicsView.zoom_in)
         self.pb_zoom_in.setIconSize(QtCore.QSize(icon_size, icon_size))
@@ -121,10 +119,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_save.clicked.connect(self.save)
         self.pb_mask.clicked.connect(self.select_mask)
         self.lineEditCurrentImage.editingFinished.connect(self.jump_to_image)
-        (self.tw_labels.
-         selectionModel().
-         selectionChanged.
-         connect(self.selection_changed))
+        self.tw_labels.selectionModel().selectionChanged.connect(self.selection_changed)
         self.tw_labels.cellChanged.connect(self.cell_changed)
         self.tw_labels.cellDoubleClicked.connect(self.delete_row)
         self.checkBoxDisplayAnnotationData.clicked.connect(self.display_bboxes)
@@ -489,6 +484,17 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.pb_mask.setEnabled(True)
                 self.label_image_directory.setText(self.image_directory)
 
+    def enableButtons(self):
+        """Enable UI for interacting with the image and annotations"""
+        self.pb_zoom_in.setEnabled(True)
+        self.pb_zoom_out.setEnabled(True)
+        self.pb_visible.setEnabled(True)
+        self.pb_previous.setEnabled(True)
+        self.pb_previous_ann.setEnabled(True)
+        self.pb_next.setEnabled(True)
+        self.pb_next_ann.setEnabled(True)
+        self.pb_clear.setEnabled(True)
+
     def load_image(self):
         """Load image into graphics scene."""
         if len(self.image_list) > 0:
@@ -507,8 +513,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
             self.graphicsView.load_image(array)
 
+
             array = None
 
+            self.enableButtons()
             self.display_bboxes()
             self.display_annotation_data()
             self.graphicsView.setFocus()

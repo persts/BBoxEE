@@ -79,6 +79,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.mode = None
         self.selected_bbox = None
         self.sticky_bbox = False
+        self.visible = True
 
         # what part of the selected bbox are we in?
         self.region = None
@@ -443,6 +444,13 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.bboxes.append(graphics_item)
 
         return graphics_item
+
+    def toggle_visibility(self):
+
+        self.visible = not self.visible
+        if self.bboxes:
+            for bbox in self.bboxes:
+                bbox.setVisible(self.visible)
 
     def display_bboxes(self, annotations, selected_row, display_details=False):
 

@@ -15,5 +15,7 @@
     <file>folder.svg</file>
     <file>flag.svg</file>
     <file>flagged.svg</file>
+    <file>visibility.svg</file>
+    <file>visibility_off.svg</file>
   </qresource>
 </RCC>
