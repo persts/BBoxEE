@@ -215,8 +215,9 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             self.selected_bbox.setCursor(cursor)
         else:
             # selected bbox does not contain cursor, so unselect
-            self.region = None
-            self.select_bbox.emit(point)
+            if(not self.sticky_bbox):
+                self.region = None
+                self.select_bbox.emit(point)
 
 
 
@@ -262,8 +263,23 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                     # resize
                     self.mode = Mode.Resize
                     self.mouse_down = point
+            elif(self.sticky_bbox):
+                self.region = None
+                self.sticky_bbox = False
+                # are we inside another box?
+                for graphic in self.scene().items():
+                    if type(graphic) == QtWidgets.QGraphicsRectItem and graphic.sceneBoundingRect().contains(point):
+
+                        self.sticky_bbox = True
+
+                        break
+
+                # this activates select_bbox in annotation_widget
+                self.select_bbox.emit(point)
+
             else:
-                # not inside a box, initiate create (new box)
+
+                # not inside the selected box, initiate create (new box)
                 self.mode = Mode.Create
                 self.mouse_down = point
                 rect = QtCore.QRectF(point, point)
@@ -291,12 +307,17 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         """Overload of the MouseReleaseEvent that handles finalization for
         Move, Resize and Create"""
         self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+        point = self.mapToScene(event.pos())
 
         bbox = self.selected_bbox
         if(bbox is None):
             pass
         elif(self.mode == Mode.Move):
             self.mode = None
+            if(point == self.mouse_down):
+                self.sticky_bbox = True
+                self.selected_bbox.setCursor(QtCore.Qt.OpenHandCursor)
+
             # update data in annotation_widget
             rect = AnnotationGraphicsView.sceneRectTransform(bbox)
 
@@ -334,11 +355,11 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 self.bboxes.pop()
 
                 # just a click on background after sticky?
-                if(self.sticky_bbox):
-                    # deselect sticky box
-                    self.region = None
-                    self.sticky_bbox = False
-                    self.select_bbox.emit(point)
+                # if(self.sticky_bbox):
+                #     # deselect sticky box
+                #     self.region = None
+                #     self.sticky_bbox = False
+                #     self.select_bbox.emit(point)
             else:
 
                 # clip to scene
