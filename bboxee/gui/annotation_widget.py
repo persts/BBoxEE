@@ -64,7 +64,9 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
         self.graphicsView.created.connect(self.bbox_created)
         self.graphicsView.resized.connect(self.update_bbox)
+        self.graphicsView.moved.connect(self.update_bbox)
         self.graphicsView.select_bbox.connect(self.select_bbox)
+        self.graphicsView.delete_event.connect(self.delete_selected_row)
         self.graphicsView.zoom_event.connect(self.disable_edit_mode)
 
         self.pb_directory.clicked.connect(self.load_from_directory)
@@ -79,7 +81,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_edit_mode.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_edit_mode.setIcon(QtGui.QIcon(':/icons/edit.svg'))
 
-        self.pb_clear_points.clicked.connect(self.graphicsView.clear_points)
+        #self.pb_clear_points.clicked.connect(self.graphicsView.clear_points)
         self.pb_clear_points.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_clear_points.setIcon(QtGui.QIcon(':/icons/clear.svg'))
 
@@ -301,18 +303,21 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.display_bboxes()
         self.set_dirty(True)
 
-    def delete_row(self, row, column):
+    def delete_selected_row(self):
+        self.delete_row(self.selected_row)
+
+    def delete_row(self, row, column=None):
         """(Slot) Delete row from table and associated metadata
         when double clicked."""
         self.tw_labels.selectionModel().blockSignals(True)
         self.tw_labels.removeRow(row)
         del self.data['images'][self.current_file_name]['annotations'][row]
-        if self.tw_labels.rowCount() == 0:
-            del self.data['images'][self.current_file_name]
         self.tw_labels.selectionModel().blockSignals(False)
         self.tw_labels.clearSelection()
         self.display_bboxes()
         self.set_dirty(True)
+        if self.tw_labels.rowCount() == 0:
+            del self.data['images'][self.current_file_name]
 
     def dirty_data_check(self):
         """Display alert of annotations are dirty and need to be saved before

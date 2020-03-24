@@ -26,46 +26,60 @@ from PyQt5 import QtWidgets, QtCore, QtGui
 from enum import Enum
 
 
-class Quad(Enum):
-    TL = 0
-    TR = 1
-    BR = 2
-    BL = 3
-
+# where in the bbox?
+class BBoxRegion(Enum):
+    Top = 0
+    Bottom = 1
+    Left = 2
+    Right = 3
+    Top_Left = 4
+    Top_Right = 5
+    Bottom_Left = 6
+    Bottom_Right = 7
+    Center = 8
 
 class Mode(Enum):
-    PAN = 0
-    EDIT = 1
-    RESIZE = 2
+    Move = 0
+    Resize = 1
+    Create = 3
+    Delete = 4
 
+# distance from edge at which to turn on resizing
+EDGE_WIDTH = 8
+
+# Hover: select a box
+# Click+Drag on box: move box
+# Click+Drag on an edge or corner: resize a box
+# Click+Drag on image: create a new box
+# Shift+Click+Drag or Right Click+Drag on image: pan the image
+
+# Middle Click inside box: delete box
+# Control+Click+Drag: create a new box, even inside an existing box
+# Click inside box: make sticky
+# Click background: unsticky
 
 class AnnotationGraphicsView(QtWidgets.QGraphicsView):
     """Custom QGraphicsView for creating and editing annotation
     bounding boxes."""
 
+
     created = QtCore.pyqtSignal(QtCore.QRectF)
     resized = QtCore.pyqtSignal(QtCore.QRectF)
+    moved = QtCore.pyqtSignal(QtCore.QRectF)
     select_bbox = QtCore.pyqtSignal(QtCore.QPointF)
+    delete_event = QtCore.pyqtSignal()
     zoom_event = QtCore.pyqtSignal()
 
     def __init__(self, parent=None):
         """Class init function."""
         QtWidgets.QGraphicsView.__init__(self, parent)
-        self.mode = Mode.PAN
-        self.points = []
-        self.point_graphics_items = []
-        self.bbox = QtCore.QRectF()
+        self.mode = None
         self.selected_bbox = None
-        self.quad = Quad.TL
+
+        # what part of the selected bbox are we in?
+        self.region = None
+
         self.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
-        self.brushes = [QtGui.QBrush(QtCore.Qt.blue, QtCore.Qt.SolidPattern),
-                        QtGui.QBrush(QtCore.Qt.green, QtCore.Qt.SolidPattern),
-                        QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern),
-                        QtGui.QBrush(QtCore.Qt.red, QtCore.Qt.SolidPattern)]
-        self.pens = [QtGui.QPen(self.brushes[0], 2),
-                     QtGui.QPen(self.brushes[1], 2),
-                     QtGui.QPen(self.brushes[2], 2),
-                     QtGui.QPen(self.brushes[3], 2)]
 
         self.img_size = (0, 0)
         self.bboxes = []
@@ -74,169 +88,244 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         # enable mouse move events when not dragging
         self.setMouseTracking(True)
 
-    def clear_points(self):
-        for item in self.point_graphics_items:
-            self.scene().removeItem(item)
-            self.point_graphics_items = []
-            self.points = []
+    @staticmethod
+    def _get_region_and_cursor(point, rect, edge_width):
+        """Are we on an edge or corner of a bounding box? Return the right cursor and Region enum."""
+
+        # https://doc.qt.io/qt-5/qt.html#CursorShape-enum
+        cursor = QtCore.Qt.OpenHandCursor
+        region = BBoxRegion.Center
+
+        # is it near an edge?
+        if(point.y() - edge_width < rect.top()):
+            # top
+            if(point.x() - edge_width < rect.left()):
+                # top left
+                cursor = QtCore.Qt.SizeFDiagCursor
+                region = BBoxRegion.Top_Left
+            elif(point.x() + edge_width > rect.right()):
+                # top right
+                cursor = QtCore.Qt.SizeBDiagCursor
+                region = BBoxRegion.Top_Right
+            else:
+                # just top
+                cursor = QtCore.Qt.SizeVerCursor
+                region = BBoxRegion.Top
+        elif(point.y() + edge_width > rect.bottom()):
+            # bottom
+            if(point.x() - edge_width < rect.left()):
+                # bottom left
+                cursor = QtCore.Qt.SizeBDiagCursor
+                region = BBoxRegion.Bottom_Left
+            elif(point.x() + edge_width > rect.right()):
+                # bottom right
+                cursor = QtCore.Qt.SizeFDiagCursor
+                region = BBoxRegion.Bottom_Right
+            else:
+                # just bottom
+                cursor = QtCore.Qt.SizeVerCursor
+                region = BBoxRegion.Bottom
+        elif(point.x() - edge_width < rect.left()):
+            # left or right
+            cursor = QtCore.Qt.SizeHorCursor
+            region = BBoxRegion.Left
+        elif(point.x() + edge_width > rect.right()):
+            cursor = QtCore.Qt.SizeHorCursor
+            region = BBoxRegion.Right
+
+        return region, cursor
+
 
     def mouseMoveEvent(self, event):
-        if self.mode == Mode.RESIZE:
 
-            # move currently selected corner point to clicked location
-            point = self.mapToScene(event.pos())
-            rect = self.selected_bbox.rect()
-            if self.quad == Quad.TL:
-                rect.setTopLeft(point)
-            elif self.quad == Quad.TR:
-                rect.setTopRight(point)
-            elif self.quad == Quad.BR:
-                rect.setBottomRight(point)
-            else:
-                rect.setBottomLeft(point)
-            self.selected_bbox.setRect(rect)
+        point = self.mapToScene(event.pos())
 
-        elif self.mode == Mode.EDIT:
-
-            # distance from edge at which to turn on resizing
-            EDGE_WIDTH = 13
-
+        # are we inside the currently selected box?
+        bbox = self.selected_bbox
+        if(bbox is None):
+            # nothing selected, see if cursor is inside any box
             # select box when hovering over it
-            point = self.mapToScene(event.pos())
-            # are we inside the currently selected box?
-            bbox = self.selected_bbox
-            if (bbox is not None and bbox.boundingRect().contains(point)):
-                rect = bbox.boundingRect()
-                # are we on an edge or corner
-                # https://doc.qt.io/qt-5/qt.html#CursorShape-enum
-                # https://doc.qt.io/qt-5/qcursor.html
-                # https://doc.qt.io/qt-5/qwidget.html#cursor-prop
-                cursor = QtCore.Qt.OpenHandCursor
+            for graphic in self.scene().items():
+                if type(graphic) == QtWidgets.QGraphicsRectItem and graphic.sceneBoundingRect().contains(point):
 
-                # is it near an edge?
-                if(point.y() - EDGE_WIDTH < rect.top()):
-                    # top
-                    if(point.x() - EDGE_WIDTH < rect.left()):
-                        # top left
-                        cursor = QtCore.Qt.SizeFDiagCursor
-                    elif(point.x() + EDGE_WIDTH > rect.right()):
-                        # top right
-                        cursor = QtCore.Qt.SizeBDiagCursor
-                    else:
-                        # just top (and bottom)
-                        cursor = QtCore.Qt.SizeVerCursor
-                elif(point.y() + EDGE_WIDTH > rect.bottom()):
-                    # bottom
-                    if(point.x() - EDGE_WIDTH < rect.left()):
-                        # bottom left
-                        cursor = QtCore.Qt.SizeBDiagCursor
-                    elif(point.x() + EDGE_WIDTH > rect.right()):
-                        # bottom right
-                        cursor = QtCore.Qt.SizeFDiagCursor
-                    else:
-                        # just right
-                        cursor = QtCore.Qt.SizeVerCursor
-                elif(point.x() - EDGE_WIDTH < rect.left() or point.x() + EDGE_WIDTH > rect.right()):
-                    # left or right
-                    cursor = QtCore.Qt.SizeHorCursor
+                    # this activates select_bbox in annotation_widget
+                    self.select_bbox.emit(point)
+
+                    break
+
+        elif (self.mode == Mode.Move):
+            # box is selected and Move mode is active
+            dx, dy = point.x() - self.mouse_down.x(), point.y() - self.mouse_down.y()
+            bbox.moveBy(dx, dy)
+            self.mouse_down = point
+
+        elif(self.mode == Mode.Resize):
+            # box is selected and Resize mode is active
+            rect = bbox.rect()
+
+            # delta method allows more precise control (doesn't snap to cursor on first move)
+            dx, dy = point.x() - self.mouse_down.x(), point.y() - self.mouse_down.y()
+
+            if(self.region == BBoxRegion.Left):
+                rect.setLeft(rect.left() + dx)
+            elif(self.region == BBoxRegion.Right):
+                rect.setRight(rect.right() + dx)
+            elif(self.region == BBoxRegion.Top):
+                rect.setTop(rect.top() + dy)
+            elif(self.region == BBoxRegion.Bottom):
+                rect.setBottom(rect.bottom + dy)
+            elif(self.region == BBoxRegion.Top_Left):
+                new_point = QtCore.QPointF(rect.left() + dx, rect.top() + dy)
+                rect.setTopLeft(new_point)
+            elif(self.region == BBoxRegion.Top_Right):
+                new_point = QtCore.QPointF(rect.right() + dx, rect.top() + dy)
+                rect.setTopRight(new_point)
+            elif(self.region == BBoxRegion.Bottom_Left):
+                new_point = QtCore.QPointF(rect.left() + dx, rect.bottom() + dy)
+                rect.setBottomLeft(new_point)
+            elif(self.region == BBoxRegion.Bottom_Right):
+                new_point = QtCore.QPointF(rect.right() + dx, rect.bottom() + dy)
+                rect.setBottomRight(new_point)
+
+            # limit to image interior
+            bbox.setRect(rect)
+
+            self.mouse_down = point
+        elif(self.mode == Mode.Create):
+
+            rect = QtWidgets.QGraphicsLineItem(self.mouse_down.x(), self.mouse_down.y(), point.x(), point.y()).boundingRect()
+            AnnotationGraphicsView.inverseRectTransform(bbox, rect)
 
 
-                self.selected_bbox.setCursor(cursor)
+            bbox.setRect(rect)
+        elif(bbox.sceneBoundingRect().contains(point)):
+            # selected box contains cursor
+            # just update the region and cursor
+            rect = bbox.sceneBoundingRect()
 
-            else:
-                for graphic in self.scene().items():
-                    if type(graphic) == QtWidgets.QGraphicsRectItem and graphic.boundingRect().contains(point):
+            region, cursor = AnnotationGraphicsView._get_region_and_cursor(point, rect, EDGE_WIDTH)
 
-                        # this activates select_bbox in annotation_widget
-                        self.select_bbox.emit(point)
-                        break
-
+            self.region = region
             # change cursor for edges and corners
-
-            QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
+            self.selected_bbox.setCursor(cursor)
         else:
-            QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
+            # selected bbox does not contain cursor, so unselect
+            self.region = None
+            self.select_bbox.emit(point)
+
+
+
+        QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
+
 
     def mousePressEvent(self, event):
-        """Overload of the mousePressEvent that stores mouse click
-        positions in a list."""
-        if len(self.scene().items()) > 0:
-            if event.button() == QtCore.Qt.MiddleButton:
-                #self.clear_points()
-            elif self.mode == Mode.PAN:
-                self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
-                QtWidgets.QGraphicsView.mousePressEvent(self, event)
-            else:  # mode = Mode.EDIT
-                point = self.mapToScene(event.pos())
-                collect_points = True
-                if len(self.points) == 0:
-                    if (self.selected_bbox is not None and
-                            self.selected_bbox.boundingRect().contains(point)):
+        """Overload of the mousePressEvent that stores mouse click positions in a list."""
 
-                        self.mode = Mode.RESIZE
-                        center = self.selected_bbox.boundingRect().center()
-                        if point.x() < center.x() and point.y() < center.y():
-                            self.quad = Quad.TL
-                        elif point.x() > center.x() and point.y() < center.y():
-                            self.quad = Quad.TR
-                        elif point.x() > center.x() and point.y() > center.y():
-                            self.quad = Quad.BR
-                        else:
-                            self.quad = Quad.BL
+        button = event.button()
+        # redirect middle click to shift click
+        if button == QtCore.Qt.MiddleButton:
+            # delete
+            self.mode = Mode.Delete
+        elif button == QtCore.Qt.RightButton:
+            # manufacture a shift+click event
+            handmade_event = QtGui.QMouseEvent(
+                QtCore.QEvent.MouseButtonPress, QtCore.QPointF(event.pos()),
+                QtCore.Qt.LeftButton, event.buttons(), QtCore.Qt.ShiftModifier)
 
-                    else:
-                        for graphic in self.scene().items():
-                            if type(graphic) == QtWidgets.QGraphicsRectItem:
-                                if graphic.boundingRect().contains(point):
-                                    collect_points = False
+            self.mousePressEvent(handmade_event)
 
-                                    # this activates select_bbox in annotation_widget
-                                    self.select_bbox.emit(point)
-                                    break
+        elif button == QtCore.Qt.LeftButton and event.modifiers() == QtCore.Qt.ShiftModifier:# QtCore.Qt.NoModifier
+            # pan the background image
 
-                if collect_points and self.mode == Mode.EDIT:
-                    rect = QtCore.QRectF(point.x() - 5, point.y() - 5, 11, 11)
-                    pen = self.pens[len(self.points)]
-                    brush = self.brushes[len(self.points)]
-                    (self.point_graphics_items.
-                        append(self.scene().addEllipse(rect, pen, brush)))
-                    self.points.append(event.pos())
+            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+            QtWidgets.QGraphicsView.mousePressEvent(self, event)
+        elif button == QtCore.Qt.LeftButton:
+            point = self.mapToScene(event.pos())
+
+            bbox = self.selected_bbox
+            # are we inside the currently selected box?
+            if (bbox is not None and bbox.sceneBoundingRect().contains(point)):
+                # yes, initiate move or resize
+
+                # move or resize
+                if(self.region == BBoxRegion.Center):
+                    # move
+                    self.mode = Mode.Move
+                    self.mouse_down = point
+                    self.selected_bbox.setCursor(QtCore.Qt.ClosedHandCursor)
+                else:
+                    # resize
+                    self.mode = Mode.Resize
+                    self.mouse_down = point
+            else:
+                #not inside a box, initiate create (new box)
+                self.mode = Mode.Create
+                self.mouse_down = point
+                rect = QtCore.QRectF(point, point)
+
+                new_bbox = self.add_bbox(rect, QtCore.Qt.green)
+                self.selected_bbox = new_bbox
+
+
+    @staticmethod
+    def sceneRectTransform(bbox):
+        """Map the rectanble for a bounding box from item coordinates to scene coordinates.
+        Like sceneBoundingBox, except without the extra pixel width line"""
+        rect = bbox.rect()
+        transform = bbox.sceneTransform()
+        return QtCore.QRectF(transform.map(rect.topLeft()), transform.map(rect.bottomRight()))
+
+    @staticmethod
+    def inverseRectTransform(bbox, rect):
+        """Map the rectangle for a bounding box from scene coordinates to item coordinates."""
+        inverted, ok = bbox.sceneTransform().inverted()
+        return QtCore.QRectF(inverted.map(rect.topLeft()), inverted.map(rect.bottomRight()))
+
 
     def mouseReleaseEvent(self, event):
-        """Overload of the MouseReleaseEvent that will calculate the
-        bounding box when four points are available."""
+        """Overload of the MouseReleaseEvent that handles finalization for
+        Move, Resize and Create"""
         self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
-        if self.mode == Mode.RESIZE:
-            rect = self.selected_bbox.rect()
+
+        bbox = self.selected_bbox
+        if(bbox is None):
+            pass
+        if(self.mode == Mode.Move):
+            self.mode = None
+            # update data in annotation_widget
+            rect = AnnotationGraphicsView.sceneRectTransform(bbox)
+
+            # clip to scene
             self.verify_rect(rect)
-            self.selected_bbox.setRect(rect)
+            item_rect = AnnotationGraphicsView.inverseRectTransform(bbox, rect)
+            bbox.setRect(item_rect)
+
+            self.moved.emit(rect)
+
+        elif(self.mode == Mode.Resize):
+            self.mode = None
+            rect = AnnotationGraphicsView.sceneRectTransform(bbox)
+
+            # clip to scene
+            self.verify_rect(rect)
+            item_rect = AnnotationGraphicsView.inverseRectTransform(bbox, rect)
+            bbox.setRect(item_rect)
+            # update data store
             self.resized.emit(rect)
-            self.mode = Mode.EDIT
 
-        if len(self.points) == 4:
-            x_min = 100000000
-            y_min = 100000000
-            x_max = 0
-            y_max = 0
-            for point in self.points:
-                x_min = min(x_min, point.x())
-                x_max = max(x_max, point.x())
-                y_min = min(y_min, point.y())
-                y_max = max(y_max, point.y())
-            for item in self.point_graphics_items:
-                self.scene().removeItem(item)
-            self.point_graphics_items = []
-            rect = QtCore.QRect(x_min, y_min, x_max - x_min, y_max - y_min)
-            rect = self.mapToScene(rect).boundingRect()
+        elif(self.mode == Mode.Create):
+            self.mode = None
+            rect = AnnotationGraphicsView.sceneRectTransform(bbox)
+
+            # clip to scene
             self.verify_rect(rect)
+            item_rect = AnnotationGraphicsView.inverseRectTransform(bbox, rect)
+            bbox.setRect(item_rect)
             self.created.emit(rect)
-            self.points = []
 
-    def set_edit_mode(self, enabled):
-        if enabled:
-            self.mode = Mode.EDIT
-        else:
-            self.mode = Mode.PAN
+        elif(self.mode == Mode.Delete):
+            self.mode = None
+            self.delete_event.emit()
 
     def verify_rect(self, rect):
         if rect.left() < 0:
@@ -272,7 +361,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def load_image(self, array):
 
-        self.points = []
+        self.point = None
         self.graphics_items = []
         self.selected_bbox = None
         self.graphics_scene.clear()
@@ -299,6 +388,39 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.resize()
         #self.setSceneRect(self.graphics_scene.itemsBoundingRect())
 
+    def add_bbox(self, rect, color, display_details=False):
+        pen = QtGui.QPen(QtGui.QBrush(color, QtCore.Qt.SolidPattern), 3)
+
+        graphics_item = self.graphics_scene.addRect(rect, pen)
+
+        # https://doc.qt.io/qt-5/qt.html#CursorShape-enum
+        graphics_item.setCursor(QtCore.Qt.OpenHandCursor)
+
+        # display annotation data center in bounding box.
+        if display_details:
+            font = QtGui.QFont()
+            font.setPointSize(int(rect.width() * 0.065))
+            s = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}"
+            content = (s.
+                       format(annotation['label'],
+                              annotation['truncated'],
+                              annotation['occluded'],
+                              annotation['difficult']))
+            text = QtWidgets.QGraphicsTextItem(content)
+            text.setFont(font)
+            text.setPos(rect.topLeft().toPoint())
+            text.setDefaultTextColor(QtCore.Qt.yellow)
+            x_offset = text.boundingRect().width() / 2.0 # sceneBoundingRect
+            y_offset = text.boundingRect().height() / 2.0
+            x = (rect.width() / 2.0) - x_offset
+            y = (rect.height() / 2.0) - y_offset
+            text.moveBy(x, y)
+            text.setParentItem(graphics_item)
+
+        self.bboxes.append(graphics_item)
+
+        return graphics_item
+
     def display_bboxes(self, annotations, selected_row, display_details=False):
 
         if self.bboxes:
@@ -308,7 +430,6 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
         width = self.img_size[0]
         height = self.img_size[1]
-
 
         for index, annotation in enumerate(annotations):
 
@@ -325,49 +446,15 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             bottom_right = QtCore.QPointF(x, y)
 
             rect = QtCore.QRectF(top_left, bottom_right)
+
             if index == selected_row:
-                pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.red,
-                                              QtCore.Qt.SolidPattern), 3)
+                color = QtCore.Qt.red
+            elif (annotation['created_by'] == 'machine' and annotation['updated_by'] == ''):
+                color = QtCore.Qt.green
             else:
-                pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.yellow,
-                                              QtCore.Qt.SolidPattern), 3)
-                if (annotation['created_by'] == 'machine' and
-                        annotation['updated_by'] == ''):
-                    pen = QtGui.QPen(QtGui.QBrush(QtCore.Qt.green,
-                                                  QtCore.Qt.SolidPattern),
-                                     3)
-            graphics_item = self.graphics_scene.addRect(rect, pen)
+                color = QtCore.Qt.yellow
 
-            # https://doc.qt.io/qt-5/qt.html#CursorShape-enum
-            # https://doc.qt.io/qt-5/qcursor.html
-            # https://doc.qt.io/qt-5/qwidget.html#cursor-prop
-            #QtCore.Qt.SizeAllCursor -> pan
-            #QtCore.Qt.OpenHandCursor ->
-            # SizeVerCursor -> Vertical resize
-            # SizeHorCursor -> Horizontal resize
-            graphics_item.setCursor(QtCore.Qt.OpenHandCursor)
-
-            # display annotation data center in bounding box.
-            if display_details:
-                font = QtGui.QFont()
-                font.setPointSize(int(rect.width() * 0.065))
-                s = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}"
-                content = (s.
-                           format(annotation['label'],
-                                  annotation['truncated'],
-                                  annotation['occluded'],
-                                  annotation['difficult']))
-                text = QtWidgets.QGraphicsTextItem(content)
-                text.setFont(font)
-                text.setPos(rect.topLeft().toPoint())
-                text.setDefaultTextColor(QtCore.Qt.yellow)
-                x_offset = text.boundingRect().width() / 2.0
-                y_offset = text.boundingRect().height() / 2.0
-                x = (rect.width() / 2.0) - x_offset
-                y = (rect.height() / 2.0) - y_offset
-                text.moveBy(x, y)
-                text.setParentItem(graphics_item)
-            self.bboxes.append(graphics_item)
+            graphics_item = self.add_bbox(rect, color, display_details)
 
             if index == selected_row:
                 self.selected_bbox = graphics_item
