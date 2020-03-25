@@ -604,6 +604,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 color = QtCore.Qt.yellow
 
             graphics_item = self.add_bbox(rect, annotation, color, display_details)
+            graphics_item.setVisible(self.visible)
 
             if index == selected_row:
                 self.selected_bbox = graphics_item
