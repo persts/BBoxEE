@@ -188,9 +188,9 @@ class Exporter(QtCore.QThread):
         val['licenses'] = licenses
 
         file = open(os.path.join(self.directory, 'training.json'), 'w')
-        json.dump(train, file)
+        json.dump(train, file, indent=4)
         file.close()
 
         file = open(os.path.join(self.directory, 'validation.json'), 'w')
-        json.dump(val, file)
+        json.dump(val, file, indent=4)
         file.close()
