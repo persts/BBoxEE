@@ -466,6 +466,30 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
         return graphics_item
 
+    def nudge_right(self):
+        if(self.selected_bbox is None): return False
+
+        self.selected_bbox.moveBy(1, 0)
+        return True
+
+    def nudge_left(self):
+        if(self.selected_bbox is None): return False
+
+        self.selected_bbox.moveBy(-1, 0)
+        return True
+
+    def nudge_up(self):
+        if(self.selected_bbox is None): return False
+
+        self.selected_bbox.moveBy(0, -1)
+        return True
+
+    def nudge_down(self):
+        if(self.selected_bbox is None): return False
+
+        self.selected_bbox.moveBy(0, 1)
+        return True
+
     def toggle_visibility(self):
 
         self.visible = not self.visible
