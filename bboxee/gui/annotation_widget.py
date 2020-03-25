@@ -138,42 +138,42 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         # Create some key bindings to help navigate through images
         self.right_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Right), self)
         self.right_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.right_arrow.activated.connect(self.nudge_right)
+        self.right_arrow.activated.connect(self.graphicsView.nudge_right)
         #self.right_arrow.activated.connect(self.next_image)
 
         self.left_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Left), self)
         self.left_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.left_arrow.activated.connect(self.nudge_left)
+        self.left_arrow.activated.connect(self.graphicsView.nudge_left)
         #self.left_arrow.activated.connect(self.previous_image)
 
         self.up_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Up), self)
         self.up_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.up_arrow.activated.connect(self.nudge_up)
+        self.up_arrow.activated.connect(self.graphicsView.nudge_up)
 
         self.down_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Down), self)
         self.down_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.down_arrow.activated.connect(self.nudge_down)
+        self.down_arrow.activated.connect(self.graphicsView.nudge_down)
 
 
         self.right_arrow_shift = \
             QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Right), self)
         self.right_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.right_arrow_shift.activated.connect(self.expand_right)
+        self.right_arrow_shift.activated.connect(self.graphicsView.expand_right)
 
         self.left_arrow_shift = \
             QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Left), self)
         self.left_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.left_arrow_shift.activated.connect(self.shrink_left)
+        self.left_arrow_shift.activated.connect(self.graphicsView.shrink_left)
 
         self.up_arrow_shift = \
             QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Up), self)
         self.up_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.up_arrow_shift.activated.connect(self.expand_up)
+        self.up_arrow_shift.activated.connect(self.graphicsView.expand_up)
 
         self.down_arrow_shift = \
             QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Down), self)
         self.down_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.down_arrow_shift.activated.connect(self.shrink_down)
+        self.down_arrow_shift.activated.connect(self.graphicsView.shrink_down)
 
 
         self.clear = QtWidgets.QShortcut(
@@ -520,31 +520,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_next.setEnabled(True)
         self.pb_next_ann.setEnabled(True)
         self.pb_clear.setEnabled(True)
-
-
-    def nudge_right(self):
-        if self.graphicsView.nudge_right(): self.set_dirty(True)
-
-    def nudge_left(self):
-        if self.graphicsView.nudge_left(): self.set_dirty(True)
-
-    def nudge_up(self):
-        if self.graphicsView.nudge_up(): self.set_dirty(True)
-
-    def nudge_down(self):
-        if self.graphicsView.nudge_down(): self.set_dirty(True)
-
-    def expand_right(self):
-        if self.graphicsView.expand_right(): self.set_dirty(True)
-
-    def shrink_left(self):
-        if self.graphicsView.shrink_left(): self.set_dirty(True)
-
-    def expand_up(self):
-        if self.graphicsView.expand_up(): self.set_dirty(True)
-
-    def shrink_down(self):
-        if self.graphicsView.shrink_down(): self.set_dirty(True)
 
     def load_image(self):
         """Load image into graphics scene."""
