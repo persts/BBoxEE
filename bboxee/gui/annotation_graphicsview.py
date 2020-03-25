@@ -464,7 +464,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             width = text.boundingRect().width()
             height = text.boundingRect().height() # sceneBoundingRect
 
-            text_background = self.graphics_scene.addRect(left, top - height + 6, width-4, height-6, pen, brush)
+            text_background = self.graphics_scene.addRect(left, top - height + 8, width-4, height-8, pen, brush)
             text_background.setParentItem(graphics_item)
 
             text.setPos(left - 2, top - height + 3)
