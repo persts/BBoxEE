@@ -664,7 +664,7 @@
           <item>
            <widget class="QCheckBox" name="checkBoxDisplayAnnotationData">
             <property name="text">
-             <string>Display annotation data in bounding box</string>
+             <string>Display label on bounding box</string>
             </property>
            </widget>
           </item>

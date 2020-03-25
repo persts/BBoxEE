@@ -50,16 +50,21 @@ EDGE_WIDTH = 8
 # than this in either dimension will be interpreted as clicks
 MIN_BOX_SIZE = 3
 
+# width of line forming bounding box
+BOX_LINE_WIDTH = 1
+
 # Hover: select a box
 # Click+Drag on box: move box
 # Click+Drag on an edge or corner: resize a box
 # Click+Drag on image: create a new box
 # Shift+Click+Drag or Right Click+Drag on image: pan the image
-
-# Middle Click inside box: delete box
-# Control+Click+Drag: create a new box, even inside an existing box
 # Click inside box: make sticky
 # Click background: unsticky
+# Middle Click inside box: delete box
+# Arrows: move selected box
+# Shift+Arrows: resize selected box
+
+# Control+Click+Drag: create a new box, even inside an existing box
 
 class AnnotationGraphicsView(QtWidgets.QGraphicsView):
     """Custom QGraphicsView for creating and editing annotation
@@ -284,7 +289,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 self.mouse_down = point
                 rect = QtCore.QRectF(point, point)
 
-                new_bbox = self.add_bbox(rect, QtCore.Qt.green)
+                new_bbox = self.add_bbox(rect, None, QtCore.Qt.green)
                 self.selected_bbox = new_bbox
 
 
@@ -349,8 +354,6 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 self.selected_bbox = None
 
                 # do opposite of these
-                #graphics_item = self.graphics_scene.addRect(rect, pen)
-                #self.bboxes.append(graphics_item)
                 self.graphics_scene.removeItem(bbox)
                 self.bboxes.pop()
 
@@ -433,34 +436,41 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.resize()
         #self.setSceneRect(self.graphics_scene.itemsBoundingRect())
 
-    def add_bbox(self, rect, color, display_details=False):
-        pen = QtGui.QPen(QtGui.QBrush(color, QtCore.Qt.SolidPattern), 3)
+    def add_bbox(self, rect, annotation, color, display_details=False):
+        brush  = QtGui.QBrush(color, QtCore.Qt.SolidPattern)
+        pen = QtGui.QPen(brush, BOX_LINE_WIDTH)
 
         graphics_item = self.graphics_scene.addRect(rect, pen)
 
         # https://doc.qt.io/qt-5/qt.html#CursorShape-enum
         graphics_item.setCursor(QtCore.Qt.OpenHandCursor)
 
-        # display annotation data center in bounding box.
-        if display_details:
+        LABEL_FONT_SIZE = 7
+        # display label at top left
+        if display_details and annotation is not None:
+
+
             font = QtGui.QFont()
-            font.setPointSize(int(rect.width() * 0.065))
-            s = "{}\nTruncated: {}\nOccluded: {}\nDifficult: {}"
-            content = (s.
-                       format(annotation['label'],
-                              annotation['truncated'],
-                              annotation['occluded'],
-                              annotation['difficult']))
-            text = QtWidgets.QGraphicsTextItem(content)
+            font.setPointSize(int(LABEL_FONT_SIZE))
+
+            text = QtWidgets.QGraphicsTextItem(annotation['label'])
             text.setFont(font)
-            text.setPos(rect.topLeft().toPoint())
-            text.setDefaultTextColor(QtCore.Qt.yellow)
-            x_offset = text.boundingRect().width() / 2.0 # sceneBoundingRect
-            y_offset = text.boundingRect().height() / 2.0
-            x = (rect.width() / 2.0) - x_offset
-            y = (rect.height() / 2.0) - y_offset
-            text.moveBy(x, y)
-            text.setParentItem(graphics_item)
+            text_color = QtCore.Qt.white if color == QtCore.Qt.red else QtCore.Qt.black
+            text.setDefaultTextColor(text_color)
+
+            # position above bbox top left corner
+            top = rect.top()
+            left = rect.left()
+            width = text.boundingRect().width()
+            height = text.boundingRect().height() # sceneBoundingRect
+
+            text_background = self.graphics_scene.addRect(left, top - height + 6, width-4, height-6, pen, brush)
+            text_background.setParentItem(graphics_item)
+
+            text.setPos(left - 2, top - height + 3)
+            #text.moveBy(0, -1 * height)
+
+            text.setParentItem(text_background)
 
         self.bboxes.append(graphics_item)
 
@@ -566,7 +576,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             else:
                 color = QtCore.Qt.yellow
 
-            graphics_item = self.add_bbox(rect, color, display_details)
+            graphics_item = self.add_bbox(rect, annotation, color, display_details)
 
             if index == selected_row:
                 self.selected_bbox = graphics_item
