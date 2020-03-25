@@ -155,6 +155,27 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.down_arrow.activated.connect(self.nudge_down)
 
 
+        self.right_arrow_shift = \
+            QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Right), self)
+        self.right_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.right_arrow_shift.activated.connect(self.expand_right)
+
+        self.left_arrow_shift = \
+            QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Left), self)
+        self.left_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.left_arrow_shift.activated.connect(self.shrink_left)
+
+        self.up_arrow_shift = \
+            QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Up), self)
+        self.up_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.up_arrow_shift.activated.connect(self.expand_up)
+
+        self.down_arrow_shift = \
+            QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Down), self)
+        self.down_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.down_arrow_shift.activated.connect(self.shrink_down)
+
+
         self.clear = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_C), self)
         self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
@@ -512,6 +533,18 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def nudge_down(self):
         if self.graphicsView.nudge_down(): self.set_dirty(True)
+
+    def expand_right(self):
+        if self.graphicsView.expand_right(): self.set_dirty(True)
+
+    def shrink_left(self):
+        if self.graphicsView.shrink_left(): self.set_dirty(True)
+
+    def expand_up(self):
+        if self.graphicsView.expand_up(): self.set_dirty(True)
+
+    def shrink_down(self):
+        if self.graphicsView.shrink_down(): self.set_dirty(True)
 
     def load_image(self):
         """Load image into graphics scene."""

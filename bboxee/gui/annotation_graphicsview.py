@@ -490,6 +490,39 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.selected_bbox.moveBy(0, 1)
         return True
 
+    def expand_right(self):
+        if(self.selected_bbox is None): return False
+
+        rect = self.selected_bbox.rect()
+        rect.setRight(rect.right() + 1)
+        self.selected_bbox.setRect(rect)
+        return True
+
+    def shrink_left(self):
+        if(self.selected_bbox is None): return False
+
+        rect = self.selected_bbox.rect()
+        rect.setRight(rect.right() - 1)
+        self.selected_bbox.setRect(rect)
+        return True
+
+
+    def expand_up(self):
+        if(self.selected_bbox is None): return False
+
+        rect = self.selected_bbox.rect()
+        rect.setTop(rect.top() - 1)
+        self.selected_bbox.setRect(rect)
+        return True
+
+    def shrink_down(self):
+        if(self.selected_bbox is None): return False
+
+        rect = self.selected_bbox.rect()
+        rect.setTop(rect.top() + 1)
+        self.selected_bbox.setRect(rect)
+        return True
+
     def toggle_visibility(self):
 
         self.visible = not self.visible
