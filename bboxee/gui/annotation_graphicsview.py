@@ -454,7 +454,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         graphics_item = self.graphics_scene.addRect(rect, pen)
 
         # https://doc.qt.io/qt-5/qt.html#CursorShape-enum
-        graphics_item.setCursor(QtCore.Qt.OpenHandCursor)
+        #graphics_item.setCursor(QtCore.Qt.OpenHandCursor)
 
         LABEL_FONT_SIZE = 7
         # display label at top left
