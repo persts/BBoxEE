@@ -128,8 +128,13 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
          setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows))
         (self.tw_labels.
          setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection))
-        self.tw_labels.horizontalHeader().setStretchLastSection(False)
-        self.tw_labels.horizontalHeader().ResizeMode = QtWidgets.QHeaderView.Interactive
+        table_header = self.tw_labels.horizontalHeader()
+        table_header.setStretchLastSection(False)
+        table_header.ResizeMode = QtWidgets.QHeaderView.Interactive
+        table_header.resizeSection(0, 150)
+        table_header.resizeSection(2, 30)
+        table_header.resizeSection(3, 30)
+        table_header.resizeSection(4, 30)
 
         # (self.tw_labels.
         #  horizontalHeader().
@@ -379,13 +384,28 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             for row, annotation in enumerate(rec['annotations']):
                 item = QtWidgets.QTableWidgetItem(annotation['label'])
                 self.tw_labels.setItem(row, 0, item)
-                item = QtWidgets.QTableWidgetItem(annotation['truncated'])
+
+                width = int((annotation['bbox']['xmax'] - annotation['bbox']['xmin']) * self.graphicsView.img_size[0])
+                height = int((annotation['bbox']['ymax'] - annotation['bbox']['ymin']) * self.graphicsView.img_size[1])
+                item = QtWidgets.QTableWidgetItem("{:d} x {:d}".format(width, height))
                 self.tw_labels.setItem(row, 1, item)
-                item = QtWidgets.QTableWidgetItem(annotation['occluded'])
+
+
+                item = QtWidgets.QTableWidgetItem()
+                item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+                item.setCheckState(QtCore.Qt.Checked if annotation['truncated'] == "Y" else QtCore.Qt.Unchecked)
                 self.tw_labels.setItem(row, 2, item)
-                item = QtWidgets.QTableWidgetItem(annotation['difficult'])
+
+                item = QtWidgets.QTableWidgetItem()
+                item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+                item.setCheckState(QtCore.Qt.Checked if annotation['occluded'] == "Y" else QtCore.Qt.Unchecked)
                 self.tw_labels.setItem(row, 3, item)
-        self.tw_labels.resizeColumnToContents(0)
+
+                item = QtWidgets.QTableWidgetItem()
+                item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+                item.setCheckState(QtCore.Qt.Checked if annotation['difficult'] == "Y" else QtCore.Qt.Unchecked)
+                self.tw_labels.setItem(row, 4, item)
+        #self.tw_labels.resizeColumnToContents(0)
         self.tw_labels.blockSignals(False)
         self.tw_labels.selectionModel().blockSignals(False)
         self.tw_labels.selectRow(self.selected_row)
@@ -749,6 +769,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             ann['bbox']['xmax'] = rect.right() / self.graphicsView.img_size[0]
             ann['bbox']['ymin'] = rect.top() / self.graphicsView.img_size[1]
             ann['bbox']['ymax'] = rect.bottom() / self.graphicsView.img_size[1]
+            self.update_annotation(ann)
 
     def update_license(self, license):
         if (self.data is not None and
