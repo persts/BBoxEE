@@ -191,7 +191,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 rect.setTop(rect.top() + dy)
                 AnnotationGraphicsView.move_label(bbox, 0, dy)
             elif(self.region == BBoxRegion.Bottom):
-                rect.setBottom(rect.bottom + dy)
+                rect.setBottom(rect.bottom() + dy)
             elif(self.region == BBoxRegion.Top_Left):
                 new_point = QtCore.QPointF(rect.left() + dx, rect.top() + dy)
                 rect.setTopLeft(new_point)
