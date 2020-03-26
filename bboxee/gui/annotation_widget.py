@@ -191,11 +191,29 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.visibility.activated.connect(self.graphicsView.toggle_visibility)
 
+        self.visibility = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key_Tab), self)
+        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.visibility.activated.connect(self.next_row)
+
+
+        self.visibility = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key_Backtab), self)
+        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.visibility.activated.connect(self.prev_row)
 
         self.helper = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_A), self)
         self.helper.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.helper.activated.connect(self.assistant.show)
+
+    def next_row(self):
+        self.tw_labels.selectRow((self.selected_row + 1) % self.tw_labels.rowCount())
+        self.graphicsView.sticky_bbox = True
+
+    def prev_row(self):
+        self.tw_labels.selectRow((self.selected_row - 1) % self.tw_labels.rowCount())
+        self.graphicsView.sticky_bbox = True
 
     def add_analyst(self, name):
         if self.data is not None:
