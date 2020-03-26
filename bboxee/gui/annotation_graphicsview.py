@@ -547,6 +547,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         rect = bbox.rect()
         rect.setTop(rect.top() - 1)
         self.selected_bbox.setRect(rect)
+
+        AnnotationGraphicsView.move_label(bbox, 0, -1)
         self.resized.emit(AnnotationGraphicsView.sceneRectTransform(bbox))
         return True
 
@@ -557,6 +559,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         rect = bbox.rect()
         rect.setTop(rect.top() + 1)
         self.selected_bbox.setRect(rect)
+        AnnotationGraphicsView.move_label(bbox, 0, 1)
         self.resized.emit(AnnotationGraphicsView.sceneRectTransform(bbox))
         return True
 
