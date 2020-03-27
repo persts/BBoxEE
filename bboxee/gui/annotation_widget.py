@@ -336,17 +336,24 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def cell_changed(self, row, column):
         """(Slot) Update annotation data on change."""
-        text = self.tw_labels.item(row, column).text()
-        header = self.tw_labels.horizontalHeaderItem(column).text().lower()
+        table = self.tw_labels
+
+        print("cell changed {}".format(row))
+        # get text
+        header = table.horizontalHeaderItem(column).text().lower()
+        if column == 0:
+            text = table.cellWidget(row, 0).currentText()
+            print(text)
+        elif header in ('o', 't', 'd'):
+            checked = table.item(row, column).checkState() == QtCore.Qt.Checked
+            text = "Y" if checked else "N"
+            mapping = {'o' : 'occluded', 't': 'truncated', 'd': 'difficult'}
+            header = mapping[header]
+        else:
+            print("Got unexpected header: {}".format(header))
+
+        # update annotations
         rec = self.data['images'][self.current_file_name]
-        if header in ('occluded', 'truncated', 'difficult'):
-            if text in ['Y', 'y', 'N', 'n']:
-                text = text.upper()
-            else:
-                text = rec['annotations'][row][header]
-                self.tw_labels.setItem(row,
-                                       column,
-                                       QtWidgets.QTableWidgetItem(text))
         rec['annotations'][row][header] = text
         self.set_dirty(True)
 
@@ -432,8 +439,25 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             rows = len(rec['annotations'])
             self.tw_labels.setRowCount(rows)
             for row, annotation in enumerate(rec['annotations']):
-                item = QtWidgets.QTableWidgetItem(annotation['label'])
-                self.tw_labels.setItem(row, 0, item)
+
+
+                # item = QtWidgets.QTableWidgetItem(annotation['label'])
+                # self.tw_labels.setItem(row, 0, item)
+
+                text = annotation['label']
+                combo = QtWidgets.QComboBox()
+                combo.addItems(self.labels)
+                index = combo.findText(text, QtCore.Qt.MatchFixedString)
+                if index >= 0:
+                     combo.setCurrentIndex(index)
+                else:
+                    print("unknown label: {}".format(text))
+                    combo.setCurrentIndex(0)
+
+                # foward change event to cell_changed
+                # this crazy lambda construction binds the current value of 'row' in the closure
+                combo.currentIndexChanged.connect((lambda bound_row: lambda: self.cell_changed(bound_row, 0))(row))
+                self.tw_labels.setCellWidget(row, 0, combo)
 
                 width = int((annotation['bbox']['xmax'] - annotation['bbox']['xmin']) * self.graphicsView.img_size[0])
                 height = int((annotation['bbox']['ymax'] - annotation['bbox']['ymin']) * self.graphicsView.img_size[1])
@@ -455,6 +479,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
                 item.setCheckState(QtCore.Qt.Checked if annotation['difficult'] == "Y" else QtCore.Qt.Unchecked)
                 self.tw_labels.setItem(row, 4, item)
+
         #self.tw_labels.resizeColumnToContents(0)
         self.tw_labels.blockSignals(False)
         self.tw_labels.selectionModel().blockSignals(False)
@@ -507,7 +532,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     config = json.load(f)
                     f.close()
                     if 'labels' in config and 'license' in config:
-                        self.assistant.set_labels(config['labels'])
+                        self.labels = config['labels']
+                        self.assistant.set_labels(self.labels)
                         self.license.set_licenses(config['license'])
                         break
                 except json.decoder.JSONDecodeError as error:
@@ -765,7 +791,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         """(Slot) Listen for selection and deselection of rows."""
         if selected.indexes():
             self.selected_row = selected.indexes()[0].row()
-            if self.tw_labels.item(self.selected_row, 0).text() != 'N/A':
+            if self.tw_labels.cellWidget(self.selected_row, 0).currentText() != 'N/A':
                 rec = self.data['images'][self.current_file_name]
                 label = rec['annotations'][self.selected_row]['label']
                 self.assistant.set_label(label)
