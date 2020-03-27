@@ -121,7 +121,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.lineEditCurrentImage.editingFinished.connect(self.jump_to_image)
         self.tw_labels.selectionModel().selectionChanged.connect(self.selection_changed)
         self.tw_labels.cellChanged.connect(self.cell_changed)
-        self.tw_labels.cellDoubleClicked.connect(self.delete_row)
+        #self.tw_labels.cellDoubleClicked.connect(self.delete_row)
         self.checkBoxDisplayAnnotationData.clicked.connect(self.display_bboxes)
 
         (self.tw_labels.
@@ -196,11 +196,30 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.visibility.activated.connect(self.next_row)
 
-
         self.visibility = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.Key_Backtab), self)
         self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.visibility.activated.connect(self.prev_row)
+
+        self.visibility = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key_Delete), self)
+        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.visibility.activated.connect(self.delete_selected_row)
+
+        self.visibility = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key_Backspace), self)
+        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.visibility.activated.connect(self.delete_selected_row)
+
+        self.visibility = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key_Space), self)
+        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.visibility.activated.connect(self.next_image)
+
+        self.visibility = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Space), self)
+        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.visibility.activated.connect(self.next_annotated_image)
 
         self.helper = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_A), self)
@@ -344,7 +363,20 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.set_dirty(True)
 
     def delete_selected_row(self):
+        if(self.selected_row is None or self.selected_row < 0): return
+
+        # select new row at same position, or previous row if last
+        next_row = self.selected_row
+
+        # last row selected?
+        if(next_row == self.tw_labels.rowCount() - 1):
+            # next selection will be previous row
+            next_row -= 1
+
         self.delete_row(self.selected_row)
+
+        self.tw_labels.selectRow(next_row)
+        self.graphicsView.sticky_bbox = True
 
     def delete_row(self, row, column=None):
         """(Slot) Delete row from table and associated metadata
