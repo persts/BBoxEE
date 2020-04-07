@@ -456,7 +456,10 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         # https://doc.qt.io/qt-5/qt.html#CursorShape-enum
         #graphics_item.setCursor(QtCore.Qt.OpenHandCursor)
 
-        LABEL_FONT_SIZE = 7
+        # scale font size based on image resolution
+        height = self.img_size[1]
+        LABEL_FONT_SIZE = 7 # at 640
+        LABEL_FONT_SIZE =  int(LABEL_FONT_SIZE * height / 640)
         # display label at top left
         if display_details and annotation is not None:
 
