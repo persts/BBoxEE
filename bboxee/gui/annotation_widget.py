@@ -53,6 +53,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.image_list = []
         self.mask = None
         self.data = None
+        self.labels = None
         self.dirty = False
         self.assistant = AnnotationAssistant(self)
         self.assistant.submitted.connect(self.update_annotation)
@@ -559,6 +560,19 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             dir_name = os.path.split(dir_name)[0]
             file_name = os.path.join(dir_name, 'bboxee_config.json')
 
+    def populate_labels(self):
+
+        if(self.labels is None):
+
+            label_set = set()
+            for image_name, annotations in self.data['images'].items():
+                for annotation in annotations['annotations']:
+                    label_set.add(annotation['label'])
+
+            self.labels = list(label_set)
+            self.assistant.set_labels(self.labels)
+
+
     def load_from_directory(self):
         """(Slot) Load image data from directory."""
         if self.dirty_data_check():
@@ -571,6 +585,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.load_config(directory)
                 self.image_directory = directory
                 self.data = schema.annotation_file()
+                self.populate_labels()
                 self.mask = None
                 self.load_image_list()
                 self.pb_mask.setEnabled(True)
@@ -594,6 +609,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.image_directory = os.path.split(file_name[0])[0]
                 self.load_config(self.image_directory)
 
+                self.populate_labels()
                 if self.data['mask'] is not None:
                     tmp = np.array(self.data['mask'], dtype='uint8')
                     self.mask = np.dstack((tmp, tmp, tmp))
@@ -625,8 +641,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.current_file_name = self.image_list[self.current_image - 1]
             filename = os.path.join(self.image_directory, self.current_file_name)
 
-
-            img = Image.open(filename)
+            img = Image.open(filename).convert("RGB")
             array = np.array(img)
             img.close()
 
