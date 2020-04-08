@@ -183,12 +183,27 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
 
         self.clear = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_C), self)
+            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_C), self)
+        self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.clear.activated.connect(self.duplicate_selected_row)
+
+        self.clear = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.SHIFT + QtCore.Qt.Key_D), self)
+        self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.clear.activated.connect(self.clear_annotations)
+
+        self.clear = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Delete), self)
+        self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.clear.activated.connect(self.clear_annotations)
+
+        self.clear = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Backspace), self)
         self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.clear.activated.connect(self.clear_annotations)
 
         self.visibility = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_H), self)
+            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_H), self)
         self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.visibility.activated.connect(self.graphicsView.toggle_visibility)
 
@@ -201,6 +216,11 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             QtGui.QKeySequence(QtCore.Qt.Key_Backtab), self)
         self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.visibility.activated.connect(self.prev_row)
+
+        self.visibility = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_D), self)
+        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.visibility.activated.connect(self.delete_selected_row)
 
         self.visibility = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.Key_Delete), self)
@@ -223,7 +243,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.visibility.activated.connect(self.next_annotated_image)
 
         self.helper = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.ALT + QtCore.Qt.Key_A), self)
+            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_A), self)
         self.helper.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.helper.activated.connect(self.assistant.show)
 
@@ -311,7 +331,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     rec['license_url'] = license['license_url']
                     self.set_dirty(True)
 
-    def bbox_created(self, rect, show_assistant=True):
+    def bbox_created(self, rect, show_assistant=True, meta=None):
         """(Slot) save the newly created bbox and display it."""
         if rect.width() > 0 and rect.height() > 0:
             self.set_dirty(True)
@@ -325,6 +345,12 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             metadata['bbox']['xmax'] = rect.right() / self.graphicsView.img_size[0]
             metadata['bbox']['ymin'] = rect.top() / self.graphicsView.img_size[1]
             metadata['bbox']['ymax'] = rect.bottom() / self.graphicsView.img_size[1]
+
+            if meta is not None:
+                metadata['label'] = meta['label']
+                metadata['truncated'] = meta['truncated']
+                metadata['occluded'] = meta['occluded']
+                metadata['difficult'] = meta['difficult']
             rec['annotations'].append(metadata)
             self.display_annotation_data()
             self.selected_row = self.tw_labels.rowCount() - 1
@@ -369,6 +395,31 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             del self.data['images'][self.current_file_name]
         self.display_bboxes()
         self.set_dirty(True)
+
+    def duplicate_selected_row(self):
+        if(self.selected_row is None or self.selected_row < 0): return
+
+        self.selected_row
+        # get metadata
+        rec = self.data['images'][self.current_file_name]
+        metadata = rec['annotations'][self.selected_row]
+
+        # get rect
+        selected_rect = self.graphicsView.selected_bbox.rect()
+        # create new of same size centerd on cursor
+        width = selected_rect.width()
+        height = selected_rect.height()
+        center = QtGui.QCursor.pos()
+        center = self.graphicsView.mapToScene(self.graphicsView.mapFromGlobal(center))
+        top_left = QtCore.QPoint(center.x() - width//2, center.y() - width//2)
+        bottom_right = QtCore.QPoint(center.x() + (width - width//2), center.y() + (width - width//2))
+        rect = QtCore.QRectF(top_left, bottom_right)
+        #print(rect)
+
+        new_bbox = self.graphicsView.add_bbox(rect, None, QtCore.Qt.green)
+        self.graphicsView.selected_bbox = new_bbox
+
+        self.bbox_created(rect, show_assistant=False, meta=metadata)
 
     def delete_selected_row(self):
         if(self.selected_row is None or self.selected_row < 0): return
