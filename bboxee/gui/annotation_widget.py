@@ -411,8 +411,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         height = selected_rect.height()
         center = QtGui.QCursor.pos()
         center = self.graphicsView.mapToScene(self.graphicsView.mapFromGlobal(center))
-        top_left = QtCore.QPoint(center.x() - width//2, center.y() - width//2)
-        bottom_right = QtCore.QPoint(center.x() + (width - width//2), center.y() + (width - width//2))
+        top_left = QtCore.QPoint(center.x() - width//2, center.y() - height//2)
+        bottom_right = QtCore.QPoint(center.x() + (width - width//2), center.y() + (height - height//2))
         rect = QtCore.QRectF(top_left, bottom_right)
         #print(rect)
 
