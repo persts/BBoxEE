@@ -24,4 +24,4 @@
 # --------------------------------------------------------------------------
 __version__ = '1.0.0'
 
-from bboxee import gui
+from bboxee import gui  # noqa: F401

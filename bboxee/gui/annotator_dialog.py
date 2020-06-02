@@ -42,7 +42,7 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
         self.last_dir = '.'
 
         # TODO: Split this up into smaller components
-        self.pushButtonTensorflow.clicked.connect(self.tensorflow_selected)
+        self.pushButtonTFv1xFrozen.clicked.connect(self.tensorflow_v1_frozen_selected)
         self.pushButtonTFGraph.clicked.connect(self.get_inference_graph)
         self.interence_graph = None
         self.pushButtonLabelMap.clicked.connect(self.get_label_map)
@@ -56,13 +56,13 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
         self.weights = None
         self.pushButtonWeights.clicked.connect(self.get_weights)
 
-    def tensorflow_selected(self):
+    def tensorflow_v1_frozen_selected(self):
         """Load a frozen inference graph and label map."""
-        self.pushButtonTensorflow.setDisabled(True)
+        self.pushButtonTFv1xFrozen.setDisabled(True)
         self.pushButtonLabelMap.setDisabled(True)
         self.pushButtonTFGraph.setDisabled(True)
         try:
-            from bboxee.annotator.tensorflow import Annotator
+            from bboxee.annotator.tensorflow_v1_frozen import Annotator
             graph = self.lineEditTFGraph.text()
             label_map = self.lineEditLabelMap.text()
             self.annotator = Annotator(graph, label_map)
@@ -72,7 +72,7 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
             message = 'Required Tensorflow modules not found.\n\n\
                 Please review install requirements.'
             QtWidgets.QMessageBox.critical(self, 'Export', message)
-        self.pushButtonTensorflow.setDisabled(False)
+        self.pushButtonTFv1xFrozen.setDisabled(False)
         self.pushButtonLabelMap.setDisabled(False)
         self.pushButtonTFGraph.setDisabled(False)
 
@@ -118,7 +118,7 @@ class AnnotatorDialog(QtWidgets.QDialog, DIALOG):
         if file_name[0] != '':
             self.lineEditLabelMap.setText(file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
-            self.pushButtonTensorflow.setDisabled(False)
+            self.pushButtonTFv1xFrozen.setDisabled(False)
 
     def get_data_config(self):
         file_name = (QtWidgets.

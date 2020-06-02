@@ -8,3 +8,4 @@ __pycache__
 notes.txt
 labels.txt
 tox.ini
+setup.cfg

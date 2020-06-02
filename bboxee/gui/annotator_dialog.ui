@@ -24,7 +24,7 @@
      </property>
      <widget class="QWidget" name="tensorflow">
       <attribute name="title">
-       <string>Tensorflow v1.X</string>
+       <string>Tensorflow v1.x Frozen Graph</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -98,7 +98,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButtonTensorflow">
+        <widget class="QPushButton" name="pushButtonTFv1xFrozen">
          <property name="enabled">
           <bool>false</bool>
          </property>
