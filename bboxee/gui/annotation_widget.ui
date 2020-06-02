@@ -671,13 +671,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QCheckBox" name="checkBoxAnnotationAssistant">
-            <property name="text">
-             <string>Open annotation assistant on select</string>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QTableWidget" name="tw_labels">
             <column>
              <property name="text">

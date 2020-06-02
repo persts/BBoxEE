@@ -180,7 +180,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.down_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.down_arrow_shift.activated.connect(self.graphicsView.shrink_down)
 
-
         self.clear = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_C), self)
         self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
@@ -798,6 +797,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             height = self.graphicsView.img_size[1]
             rec = self.data['images'][self.current_file_name]
             found = False
+            current_index = 0
+            distance = 10000000.0
             for index, annotation in enumerate(rec['annotations']):
                 x = annotation['bbox']['xmin'] * width
                 y = annotation['bbox']['ymin'] * height
@@ -809,11 +810,15 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
                 rect = QtCore.QRectF(top_left, bottom_right)
                 if rect.contains(point):
-                    self.tw_labels.selectRow(index)
                     found = True
-                    break
+                    line = QtCore.QLineF(point, rect.center())
+                    if line.length() < distance:
+                        current_index = index
+                        distance = line.length()
 
-            if not found:
+            if found:
+                self.tw_labels.selectRow(current_index)
+            else:
                 self.tw_labels.clearSelection()
 
     def select_mask(self):
@@ -850,8 +855,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 rec = self.data['images'][self.current_file_name]
                 label = rec['annotations'][self.selected_row]['label']
                 self.assistant.set_label(label)
-            if self.checkBoxAnnotationAssistant.isChecked():
-                self.show_assistant()
         else:
             self.selected_row = -1
             self.graphicsView.selected_bbox = None

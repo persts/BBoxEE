@@ -220,6 +220,20 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
             bbox.setRect(rect)
         elif(bbox.sceneBoundingRect().contains(point)):
+            # Check to see if we should a different box when overlap occurs
+            if not self.sticky_bbox:
+                distance = 10000000.0
+                candidate = None
+                for graphic in self.scene().items():
+                    if type(graphic) == QtWidgets.QGraphicsRectItem and graphic.sceneBoundingRect().contains(point):
+                        line = QtCore.QLineF(point, graphic.sceneBoundingRect().center())
+                        if line.length() < distance:
+                            candidate = graphic
+                            distance = line.length()
+                if candidate != bbox:
+                    self.select_bbox.emit(point)
+                    return
+
             # selected box contains cursor
             # just update the region and cursor
             rect = bbox.sceneBoundingRect()
