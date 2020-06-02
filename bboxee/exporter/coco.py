@@ -194,3 +194,4 @@ class Exporter(QtCore.QThread):
         file = open(os.path.join(self.directory, 'validation.json'), 'w')
         json.dump(val, file, indent=4)
         file.close()
+        self.exported.emit()
