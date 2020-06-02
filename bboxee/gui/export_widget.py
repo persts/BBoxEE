@@ -234,9 +234,9 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                                          self.cb_strip_metadata.isChecked())
                 if export_to == 'COCO':
                     diag = CocoDialog(self)
-                    diag.exec_()
+                    accepted = diag.exec()
                     self.exporter.info = diag.info
-                    if(not diag.info['accepted']):
+                    if accepted == 0:
                         return
 
                 self.pb_export.setEnabled(False)
