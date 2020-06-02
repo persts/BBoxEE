@@ -122,7 +122,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.lineEditCurrentImage.editingFinished.connect(self.jump_to_image)
         self.tw_labels.selectionModel().selectionChanged.connect(self.selection_changed)
         self.tw_labels.cellChanged.connect(self.cell_changed)
-        #self.tw_labels.cellDoubleClicked.connect(self.delete_row)
         self.checkBoxDisplayAnnotationData.clicked.connect(self.display_bboxes)
 
         (self.tw_labels.
@@ -364,17 +363,14 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def cell_changed(self, row, column):
         """(Slot) Update annotation data on change."""
         table = self.tw_labels
-
-        print("cell changed {}".format(row))
         # get text
         header = table.horizontalHeaderItem(column).text().lower()
         if column == 0:
             text = table.cellWidget(row, 0).currentText()
-            print(text)
         elif header in ('o', 't', 'd'):
             checked = table.item(row, column).checkState() == QtCore.Qt.Checked
             text = "Y" if checked else "N"
-            mapping = {'o' : 'occluded', 't': 'truncated', 'd': 'difficult'}
+            mapping = {'o': 'occluded', 't': 'truncated', 'd': 'difficult'}
             header = mapping[header]
         else:
             print("Got unexpected header: {}".format(header))
@@ -383,6 +379,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         rec = self.data['images'][self.current_file_name]
         rec['annotations'][row][header] = text
         self.set_dirty(True)
+        if column == 0:
+            self.display_bboxes()
 
     def clear_annotations(self):
         """(SLOT) Clear all annotations for the current image."""
@@ -397,7 +395,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.set_dirty(True)
 
     def duplicate_selected_row(self):
-        if(self.selected_row is None or self.selected_row < 0): return
+        if self.selected_row is None or self.selected_row < 0:
+            return
 
         self.selected_row
         # get metadata
@@ -411,10 +410,9 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         height = selected_rect.height()
         center = QtGui.QCursor.pos()
         center = self.graphicsView.mapToScene(self.graphicsView.mapFromGlobal(center))
-        top_left = QtCore.QPoint(center.x() - width//2, center.y() - height//2)
-        bottom_right = QtCore.QPoint(center.x() + (width - width//2), center.y() + (height - height//2))
+        top_left = QtCore.QPoint(center.x() - width // 2, center.y() - height // 2)
+        bottom_right = QtCore.QPoint(center.x() + (width - width // 2), center.y() + (height - height // 2))
         rect = QtCore.QRectF(top_left, bottom_right)
-        #print(rect)
 
         new_bbox = self.graphicsView.add_bbox(rect, None, QtCore.Qt.green)
         self.graphicsView.selected_bbox = new_bbox
@@ -422,7 +420,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.bbox_created(rect, show_assistant=False, meta=metadata)
 
     def delete_selected_row(self):
-        if(self.selected_row is None or self.selected_row < 0): return
+        if self.selected_row is None or self.selected_row < 0:
+            return
 
         # select new row at same position, or previous row if last
         next_row = self.selected_row
@@ -492,18 +491,13 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.tw_labels.setRowCount(rows)
             for row, annotation in enumerate(rec['annotations']):
 
-
-                # item = QtWidgets.QTableWidgetItem(annotation['label'])
-                # self.tw_labels.setItem(row, 0, item)
-
                 text = annotation['label']
                 combo = QtWidgets.QComboBox()
                 combo.addItems(self.labels)
                 index = combo.findText(text, QtCore.Qt.MatchFixedString)
                 if index >= 0:
-                     combo.setCurrentIndex(index)
+                    combo.setCurrentIndex(index)
                 else:
-                    print("unknown label: {}".format(text))
                     combo.setCurrentIndex(0)
 
                 # foward change event to cell_changed
@@ -515,7 +509,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 height = int((annotation['bbox']['ymax'] - annotation['bbox']['ymin']) * self.graphicsView.img_size[1])
                 item = QtWidgets.QTableWidgetItem("{:d} x {:d}".format(width, height))
                 self.tw_labels.setItem(row, 1, item)
-
 
                 item = QtWidgets.QTableWidgetItem()
                 item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
@@ -532,7 +525,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 item.setCheckState(QtCore.Qt.Checked if annotation['difficult'] == "Y" else QtCore.Qt.Unchecked)
                 self.tw_labels.setItem(row, 4, item)
 
-        #self.tw_labels.resizeColumnToContents(0)
         self.tw_labels.blockSignals(False)
         self.tw_labels.selectionModel().blockSignals(False)
         self.tw_labels.selectRow(self.selected_row)
@@ -560,6 +552,17 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             lic['attribution'] = rec['attribution']
         self.license.display_license(lic)
 
+    def enableButtons(self):
+        """Enable UI for interacting with the image and annotations"""
+        self.pb_zoom_in.setEnabled(True)
+        self.pb_zoom_out.setEnabled(True)
+        self.pb_visible.setEnabled(True)
+        self.pb_previous.setEnabled(True)
+        self.pb_previous_ann.setEnabled(True)
+        self.pb_next.setEnabled(True)
+        self.pb_next_ann.setEnabled(True)
+        self.pb_clear.setEnabled(True)
+
     def jump_to_image(self):
         """(Slot) Just to a specific image when when line edit changes."""
         try:
@@ -585,6 +588,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     f.close()
                     if 'labels' in config and 'license' in config:
                         self.labels = config['labels']
+                        if 'N/A' not in self.labels:
+                            self.labels = ['N/A'] + self.labels
                         self.assistant.set_labels(self.labels)
                         self.license.set_licenses(config['license'])
                         break
@@ -610,19 +615,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             history.append(file_name)
             dir_name = os.path.split(dir_name)[0]
             file_name = os.path.join(dir_name, 'bboxee_config.json')
-
-    def populate_labels(self):
-
-        if(self.labels is None):
-
-            label_set = set()
-            for image_name, annotations in self.data['images'].items():
-                for annotation in annotations['annotations']:
-                    label_set.add(annotation['label'])
-
-            self.labels = list(label_set)
-            self.assistant.set_labels(self.labels)
-
 
     def load_from_directory(self):
         """(Slot) Load image data from directory."""
@@ -673,17 +665,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.pb_mask.setEnabled(True)
                 self.label_image_directory.setText(self.image_directory)
 
-    def enableButtons(self):
-        """Enable UI for interacting with the image and annotations"""
-        self.pb_zoom_in.setEnabled(True)
-        self.pb_zoom_out.setEnabled(True)
-        self.pb_visible.setEnabled(True)
-        self.pb_previous.setEnabled(True)
-        self.pb_previous_ann.setEnabled(True)
-        self.pb_next.setEnabled(True)
-        self.pb_next_ann.setEnabled(True)
-        self.pb_clear.setEnabled(True)
-
     def load_image(self):
         """Load image into graphics scene."""
         if len(self.image_list) > 0:
@@ -700,8 +681,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 array = array * self.mask
 
             self.graphicsView.load_image(array)
-
-
             array = None
 
             self.enableButtons()
@@ -746,6 +725,16 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.current_image += 1
             self.lineEditCurrentImage.setText(str(self.current_image))
             self.load_image()
+
+    def populate_labels(self):
+        if self.labels is None:
+            label_set = set()
+            for image_name, annotations in self.data['images'].items():
+                for annotation in annotations['annotations']:
+                    label_set.add(annotation['label'])
+
+            self.labels = ['N/A'] + list(label_set)
+            self.assistant.set_labels(self.labels)
 
     def previous_annotated_image(self):
         """(Slot) Jump to the previous image that has been annotated."""

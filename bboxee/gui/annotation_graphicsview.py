@@ -38,15 +38,17 @@ class BBoxRegion(Enum):
     Bottom_Right = 7
     Center = 8
 
+
 class Mode(Enum):
     Move = 0
     Resize = 1
     Create = 3
     Delete = 4
 
+
 # distance from edge at which to turn on resizing
 EDGE_WIDTH = 8
-# minimum size side for creation of a new box, drags smaller 
+# minimum size side for creation of a new box, drags smaller
 # than this in either dimension will be interpreted as clicks
 MIN_BOX_SIZE = 3
 
@@ -69,7 +71,6 @@ BOX_LINE_WIDTH = 1
 class AnnotationGraphicsView(QtWidgets.QGraphicsView):
     """Custom QGraphicsView for creating and editing annotation
     bounding boxes."""
-
 
     created = QtCore.pyqtSignal(QtCore.QRectF)
     resized = QtCore.pyqtSignal(QtCore.QRectF)
@@ -217,7 +218,6 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             rect = QtWidgets.QGraphicsLineItem(self.mouse_down.x(), self.mouse_down.y(), point.x(), point.y()).boundingRect()
             AnnotationGraphicsView.inverseRectTransform(bbox, rect)
 
-
             bbox.setRect(rect)
         elif(bbox.sceneBoundingRect().contains(point)):
             # selected box contains cursor
@@ -235,10 +235,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 self.region = None
                 self.select_bbox.emit(point)
 
-
-
         QtWidgets.QGraphicsView.mouseMoveEvent(self, event)
-
 
     def mousePressEvent(self, event):
         """Overload of the mousePressEvent that stores mouse click positions in a list."""
@@ -428,7 +425,6 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         h, w, c = array.shape
         self.img_size = (w, h)
 
-
         bpl = int(array.nbytes / array.shape[0])
         if array.shape[2] == 4:
             self.qt_image = QtGui.QImage(array.data,
@@ -448,21 +444,20 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         #self.setSceneRect(self.graphics_scene.itemsBoundingRect())
 
     def add_bbox(self, rect, annotation, color, display_details=False):
-        brush  = QtGui.QBrush(color, QtCore.Qt.SolidPattern)
+        brush = QtGui.QBrush(color, QtCore.Qt.SolidPattern)
         pen = QtGui.QPen(brush, BOX_LINE_WIDTH)
 
         graphics_item = self.graphics_scene.addRect(rect, pen)
 
         # https://doc.qt.io/qt-5/qt.html#CursorShape-enum
-        #graphics_item.setCursor(QtCore.Qt.OpenHandCursor)
+        # graphics_item.setCursor(QtCore.Qt.OpenHandCursor)
 
         # scale font size based on image resolution
         height = self.img_size[1]
-        LABEL_FONT_SIZE = 7 # at 640
-        LABEL_FONT_SIZE =  int(LABEL_FONT_SIZE * height / 640)
+        LABEL_FONT_SIZE = 7  # at 640
+        LABEL_FONT_SIZE = int(LABEL_FONT_SIZE * height / 640)
         # display label at top left
         if display_details and annotation is not None:
-
 
             font = QtGui.QFont()
             font.setPointSize(int(LABEL_FONT_SIZE))
