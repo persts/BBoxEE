@@ -68,6 +68,7 @@ BOX_LINE_WIDTH = 1
 
 # Control+Click+Drag: create a new box, even inside an existing box
 
+
 class AnnotationGraphicsView(QtWidgets.QGraphicsView):
     """Custom QGraphicsView for creating and editing annotation
     bounding boxes."""
@@ -92,7 +93,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
         self.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
 
-        self.img_size = (0, 0) # width, height
+        self.img_size = (0, 0)  # width, height
         self.bboxes = []
         self.graphics_scene = QtWidgets.QGraphicsScene()
         self.setScene(self.graphics_scene)
@@ -267,7 +268,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
             self.mousePressEvent(handmade_event)
 
-        elif button == QtCore.Qt.LeftButton and event.modifiers() == QtCore.Qt.ShiftModifier:# QtCore.Qt.NoModifier
+        elif button == QtCore.Qt.LeftButton and event.modifiers() == QtCore.Qt.ShiftModifier:  # QtCore.Qt.NoModifier
             # pan the background image
 
             self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
@@ -314,7 +315,6 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 new_bbox = self.add_bbox(rect, None, QtCore.Qt.green)
                 self.selected_bbox = new_bbox
 
-
     @staticmethod
     def sceneRectTransform(bbox):
         """Map the rectanble for a bounding box from item coordinates to scene coordinates.
@@ -328,7 +328,6 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         """Map the rectangle for a bounding box from scene coordinates to item coordinates."""
         inverted, ok = bbox.sceneTransform().inverted()
         return QtCore.QRectF(inverted.map(rect.topLeft()), inverted.map(rect.bottomRight()))
-
 
     def mouseReleaseEvent(self, event):
         """Overload of the MouseReleaseEvent that handles finalization for
@@ -430,7 +429,6 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.setSceneRect(bounding_rect)
 
     def load_image(self, array):
-
         self.point = None
         self.graphics_items = []
         self.selected_bbox = None
@@ -456,7 +454,6 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
         self.resize()
         self.sticky_bbox = False
-        #self.setSceneRect(self.graphics_scene.itemsBoundingRect())
 
     def add_bbox(self, rect, annotation, color, display_details=False):
         brush = QtGui.QBrush(color, QtCore.Qt.SolidPattern)
@@ -486,14 +483,12 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             top = rect.top()
             left = rect.left()
             width = text.boundingRect().width()
-            height = text.boundingRect().height() # sceneBoundingRect
+            height = text.boundingRect().height()  # sceneBoundingRect
 
-            text_background = self.graphics_scene.addRect(left, top - height + 8, width-4, height-8, pen, brush)
+            text_background = self.graphics_scene.addRect(left, top - height + 8, width - 4, height - 8, pen, brush)
             text_background.setParentItem(graphics_item)
 
             text.setPos(left - 2, top - height + 3)
-            #text.moveBy(0, -1 * height)
-
             text.setParentItem(text_background)
 
         self.bboxes.append(graphics_item)
@@ -502,7 +497,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def nudge_right(self):
         bbox = self.selected_bbox
-        if(bbox is None or bbox.sceneBoundingRect().right() >= self.img_size[0]): return False
+        if bbox is None or bbox.sceneBoundingRect().right() >= self.img_size[0]:
+            return False
 
         self.selected_bbox.moveBy(1, 0)
         self.moved.emit(AnnotationGraphicsView.sceneRectTransform(bbox))
@@ -510,7 +506,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def nudge_left(self):
         bbox = self.selected_bbox
-        if(bbox is None or bbox.sceneBoundingRect().left() <= 0): return False
+        if bbox is None or bbox.sceneBoundingRect().left() <= 0:
+            return False
 
         self.selected_bbox.moveBy(-1, 0)
         self.moved.emit(AnnotationGraphicsView.sceneRectTransform(bbox))
@@ -518,7 +515,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def nudge_up(self):
         bbox = self.selected_bbox
-        if(bbox is None or bbox.sceneBoundingRect().top() <= 0): return False
+        if bbox is None or bbox.sceneBoundingRect().top() <= 0:
+            return False
 
         self.selected_bbox.moveBy(0, -1)
         self.moved.emit(AnnotationGraphicsView.sceneRectTransform(bbox))
@@ -526,7 +524,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def nudge_down(self):
         bbox = self.selected_bbox
-        if(bbox is None or bbox.sceneBoundingRect().bottom() >= self.img_size[1]): return False
+        if bbox is None or bbox.sceneBoundingRect().bottom() >= self.img_size[1]:
+            return False
 
         self.selected_bbox.moveBy(0, 1)
         self.moved.emit(AnnotationGraphicsView.sceneRectTransform(bbox))
@@ -534,7 +533,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def expand_right(self):
         bbox = self.selected_bbox
-        if(bbox is None or bbox.sceneBoundingRect().right() >= self.img_size[0]): return False
+        if bbox is None or bbox.sceneBoundingRect().right() >= self.img_size[0]:
+            return False
 
         rect = bbox.rect()
         rect.setRight(rect.right() + 1)
@@ -544,7 +544,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def shrink_left(self):
         bbox = self.selected_bbox
-        if(bbox is None or bbox.rect().width() <= MIN_BOX_SIZE): return False
+        if bbox is None or bbox.rect().width() <= MIN_BOX_SIZE:
+            return False
 
         rect = bbox.rect()
         rect.setRight(rect.right() - 1)
@@ -552,10 +553,10 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.resized.emit(AnnotationGraphicsView.sceneRectTransform(bbox))
         return True
 
-
     def expand_up(self):
         bbox = self.selected_bbox
-        if(bbox is None or bbox.sceneBoundingRect().top() <= 0): return False
+        if bbox is None or bbox.sceneBoundingRect().top() <= 0:
+            return False
 
         rect = bbox.rect()
         rect.setTop(rect.top() - 1)
@@ -567,7 +568,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def shrink_down(self):
         bbox = self.selected_bbox
-        if(bbox is None or bbox.rect().height() <= MIN_BOX_SIZE): return False
+        if bbox is None or bbox.rect().height() <= MIN_BOX_SIZE:
+            return False
 
         rect = bbox.rect()
         rect.setTop(rect.top() + 1)
