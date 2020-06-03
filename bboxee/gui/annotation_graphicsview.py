@@ -455,6 +455,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.graphics_scene.addPixmap(QtGui.QPixmap.fromImage(self.qt_image))
 
         self.resize()
+        self.sticky_bbox = False
         #self.setSceneRect(self.graphics_scene.itemsBoundingRect())
 
     def add_bbox(self, rect, annotation, color, display_details=False):

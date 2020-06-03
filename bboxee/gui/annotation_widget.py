@@ -463,9 +463,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 else:
                     combo.setCurrentIndex(0)
 
-                # foward change event to cell_changed
-                # this crazy lambda construction binds the current value of 'row' in the closure
-                combo.currentIndexChanged.connect((lambda bound_row: lambda: self.cell_changed(bound_row, 0))(row))
+                combo.currentIndexChanged.connect(self.label_change_handler)
                 self.tw_labels.setCellWidget(row, 0, combo)
 
                 width = int((annotation['bbox']['xmax'] - annotation['bbox']['xmin']) * self.graphicsView.img_size[0])
@@ -489,7 +487,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.tw_labels.setItem(row, 4, item)
 
                 delete = QtWidgets.QPushButton()
-                # delete.setIconSize(QtCore.QSize(24, 24))
+                delete.setIconSize(QtCore.QSize(24, 24))
                 delete.setIcon(QtGui.QIcon(':/icons/delete.svg'))
                 delete.clicked.connect(self.delete_click_handler)
                 self.tw_labels.setCellWidget(row, 5, delete)
@@ -568,6 +566,15 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.lineEditCurrentImage.setText(str(self.current_image))
         except ValueError:
             self.lineEditCurrentImage.setText(str(self.current_image))
+
+    def label_change_handler(self):
+        """(SLOT) Handle index change from lable combobox."""
+        # Get combobox that changed
+        cbox = self.sender()
+        # Find location in table
+        row = self.tw_labels.indexAt(cbox.pos()).row()
+        # Select row and call delete
+        self.cell_changed(row, 0)
 
     def load_config(self, directory):
         dir_name = directory
