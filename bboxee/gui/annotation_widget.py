@@ -337,7 +337,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.license.request()
         self.display_bboxes()
         if show_assistant:
-            self.show_assistant()
+            self.assistant.show()
 
     def cell_changed(self, row, column):
         """(Slot) Update annotation data on change."""
@@ -883,13 +883,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         else:
             self.dirty = False
             self.pb_save.setDisabled(True)
-
-    def show_assistant(self):
-        pos = self.mapToGlobal(self.graphicsView.pos())
-        x = pos.x() + (self.graphicsView.width() - self.assistant.width())
-        y = pos.y() + (self.graphicsView.height() - self.assistant.height())
-        self.assistant.move(x / 2, y / 2)
-        self.assistant.show()
 
     def update_annotation(self, annotation_data):
         """(Slot) Update table with data submitted from assistant widget."""
