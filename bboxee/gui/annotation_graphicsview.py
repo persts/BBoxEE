@@ -278,7 +278,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
             bbox = self.selected_bbox
             # are we inside the currently selected box?
-            if (bbox is not None and bbox.sceneBoundingRect().contains(point)):
+            if event.modifiers() != QtCore.Qt.ControlModifier and bbox is not None and bbox.sceneBoundingRect().contains(point):
                 # yes, initiate move or resize
 
                 # move or resize
