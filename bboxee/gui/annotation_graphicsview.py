@@ -173,16 +173,16 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
         elif (self.mode == Mode.Move):
             # box is selected and Move mode is active
-            dx, dy = point.x() - self.mouse_down.x(), point.y() - self.mouse_down.y()
+            dx, dy = point.x() - self.delta_tracker.x(), point.y() - self.delta_tracker.y()
             bbox.moveBy(dx, dy)
-            self.mouse_down = point
+            self.delta_tracker = point
 
         elif(self.mode == Mode.Resize):
             # box is selected and Resize mode is active
             rect = bbox.rect()
 
             # delta method allows more precise control (doesn't snap to cursor on first move)
-            dx, dy = point.x() - self.mouse_down.x(), point.y() - self.mouse_down.y()
+            dx, dy = point.x() - self.delta_tracker.x(), point.y() - self.delta_tracker.y()
 
             if(self.region == BBoxRegion.Left):
                 rect.setLeft(rect.left() + dx)
@@ -213,7 +213,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             # limit to image interior
             bbox.setRect(rect)
 
-            self.mouse_down = point
+            self.delta_tracker = point
         elif(self.mode == Mode.Create):
 
             rect = QtWidgets.QGraphicsLineItem(self.mouse_down.x(), self.mouse_down.y(), point.x(), point.y()).boundingRect()
@@ -286,11 +286,13 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                     # move
                     self.mode = Mode.Move
                     self.mouse_down = point
+                    self.delta_tracker = point
                     self.selected_bbox.setCursor(QtCore.Qt.ClosedHandCursor)
                 else:
                     # resize
                     self.mode = Mode.Resize
                     self.mouse_down = point
+                    self.delta_tracker = point
             elif(self.sticky_bbox):
                 self.region = None
                 self.sticky_bbox = False
@@ -343,6 +345,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             if(point == self.mouse_down):
                 self.sticky_bbox = True
                 self.selected_bbox.setCursor(QtCore.Qt.OpenHandCursor)
+                return  # Setting sticky mode should not trigger an emit and result in dirty flag being set
 
             # update data in annotation_widget
             rect = AnnotationGraphicsView.sceneRectTransform(bbox)
@@ -366,7 +369,6 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             self.resized.emit(rect)
 
         elif(self.mode == Mode.Create):
-
             self.mode = None
             rect = AnnotationGraphicsView.sceneRectTransform(bbox)
             if(rect.width() < MIN_BOX_SIZE or rect.height() < MIN_BOX_SIZE):

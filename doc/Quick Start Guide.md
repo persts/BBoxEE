@@ -2,7 +2,7 @@
 # BBoxEE Quick Start Guide
 <div style='text-align: right;'> Release 1.0.0 </div>
 <div style='text-align: right;margin-top:20px;font-size:2em'> Peter J. Ersts </div>
-<div style='text-align: right;margin-top:20px'> January 2020</div>
+<div style='text-align: right;margin-top:20px'> June 2020</div>
 [TOC]
 
 ___
@@ -22,10 +22,6 @@ This quick start guide is intended to introduce the basic functionality of BBoxE
 
 
 ---
-
-If you use BBoxEE on data that results in a publication, report, or online analysis, we ask that you include the following reference:
-
-Ersts,P.J. [Internet] BBoxEE (version 1.0.0). American Museum of Natural History, Center for Biodiversity and Conservation. Available from [https://github.com/persts/BBoxEE](https://github.com/persts/BBoxEE). Accessed on [DOWNLOAD DATE].
 
 <div style="page-break-after: always;"></div>
 ![CBC Logo](./images/CBC-AMNH-Logo.jpg)
@@ -88,7 +84,7 @@ There are two ways to load data into BBoxEE:
 1. Select a directory (![Folder Icon](../icons/folder.svg))
 2. Select an existing annotation file (![file icon](../icons/file.svg))
 
-Selecting an existing annotation file will allow you to pick up where you left off or edit/correct any existing bounding boxes.
+Selecting an existing annotation file will allow you to pick up where you left off or edit/correct existing bounding boxes.
 
 ### Interface Buttons
 
@@ -99,58 +95,41 @@ Selecting an existing annotation file will allow you to pick up where you left o
 * (![Skip to next](../icons/skip_next.svg)) Jump the next image with an annotation, skipping all unannotated images in between
 * (![Skip to previous](../icons/skip_previous.svg)) Jump the previous image with an annotation, skipping all unannotated images in between
 * (![Delete](../icons/delete.svg)) Delete all bounding boxes on the current image
-* (![Edit mode](../icons/edit.svg)) Toggle edit mode
-* (![Clear](../icons/clear.svg)) Clear all click indicators by pressing this button or pressing the mouse wheel (i.e., third mouse button)
+* (![Visibility](../icons/visibility.svg)) Toggle the visibility of bounding boxes
 
-You can pan around the image with the typical left mouse click + drag motion. When edit mode is activated, a left mouse click will drop a click indicator (see below). 
+### Defining a Bounding Box
 
-If you zoom in while edit mode is active, edit mode will be disabled as your next action will likely be to pan the image to center your object in the display area.
+1. Left click and drag on the image to define a new bounding box.
+2. Select your target's label from the Annotation Assistant dialog's select box and check any of the descriptive features that apply.
+3. Press the submit button.
 
-### Define a Bounding Box
+If you need to draw a bounding box that starts or is completely contained within another bounding box, press and hold the CTRL key then left click and drag to define the new bounding box.
 
-BBoxEE implements a four click method for defining bounding boxes (Figure 2). After the fourth mouse click  the bounding box will be created and displayed along with an Annotation Assistant dialog where you can select the label for your bounding box.
-
-1. Zoom in and center your target in the display area.
-2. Press the ![Edit mode](../icons/edit.svg)button to enter edit mode.
-3. Left mouse click on the lower most point of your target.
-4. Left mouse click on the right most point of your target.
-5. Left mouse click on the upper most point of your target.
-6. Left mouse click on the left most point of your target.
-7. Select your target's label from the Annotation Assistant dialog's select box and check any of the descriptive features that apply.
-8. Press the submit button.
-
-![Interface](./images/interface.png)
-
-<div style='text-align:center;font-size:0.8em'><strong>Figure 2.</strong> BBoxEE implements a four click method for defining bounding boxes.</div>
 ### Adjusting a Bounding Box
 
-1. Zoom in and center your target in the display area.
-2. Press the ![Edit mode](../icons/edit.svg)button to enter edit mode.
-3. If the bounding box is not already active (red) left mouse click inside the bounding box to make it active.
-4. Left mouse click and hold inside the bounding box near the corner that need to be adjusted.
-5. Drag the mouse to resize the box.
-6. Release the mouse button to save the updated bounding box.
+1. Hover over an existing bouding box to make the box active.
+2. Hover over the edge or corner that you want to adjust then left click and drag to adjust the bounding box.
 
+### Selecting a Bounding Box ( Sticky Mode )
+There are two ways to select a bounding box.
+1. Hover over a bounding box to activate it then left mouse click.
+2. Clicking the row header in the bounding box table.
+
+While in sticky mode mouse events over other bounding boxes will be ignored. To exit sticky mode, left mouse click on the image anywhere outside of a bounding box.
+
+<div style="page-break-after: always;"></div>
 ### Deleting a Bounding Box
 
 There are two ways to delete a bounding box.
 
-1. Double click a row in the bounding box table.
-2. Press the ![Delete icon](../icons/delete.svg)button to clear all bounding boxes for the current image.
+1. Press the ![Delete icon](../icons/delete.svg)button in a row of the bounding box table.
+2. Press the ![Delete icon](../icons/delete.svg)button in the tool bar to clear all bounding boxes for the current image.
 
 ### Saving
 
 All annotation data are saved in a .bbx file that must be saved inside the same directory with the associated images. The annotation file is a simple JSON format. BBoxEE does not save full path names to images, thus allowing you to reorganize and move your image directories as needed without impacting your existing annotations.
 
 Save often!
-
-<div style="page-break-after: always;"></div>
-### Annotation Notes
-
-* While you could use a mouse pad with BBoxEE, it is **highly** recommended that you use a good quality mouse with a wheel.
-* The annotation interface has been optimized for use with a stylus pen and touch screen computer. We used a Microsoft Surface Pro 6 during the optimization of BBoxEE and found it to be the most comfortable and efficient way to define or update bounding boxes.
-* If you have a situation where you will have one or more bounding boxes completely contained within a larger bounding box, you have to create the smaller bounding boxes first.
-* There are a number of keyboard short cuts that are not discussed in this quick start guide.
 
 ## Exporting Your Bounding Boxes
 
@@ -170,10 +149,48 @@ You can export your bounding boxes for use in your favorite machine learning pip
 
 ![Export screen](./images/export.png)
 
-<div style='text-align:center;font-size:0.8em'><strong>Figure 3.</strong> Exporting bounding boxes to train object detectors.</div>
+<div style='text-align:center;font-size:0.8em'><strong>Figure 2.</strong> Exporting bounding boxes to train object detectors.</div>
+<div style="page-break-after: always;"></div>
+## Keyboard Shortcuts
+### Nudge
+You can use the arrow keys to move the active bounding box.
+
+### Expand & Shrink
+SHIFT+Right-Arrow - Expand bounding box to the right.
+SHIFT+Left-Arrow - Contract bounding box from the right.
+
+SHIFT+Up-Arrow - Expand the top of the bounding box.
+SHIFT+Down-Arrow - Contract bounding box from the top.
+
+### Duplicate
+CTRL+C - Duplicate the selected bounding box and place at the current cursor location.
+
+### Delete Bounding Box
+CTRL+D - Delete the selected bounding box.
+CRTL+SHIFT+D - Delete all bounding boxes on current image.
+
+### Hide & Show
+CTRL+H - Toggle bounding box visibility.
+
+### Next & Previous Row
+Tab - Select next row.
+SHIFT+Tab - Select previous row.
+
+### Next & Previous Image
+Space - Next image.
+CTRL+Space - Previous image.
+
+SHIFT+Space - Next annotated image.
+CRTL+SHIFT+Space - Previous annotated image.
+
+### Pan
+SHIFT+Left-click+Drag - Pan image.
+Right-click+Drag - Pan image.
+
 <div style="page-break-after: always;"></div>
 ## Acknowledgements
 I would like to thank the following people for their feedback, data, and support during the development of BBoxEE.
 * Ned Horning, Center for Biodiversity and Conservation 
 * Mark Weckel, Gotham Coyote Project
 * Chris Nagy, Minus river Gorge
+* Waylon Flinn [ Code Contributor ]

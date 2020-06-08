@@ -127,6 +127,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
          setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows))
         (self.tw_labels.
          setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection))
+        self.tw_labels.verticalHeader().sectionClicked.connect(self.set_sticky)
         table_header = self.tw_labels.horizontalHeader()
         table_header.setStretchLastSection(False)
         table_header.ResizeMode = QtWidgets.QHeaderView.Interactive
@@ -410,7 +411,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.delete_row(self.selected_row)
 
         self.tw_labels.selectRow(next_row)
-        self.graphicsView.sticky_bbox = True
+        self.graphicsView.sticky_bbox = False
 
     def dirty_data_check(self):
         """Display alert of annotations are dirty and need to be saved before
@@ -868,6 +869,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         else:
             self.selected_row = -1
             self.graphicsView.selected_bbox = None
+            self.graphicsView.sticky_bbox = False
 
         self.display_bboxes()
 
@@ -883,6 +885,9 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         else:
             self.dirty = False
             self.pb_save.setDisabled(True)
+
+    def set_sticky(self):
+        self.graphicsView.sticky_bbox = True
 
     def update_annotation(self, annotation_data):
         """(Slot) Update table with data submitted from assistant widget."""
