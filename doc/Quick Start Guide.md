@@ -105,31 +105,36 @@ Selecting an existing annotation file will allow you to pick up where you left o
 
 If you need to draw a bounding box that starts or is completely contained within another bounding box, press and hold the CTRL key then left click and drag to define the new bounding box.
 
+### Moving a Bounding Box
+1. Hover over an existing bouding box to make the box active.
+2. Left click and drag to move the bounding box.
+
 ### Adjusting a Bounding Box
 
 1. Hover over an existing bouding box to make the box active.
 2. Hover over the edge or corner that you want to adjust then left click and drag to adjust the bounding box.
 
-### Selecting a Bounding Box ( Sticky Mode )
-There are two ways to select a bounding box.
-1. Hover over a bounding box to activate it then left mouse click.
-2. Clicking the row header in the bounding box table.
-
-While in sticky mode mouse events over other bounding boxes will be ignored. To exit sticky mode, left mouse click on the image anywhere outside of a bounding box.
-
-<div style="page-break-after: always;"></div>
 ### Deleting a Bounding Box
 
 There are two ways to delete a bounding box.
 
 1. Press the ![Delete icon](../icons/delete.svg)button in a row of the bounding box table.
 2. Press the ![Delete icon](../icons/delete.svg)button in the tool bar to clear all bounding boxes for the current image.
+<div style="page-break-after: always;"></div>
+### Selecting a Bounding Box ( Sticky Mode )
+There are two ways to select a bounding box.
+1. Hover over a bounding box to activate it then left mouse click.
+2. Click a row number in the bounding box table.
+
+While in sticky mode mouse events over other bounding boxes will be ignored. To exit sticky mode, left mouse click on the image anywhere outside of a bounding box.
 
 ### Saving
 
 All annotation data are saved in a .bbx file that must be saved inside the same directory with the associated images. The annotation file is a simple JSON format. BBoxEE does not save full path names to images, thus allowing you to reorganize and move your image directories as needed without impacting your existing annotations.
 
 Save often!
+
+<div style="page-break-after: always;"></div>
 
 ## Exporting Your Bounding Boxes
 
@@ -141,11 +146,12 @@ You can export your bounding boxes for use in your favorite machine learning pip
 
 ### Export
 
-1. Press the ![Folder icon](../icons/folder.svg)button.
-2. Select the top level directory of your project. BBoxEE will find all of the annotation (.bbx) files and display them in the table.
-3. Select the rows that you want to include in the export.
-4. Select an export format from the pull down.
-5. Press the export button.
+1. Click the Export tab.
+2. Press the ![Folder icon](../icons/folder.svg)button.
+3. Select the top level directory of your project. BBoxEE will find all of the annotation (.bbx) files and display them in the table.
+4. Select the rows that you want to include in the export.
+5. Select an export format from the pull down.
+6. Press the export button.
 
 ![Export screen](./images/export.png)
 
