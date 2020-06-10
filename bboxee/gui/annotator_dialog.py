@@ -23,10 +23,14 @@
 #
 # --------------------------------------------------------------------------
 import os
+import sys
 from PyQt5 import QtCore, QtWidgets, uic
 
-DIALOG, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
-                           'annotator_dialog.ui'))
+if getattr(sys, 'frozen', False):
+    bundle_dir = sys._MEIPASS
+else:
+    bundle_dir = os.path.dirname(__file__)
+DIALOG, _ = uic.loadUiType(os.path.join(bundle_dir, 'annotator_dialog.ui'))
 
 
 class AnnotatorDialog(QtWidgets.QDialog, DIALOG):

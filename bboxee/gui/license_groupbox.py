@@ -23,10 +23,14 @@
 #
 # --------------------------------------------------------------------------
 import os
+import sys
 from PyQt5 import QtCore, QtWidgets, uic
 
-GBOX, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
-                         'license_groupbox.ui'))
+if getattr(sys, 'frozen', False):
+    bundle_dir = sys._MEIPASS
+else:
+    bundle_dir = os.path.dirname(__file__)
+GBOX, _ = uic.loadUiType(os.path.join(bundle_dir, 'license_groupbox.ui'))
 
 
 class LicenseGroupBox(QtWidgets.QGroupBox, GBOX):

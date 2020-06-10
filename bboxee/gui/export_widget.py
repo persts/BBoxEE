@@ -23,14 +23,18 @@
 #
 # --------------------------------------------------------------------------
 import os
+import sys
 import glob
 import json
 from PyQt5 import QtCore, QtWidgets, QtGui, uic
 from bboxee.gui import CocoDialog
 from bboxee import schema
 
-EXPORT, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
-                           'export_widget.ui'))
+if getattr(sys, 'frozen', False):
+    bundle_dir = sys._MEIPASS
+else:
+    bundle_dir = os.path.dirname(__file__)
+EXPORT, _ = uic.loadUiType(os.path.join(bundle_dir, 'export_widget.ui'))
 
 
 class Globber(QtCore.QThread):
@@ -102,7 +106,7 @@ class Globber(QtCore.QThread):
             for label in summary:
                 string += label + ': ' + str(summary[label]) + "\n"
             data[bbx_file]['summary'] = string
-            self.progress.emit(p+1)
+            self.progress.emit(p + 1)
         self.finished.emit(data, masks)
 
 

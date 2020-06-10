@@ -23,10 +23,14 @@
 #
 # --------------------------------------------------------------------------
 import os
+import sys
 from PyQt5 import QtCore, QtWidgets, uic
 
-LABEL, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
-                          'annotation_assistant.ui'))
+if getattr(sys, 'frozen', False):
+    bundle_dir = sys._MEIPASS
+else:
+    bundle_dir = os.path.dirname(__file__)
+LABEL, _ = uic.loadUiType(os.path.join(bundle_dir, 'annotation_assistant.ui'))
 
 
 class AnnotationAssistant(QtWidgets.QDialog, LABEL):

@@ -1,2 +1,2 @@
 #!/bin/sh
-pyrcc5 bboxee.qrc > ../bboxee.py
+pyrcc5 bboxee.qrc > ../bboxee_rc.py

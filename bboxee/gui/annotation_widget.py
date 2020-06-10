@@ -23,6 +23,7 @@
 #
 # --------------------------------------------------------------------------
 import os
+import sys
 import glob
 import json
 import numpy as np
@@ -33,8 +34,11 @@ from bboxee.gui import AnnotationAssistant
 from bboxee.gui import AnnotatorDialog
 from bboxee.gui import AnalystDialog
 
-WIDGET, _ = uic.loadUiType(os.path.join(os.path.dirname(__file__),
-                           'annotation_widget.ui'))
+if getattr(sys, 'frozen', False):
+    bundle_dir = sys._MEIPASS
+else:
+    bundle_dir = os.path.dirname(__file__)
+WIDGET, _ = uic.loadUiType(os.path.join(bundle_dir, 'annotation_widget.ui'))
 # TODO: Break this class / widget up into multiple widgets / components.
 
 
