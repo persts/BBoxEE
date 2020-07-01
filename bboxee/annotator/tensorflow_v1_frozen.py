@@ -71,7 +71,6 @@ class Annotator(QtCore.QThread):
                 comma = ','
 
         string = "[{}]".format(parsed[0:-1])
-        print(string)
         j = json.loads(string)
         label_map = {}
         for entry in j:
