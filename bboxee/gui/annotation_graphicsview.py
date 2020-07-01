@@ -53,7 +53,7 @@ EDGE_WIDTH = 8
 MIN_BOX_SIZE = 3
 
 # width of line forming bounding box
-BOX_LINE_WIDTH = 1
+BOX_LINE_WIDTH = 2
 
 # Hover: select a box
 # Click+Drag on box: move box
@@ -619,7 +619,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             if index == selected_row:
                 color = QtCore.Qt.red
             elif (annotation['created_by'] == 'machine' and annotation['updated_by'] == ''):
-                color = QtCore.Qt.green
+                color = QtCore.Qt.magenta
             else:
                 color = QtCore.Qt.yellow
 

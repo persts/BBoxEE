@@ -66,11 +66,12 @@ class Annotator(QtCore.QThread):
                 comma = ''
                 parsed += '},'
             else:
-                parts = line.replace('\\', '').split(':')
+                parts = line.replace('\\', '').replace('\'', '"').split(':')
                 parsed += '{} "{}":{}'.format(comma, parts[0].lstrip(), parts[1])
                 comma = ','
 
         string = "[{}]".format(parsed[0:-1])
+        print(string)
         j = json.loads(string)
         label_map = {}
         for entry in j:
