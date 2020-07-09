@@ -45,11 +45,11 @@ categories = []
 for bbx in bbx_list:
     base = ntpath.split(bbx)[0].replace(base_path + os.path.sep, '')
     base += os.path.sep
-    base = base.replace('/', '\\') # If processed on linux udpate sep
+    base = base.replace('/', '\\')  # If processed on linux udpate sep
     file = open(bbx, 'r')
     data = json.load(file)
     file.close()
-    # Get all of the annotations in the .bbx file and convert them to 
+    # Get all of the annotations in the .bbx file and convert them to
     # a megadetector like json output for timelapse
     for image in data['images']:
         entry = {'file': base + image, 'detections': []}
