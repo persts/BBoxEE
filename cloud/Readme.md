@@ -1,6 +1,6 @@
 # Cloud based assisted annotation
 
-You can use the scripts in this folder if would like to use the assisted annotation functionality of BBoxEE on a bunch of image folders or on a cloud based platform like AWS or Azure. 
+You can use the scripts in this directory if would like to use the assisted annotation functionality of BBoxEE on a bunch of image directories or on a cloud based platform like AWS or Azure. 
 
 These annotation scripts will recursively process all directories contained with in the root "data" directory.
 
