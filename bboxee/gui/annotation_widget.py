@@ -31,7 +31,7 @@ from PIL import Image
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from bboxee import schema
 from bboxee.gui import AnnotationAssistant
-from bboxee.gui import AnnotatorDialog
+from bboxee.gui import SelectModelDialog
 from bboxee.gui import AnalystDialog
 
 if getattr(sys, 'frozen', False):
@@ -64,8 +64,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.qt_image = None
 
         self.annotator = None
-        self.annotator_selecter = AnnotatorDialog(self)
-        self.annotator_selecter.selected.connect(self.annotator_selected)
+        self.model_selector = SelectModelDialog(self)
+        self.model_selector.selected.connect(self.annotator_selected)
 
         self.graphicsView.created.connect(self.bbox_created)
         self.graphicsView.resized.connect(self.update_bbox)
@@ -803,7 +803,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         return saved
 
     def select_annotator(self):
-        self.annotator_selecter.show()
+        self.model_selector.show()
 
     def select_bbox(self, point):
         if (self.data is not None and

@@ -53,7 +53,7 @@ def float_list_feature(value):
 
 
 class Exporter(QtCore.QThread):
-    """Export annotated image examples into the Tensorflow TFRecord format."""
+    """Export annotated image examples into the TensorFlow Record format."""
 
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal()
@@ -63,6 +63,7 @@ class Exporter(QtCore.QThread):
                  images,
                  label_map,
                  validation_split,
+                 shards,
                  masks={},
                  strip_metadata=False):
         """
@@ -81,6 +82,7 @@ class Exporter(QtCore.QThread):
         self.images = images
         self.label_map = label_map
         self.train_size = int((1.0 - validation_split) * len(self.images))
+        self.shards = shards
 
         self.masks = masks
         self.strip_metadata = strip_metadata
@@ -106,10 +108,15 @@ class Exporter(QtCore.QThread):
         random.shuffle(self.images)
 
         counter = 0
-        train_writer = tf.io.TFRecordWriter(
-            os.path.join(self.directory, 'training.record'))
-        validation_writer = tf.io.TFRecordWriter(
-            os.path.join(self.directory, 'validation.record'))
+        train_writer = []
+        validation_writer = []
+        for i in range(self.shards):
+            train_name = 'train_dataset.tfrecord-{:05}-{:05}'.format(i, self.shards)
+            train_path = os.path.join(self.directory, train_name)
+            train_writer.append(tf.io.TFRecordWriter(train_path))
+            val_name = 'validation_dataset.tfrecord-{:05}-{:05}'.format(i, self.shards)
+            val_path = os.path.join(self.directory, val_name)
+            validation_writer.append(tf.io.TFRecordWriter(val_path))
         for example in self.images:
             file_name = os.path.join(
                 example['directory'], example['file_name'])
@@ -188,14 +195,16 @@ class Exporter(QtCore.QThread):
             }
             tf_example = tf.train.Example(
                 features=tf.train.Features(feature=feature_dict))
+            index = counter % self.shards
             if counter <= self.train_size:
-                train_writer.write(tf_example.SerializeToString())
+                train_writer[index].write(tf_example.SerializeToString())
             else:
-                validation_writer.write(tf_example.SerializeToString())
+                validation_writer[index].write(tf_example.SerializeToString())
             counter += 1
             self.progress.emit(counter)
-        train_writer.close()
-        validation_writer.close()
+        for i in range(self.shards):
+            train_writer[i].close()
+            validation_writer[i].close()
         file = open(os.path.join(self.directory, 'label_map.pbtxt'), 'w')
         for counter in range(len(self.labels)):
             template = "item {{\n name: \"{}\"\n id: {}\n}}\n"

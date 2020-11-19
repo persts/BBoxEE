@@ -33,8 +33,7 @@ if __name__ == "__main__":
     icon_size = int(screen.height() * 0.03)
     GUI = MainWindow(icon_size)
 
-    GUI.resize(int(screen.width() * 0.8), screen.height() * 0.8)
-    #GUI.move(int(screen.width() * -.05), 0)
+    GUI.resize(int(screen.width() * 0.8), int(screen.height() * 0.8))
     GUI.show()
 
     sys.exit(APP.exec_())

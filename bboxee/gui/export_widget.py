@@ -131,6 +131,8 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.pb_select_directory.setIcon(QtGui.QIcon(':/icons/folder.svg'))
         self.pb_select_directory.clicked.connect(self.load_annotation_files)
 
+        self.comboBoxFormat.currentIndexChanged.connect(self.check_format)
+
         self.pb_export.clicked.connect(self.export_preflight)
 
         (self.tw_files.
@@ -152,6 +154,13 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.cb_truncated.stateChanged.connect(self.exclude_changed)
         self.cb_occluded.stateChanged.connect(self.exclude_changed)
         self.cb_difficult.stateChanged.connect(self.exclude_changed)
+
+    def check_format(self, index):
+        format = self.comboBoxFormat.currentText()
+        if format == 'TensorFlow Record':
+            self.spinBoxShards.setEnabled(True)
+        else:
+            self.spinBoxShards.setEnabled(False)
 
     def display(self, data, masks):
         """(Slot) Display annotation files in table with summary count
@@ -205,13 +214,14 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
     def export(self, images):
         export_to = self.comboBoxFormat.currentText()
         validation_split = self.doubleSpinBoxSplit.value()
+        shards = self.spinBoxShards.value()
         module_loaded = False
-        if export_to == 'Tensorflow Record':
+        if export_to == 'TensorFlow Record':
             try:
                 from bboxee.exporter.tfrecord import Exporter
                 module_loaded = True
             except ModuleNotFoundError:
-                message = 'Required Tensorflow modules not found.' \
+                message = 'Required TensorFlow modules not found.' \
                     '\n\nPlease review install requirements.'
                 QtWidgets.QMessageBox.critical(self, 'Export', message)
         elif export_to == 'Darknet YOLOv3':
@@ -234,6 +244,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                                          images,
                                          self.label_map,
                                          validation_split,
+                                         shards,
                                          self.masks,
                                          self.cb_strip_metadata.isChecked())
                 if export_to == 'COCO':

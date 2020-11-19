@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>AnnotatorDialog</class>
- <widget class="QDialog" name="AnnotatorDialog">
+ <class>SelectModelDialog</class>
+ <widget class="QDialog" name="SelectModelDialog">
   <property name="windowModality">
    <enum>Qt::ApplicationModal</enum>
   </property>
@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>602</width>
-    <height>355</height>
+    <width>638</width>
+    <height>391</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -22,9 +22,90 @@
      <property name="currentIndex">
       <number>0</number>
      </property>
-     <widget class="QWidget" name="tensorflow">
+     <widget class="QWidget" name="tensorflowv2">
       <attribute name="title">
-       <string>Tensorflow v1.x Frozen Graph</string>
+       <string>TensorFlow v2.x Saved Model</string>
+      </attribute>
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <item>
+          <widget class="QPushButton" name="pushButtonTFModel">
+           <property name="text">
+            <string>Saved Model</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEditTFModel"/>
+       </item>
+       <item>
+        <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <item>
+          <widget class="QPushButton" name="pushButtonLabelMapV2">
+           <property name="text">
+            <string>Label Map</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="horizontalSpacer_8">
+           <property name="orientation">
+            <enum>Qt::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <widget class="QLineEdit" name="lineEditLabelMapV2"/>
+       </item>
+       <item>
+        <spacer name="verticalSpacer_3">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>20</width>
+           <height>153</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonTFV2">
+         <property name="text">
+          <string>Load Model</string>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="tensorflowv1">
+      <attribute name="title">
+       <string>TensorFlow v1.x Frozen Graph</string>
       </attribute>
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
@@ -57,7 +138,7 @@
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_6">
          <item>
-          <widget class="QPushButton" name="pushButtonLabelMap">
+          <widget class="QPushButton" name="pushButtonLabelMapV1">
            <property name="enabled">
             <bool>false</bool>
            </property>
@@ -82,7 +163,7 @@
         </layout>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEditLabelMap"/>
+        <widget class="QLineEdit" name="lineEditLabelMapV1"/>
        </item>
        <item>
         <spacer name="verticalSpacer">
@@ -98,7 +179,7 @@
         </spacer>
        </item>
        <item>
-        <widget class="QPushButton" name="pushButtonTFv1xFrozen">
+        <widget class="QPushButton" name="pushButtonTFV1">
          <property name="enabled">
           <bool>false</bool>
          </property>

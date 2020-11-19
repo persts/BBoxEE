@@ -27,7 +27,7 @@ import json
 from PIL import Image
 from PyQt5 import QtCore
 from bboxee import schema
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import numpy as np
 
 

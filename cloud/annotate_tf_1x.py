@@ -31,7 +31,7 @@ from PIL import Image
 from tqdm import tqdm
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-import tensorflow as tf  # noqa: E02
+import tensorflow as tf  # noqa: E402
 
 # Usage check
 if len(sys.argv) != 5:

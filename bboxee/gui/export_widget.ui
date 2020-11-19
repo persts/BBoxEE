@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1032</width>
-    <height>558</height>
+    <height>755</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -224,7 +224,7 @@
              <widget class="QComboBox" name="comboBoxFormat">
               <item>
                <property name="text">
-                <string>Tensorflow Record</string>
+                <string>TensorFlow Record</string>
                </property>
               </item>
               <item>
@@ -284,16 +284,49 @@
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
-             <widget class="QPushButton" name="pb_export">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
+             <widget class="QLabel" name="label">
               <property name="text">
-               <string>Export</string>
+               <string>Number of Shards</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="spinBoxShards">
+              <property name="minimum">
+               <number>2</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="value">
+               <number>10</number>
               </property>
              </widget>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pb_export">
+            <property name="enabled">
+             <bool>true</bool>
+            </property>
+            <property name="text">
+             <string>Export</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

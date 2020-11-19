@@ -23,7 +23,7 @@
 #
 # --------------------------------------------------------------------------
 from .annotation_assistant import AnnotationAssistant  # noqa: F401
-from .annotator_dialog import AnnotatorDialog  # noqa: F401
+from .select_model_dialog import SelectModelDialog  # noqa: F401
 from .analyst_dialog import AnalystDialog  # noqa: F401
 from .coco_dialog import CocoDialog  # noqa: F401
 

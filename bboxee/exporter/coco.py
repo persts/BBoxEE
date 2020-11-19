@@ -43,6 +43,7 @@ class Exporter(QtCore.QThread):
                  images,
                  label_map,
                  validation_split,
+                 shards=0,
                  masks={},
                  strip_metadata=False):
         """
