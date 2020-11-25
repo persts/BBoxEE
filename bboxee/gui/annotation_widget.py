@@ -519,9 +519,12 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         if (self.data is not None and
                 self.current_file_name in self.data['images']):
             rec = self.data['images'][self.current_file_name]
-            lic['license'] = rec['license']
-            lic['license_url'] = rec['license_url']
-            lic['attribution'] = rec['attribution']
+            try:  # backward compatability
+                lic['license'] = rec['license']
+                lic['license_url'] = rec['license_url']
+                lic['attribution'] = rec['attribution']
+            except KeyError:
+                pass
         self.license.display_license(lic)
 
     def duplicate_selected_row(self):

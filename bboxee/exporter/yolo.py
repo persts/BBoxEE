@@ -68,12 +68,13 @@ class Exporter(QtCore.QThread):
             m = np.array(masks[mask], dtype='uint8')
             self.masks[mask] = np.dstack((m, m, m))
 
-        self.labels = []
+        labels = set()
         for label in label_map:
             if label_map[label].lower() != 'exclude':
                 if label_map[label] == '':
                     label_map[label] = label
-                self.labels.append(label_map[label])
+                labels.add(label_map[label])
+        self.labels = list(labels).sort()
 
     def run(self):
         """
