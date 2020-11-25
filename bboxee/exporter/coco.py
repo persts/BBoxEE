@@ -75,9 +75,10 @@ class Exporter(QtCore.QThread):
         for label in label_map:
             if label_map[label].lower() != 'exclude':
                 if label_map[label] == '':
-                    label_map[label] = label
-                labels.add(label_map[label])
-        self.labels = list(labels).sort()
+                    self.label_map[label] = label
+                labels.add(self.label_map[label])
+        self.labels = list(labels)
+        self.labels.sort()
 
     def run(self):
         """
