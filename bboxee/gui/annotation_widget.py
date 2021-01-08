@@ -373,6 +373,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.tw_labels.clearSelection()
         if self.data is not None and self.current_file_name in self.data['images']:
             del self.data['images'][self.current_file_name]
+        self.graphicsView.sticky_bbox = False
+        self.graphicsView.setFocus()
         self.display_bboxes()
         self.set_dirty(True)
 
@@ -393,6 +395,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         del self.data['images'][self.current_file_name]['annotations'][row]
         if self.tw_labels.rowCount() == 0:
             del self.data['images'][self.current_file_name]
+            self.graphicsView.setFocus()
         self.tw_labels.selectionModel().blockSignals(False)
         self.tw_labels.clearSelection()
         self.display_bboxes()
