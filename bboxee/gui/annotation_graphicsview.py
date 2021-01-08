@@ -47,7 +47,7 @@ class Mode(Enum):
 
 
 # distance from edge at which to turn on resizing
-EDGE_WIDTH = 8
+EDGE_WIDTH = 15
 # minimum size side for creation of a new box, drags smaller
 # than this in either dimension will be interpreted as clicks
 MIN_BOX_SIZE = 3

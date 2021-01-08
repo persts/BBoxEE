@@ -30,7 +30,6 @@ import numpy as np
 from PIL import Image
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from bboxee import schema
-from bboxee.gui import AnnotationAssistant
 from bboxee.gui import SelectModelDialog
 from bboxee.gui import AnalystDialog
 
@@ -58,9 +57,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.mask = None
         self.data = None
         self.labels = None
+        self.last_label = 'N/A'
         self.dirty = False
-        self.assistant = AnnotationAssistant(self)
-        self.assistant.submitted.connect(self.update_annotation)
         self.qt_image = None
 
         self.annotator = None
@@ -306,15 +304,14 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def apply_license(self, license):
         if self.data is not None:
             for image in self.data['images']:
-                if ('annotations' in self.data['images'][image] and
-                        self.data['images'][image]['annotations']):
+                if 'annotations' in self.data['images'][image] and self.data['images'][image]['annotations']:
                     rec = self.combodata['images'][image]
                     rec['attribution'] = license['attribution']
                     rec['license'] = license['license']
                     rec['license_url'] = license['license_url']
                     self.set_dirty(True)
 
-    def bbox_created(self, rect, show_assistant=True, meta=None):
+    def bbox_created(self, rect, meta=None):
         """(Slot) save the newly created bbox and display it."""
         if rect.width() > 0 and rect.height() > 0:
             self.set_dirty(True)
@@ -334,6 +331,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 metadata['truncated'] = meta['truncated']
                 metadata['occluded'] = meta['occluded']
                 metadata['difficult'] = meta['difficult']
+            else:
+                metadata['label'] = self.last_label
             rec['annotations'].append(metadata)
             self.display_annotation_data()
             self.selected_row = self.tw_labels.rowCount() - 1
@@ -341,16 +340,16 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
             self.license.request()
         self.display_bboxes()
-        if show_assistant:
-            self.assistant.show()
 
     def cell_changed(self, row, column):
         """(Slot) Update annotation data on change."""
         table = self.tw_labels
         # get text
+        text = ''
         header = table.horizontalHeaderItem(column).text().lower()
         if column == 0:
             text = table.cellWidget(row, 0).currentText()
+            self.last_label = text
         elif header in ('o', 't', 'd'):
             checked = table.item(row, column).checkState() == QtCore.Qt.Checked
             text = "Y" if checked else "N"
@@ -372,8 +371,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.tw_labels.setRowCount(0)
         self.tw_labels.selectionModel().blockSignals(False)
         self.tw_labels.clearSelection()
-        if (self.data is not None and
-                self.current_file_name in self.data['images']):
+        if self.data is not None and self.current_file_name in self.data['images']:
             del self.data['images'][self.current_file_name]
         self.display_bboxes()
         self.set_dirty(True)
@@ -425,9 +423,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             msg_box = QtWidgets.QMessageBox()
             msg_box.setText('Annotations have been modified.')
             msg_box.setInformativeText('Do you want to save your changes?')
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save |
-                                       QtWidgets.QMessageBox.Cancel |
-                                       QtWidgets.QMessageBox.Ignore)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ignore)
             msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
             response = msg_box.exec()
             if response == QtWidgets.QMessageBox.Save:
@@ -506,8 +502,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
         annotations = None
 
-        if (self.data is not None and
-                self.current_file_name in self.data['images']):
+        if self.data is not None and self.current_file_name in self.data['images']:
             rec = self.data['images'][self.current_file_name]
             annotations = rec['annotations']
 
@@ -516,8 +511,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def display_license(self):
         lic = {'license': '', 'license_url': '', 'attribution': ''}
-        if (self.data is not None and
-                self.current_file_name in self.data['images']):
+        if self.data is not None and self.current_file_name in self.data['images']:
             rec = self.data['images'][self.current_file_name]
             try:  # backward compatability
                 lic['license'] = rec['license']
@@ -550,7 +544,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         new_bbox = self.graphicsView.add_bbox(rect, None, QtCore.Qt.green)
         self.graphicsView.selected_bbox = new_bbox
 
-        self.bbox_created(rect, show_assistant=False, meta=metadata)
+        self.bbox_created(rect, meta=metadata)
 
     def enableButtons(self):
         """Enable UI for interacting with the image and annotations"""
@@ -591,6 +585,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         config = {}
         while file_name not in history:
             if os.path.exists(file_name):
+                f = None
                 try:
                     f = open(file_name, 'r')
                     config = json.load(f)
@@ -599,7 +594,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                         self.labels = config['labels']
                         if 'N/A' not in self.labels:
                             self.labels = ['N/A'] + self.labels
-                        self.assistant.set_labels(self.labels)
                         self.license.set_licenses(config['license'])
                         break
                 except json.decoder.JSONDecodeError as error:
@@ -719,8 +713,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         index = self.current_image
         while index < len(self.image_list):
             image_name = self.image_list[index]
-            if (image_name in self.data['images'] and
-                    self.data['images'][image_name]['annotations']):
+            if image_name in self.data['images'] and self.data['images'][image_name]['annotations']:
                 self.current_image = index + 1
                 break
             else:
@@ -736,8 +729,11 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.load_image()
 
     def next_row(self):
-        self.tw_labels.selectRow((self.selected_row + 1) % self.tw_labels.rowCount())
-        self.graphicsView.sticky_bbox = True
+        if self.tw_labels.rowCount() != 0:
+            self.tw_labels.selectRow((self.selected_row + 1) % self.tw_labels.rowCount())
+            self.graphicsView.sticky_bbox = True
+        else:
+            self.graphicsView.sticky_bbox = False
 
     def populate_labels(self):
         if self.labels is None:
@@ -747,15 +743,13 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     label_set.add(annotation['label'])
 
             self.labels = ['N/A'] + list(label_set)
-            self.assistant.set_labels(self.labels)
 
     def previous_annotated_image(self):
         """(Slot) Jump to the previous image that has been annotated."""
         index = self.current_image - 2
         while index >= 0:
             image_name = self.image_list[index]
-            if (image_name in self.data['images'] and
-                    self.data['images'][image_name]['annotations']):
+            if image_name in self.data['images'] and self.data['images'][image_name]['annotations']:
                 self.current_image = index + 1
                 break
             else:
@@ -809,8 +803,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.model_selector.show()
 
     def select_bbox(self, point):
-        if (self.data is not None and
-                self.current_file_name in self.data['images']):
+        if self.data is not None and self.current_file_name in self.data['images']:
             width = self.graphicsView.img_size[0]
             height = self.graphicsView.img_size[1]
             rec = self.data['images'][self.current_file_name]
@@ -869,10 +862,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         """(Slot) Listen for selection and deselection of rows."""
         if selected.indexes():
             self.selected_row = selected.indexes()[0].row()
-            if self.tw_labels.cellWidget(self.selected_row, 0).currentText() != 'N/A':
-                rec = self.data['images'][self.current_file_name]
-                label = rec['annotations'][self.selected_row]['label']
-                self.assistant.set_label(label)
         else:
             self.selected_row = -1
             self.graphicsView.selected_bbox = None
@@ -897,7 +886,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.graphicsView.sticky_bbox = True
 
     def update_annotation(self, annotation_data):
-        """(Slot) Update table with data submitted from assistant widget."""
+        """(Slot) Update annotation table widget."""
         if self.selected_row >= 0:
             self.set_dirty(True)
             rec = self.data['images'][self.current_file_name]
@@ -921,8 +910,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.update_annotation(ann)
 
     def update_license(self, license):
-        if (self.data is not None and
-                self.current_file_name in self.data['images']):
+        if self.data is not None and self.current_file_name in self.data['images']:
             rec = self.data['images'][self.current_file_name]
             rec['attribution'] = license['attribution']
             rec['license'] = license['license']
