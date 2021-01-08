@@ -44,6 +44,7 @@ class Mode(Enum):
     Resize = 1
     Create = 3
     Delete = 4
+    Pan = 5
 
 
 # distance from edge at which to turn on resizing
@@ -160,24 +161,20 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
         # are we inside the currently selected box?
         bbox = self.selected_bbox
-        if(bbox is None):
+        if bbox is None:
             # nothing selected, see if cursor is inside any box
             # select box when hovering over it
             for graphic in self.scene().items():
                 if type(graphic) == QtWidgets.QGraphicsRectItem and graphic.sceneBoundingRect().contains(point):
-
                     # this activates select_bbox in annotation_widget
                     self.select_bbox.emit(point)
-
-                    break
-
-        elif (self.mode == Mode.Move):
+        elif self.mode == Mode.Move:
             # box is selected and Move mode is active
             dx, dy = point.x() - self.delta_tracker.x(), point.y() - self.delta_tracker.y()
             bbox.moveBy(dx, dy)
             self.delta_tracker = point
 
-        elif(self.mode == Mode.Resize):
+        elif self.mode == Mode.Resize:
             # box is selected and Resize mode is active
             rect = bbox.rect()
 
@@ -214,14 +211,14 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             bbox.setRect(rect)
 
             self.delta_tracker = point
-        elif(self.mode == Mode.Create):
+        elif self.mode == Mode.Create:
 
             rect = QtWidgets.QGraphicsLineItem(self.mouse_down.x(), self.mouse_down.y(), point.x(), point.y()).boundingRect()
             AnnotationGraphicsView.inverseRectTransform(bbox, rect)
 
             bbox.setRect(rect)
-        elif(bbox.sceneBoundingRect().contains(point)):
-            # Check to see if we should a different box when overlap occurs
+        elif bbox.sceneBoundingRect().contains(point):
+            # Check to see if we should select a different box when overlap occurs
             if not self.sticky_bbox:
                 distance = 10000000.0
                 candidate = None
@@ -270,7 +267,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
         elif button == QtCore.Qt.LeftButton and event.modifiers() == QtCore.Qt.ShiftModifier:  # QtCore.Qt.NoModifier
             # pan the background image
-
+            self.mode = Mode.Pan
             self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
             QtWidgets.QGraphicsView.mousePressEvent(self, event)
         elif button == QtCore.Qt.LeftButton:
@@ -334,12 +331,15 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
     def mouseReleaseEvent(self, event):
         """Overload of the MouseReleaseEvent that handles finalization for
         Move, Resize and Create"""
-        self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
         point = self.mapToScene(event.pos())
 
         bbox = self.selected_bbox
-        if(bbox is None):
-            pass
+        if(self.mode == Mode.Pan):
+            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+            self.mode = None
+            # Emit the point, to refocus the table entry for the bbox in case pan
+            # was initiated inside of a bbox
+            self.select_bbox.emit(point)
         elif(self.mode == Mode.Move):
             self.mode = None
             if(point == self.mouse_down):

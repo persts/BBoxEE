@@ -832,8 +832,12 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
             if found:
                 self.tw_labels.selectRow(current_index)
+                # Set focus to combobox to allow keyboard entry shortcuts
+                self.tw_labels.cellWidget(current_index, 0).setFocus()
             else:
                 self.tw_labels.clearSelection()
+                # Clear the focus from previous combobox
+                self.graphicsView.setFocus()
 
     def select_mask(self):
         """(Slot) Select mask from disk."""
