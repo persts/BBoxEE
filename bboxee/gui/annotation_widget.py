@@ -144,97 +144,97 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         #
 
         # Arrow keys move bbox
-        self.right_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Right), self)
-        self.right_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.right_arrow.activated.connect(self.graphicsView.nudge_right)
+        self.scut_right_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Right), self)
+        self.scut_right_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_right_arrow.activated.connect(self.graphicsView.nudge_right)
 
-        self.left_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Left), self)
-        self.left_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.left_arrow.activated.connect(self.graphicsView.nudge_left)
+        self.scut_left_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Left), self)
+        self.scut_left_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_left_arrow.activated.connect(self.graphicsView.nudge_left)
 
-        self.up_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Up), self)
-        self.up_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.up_arrow.activated.connect(self.graphicsView.nudge_up)
+        self.scut_up_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Up), self)
+        self.scut_up_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_up_arrow.activated.connect(self.graphicsView.nudge_up)
 
-        self.down_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Down), self)
-        self.down_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.down_arrow.activated.connect(self.graphicsView.nudge_down)
+        self.scut_down_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Down), self)
+        self.scut_down_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_down_arrow.activated.connect(self.graphicsView.nudge_down)
 
         # Expand & contract right and top
-        self.right_arrow_shift = \
+        self.scut_right_arrow_shift = \
             QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Right), self)
-        self.right_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.right_arrow_shift.activated.connect(self.graphicsView.expand_right)
+        self.scut_right_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_right_arrow_shift.activated.connect(self.graphicsView.expand_right)
 
-        self.left_arrow_shift = \
+        self.scut_left_arrow_shift = \
             QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Left), self)
-        self.left_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.left_arrow_shift.activated.connect(self.graphicsView.shrink_left)
+        self.scut_left_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_left_arrow_shift.activated.connect(self.graphicsView.shrink_left)
 
-        self.up_arrow_shift = \
+        self.scut_up_arrow_shift = \
             QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Up), self)
-        self.up_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.up_arrow_shift.activated.connect(self.graphicsView.expand_up)
+        self.scut_up_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_up_arrow_shift.activated.connect(self.graphicsView.expand_up)
 
-        self.down_arrow_shift = \
+        self.scut_down_arrow_shift = \
             QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Down), self)
-        self.down_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.down_arrow_shift.activated.connect(self.graphicsView.shrink_down)
+        self.scut_down_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_down_arrow_shift.activated.connect(self.graphicsView.shrink_down)
 
         # Duplicate bbox
-        self.clear = QtWidgets.QShortcut(
+        self.scut_duplicate = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_C), self)
-        self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.clear.activated.connect(self.duplicate_selected_row)
+        self.scut_duplicate.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_duplicate.activated.connect(self.duplicate_selected_row)
 
         # Delete bbox
-        self.clear = QtWidgets.QShortcut(
+        self.scut_clear = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.SHIFT + QtCore.Qt.Key_D), self)
-        self.clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.clear.activated.connect(self.clear_annotations)
+        self.scut_clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_clear.activated.connect(self.clear_annotations)
 
-        self.visibility = QtWidgets.QShortcut(
+        self.scut_delete = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_D), self)
-        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.visibility.activated.connect(self.delete_selected_row)
+        self.scut_delete.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_delete.activated.connect(self.delete_selected_row)
 
         # Toggle bbox visibility
-        self.visibility = QtWidgets.QShortcut(
+        self.scut_visibility = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_H), self)
-        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.visibility.activated.connect(self.graphicsView.toggle_visibility)
+        self.scut_visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_visibility.activated.connect(self.graphicsView.toggle_visibility)
 
         # Next & previous row
-        self.visibility = QtWidgets.QShortcut(
+        self.scut_next_row = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.Key_Tab), self)
-        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.visibility.activated.connect(self.next_row)
+        self.scut_next_row.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_next_row.activated.connect(self.next_row)
 
-        self.visibility = QtWidgets.QShortcut(
+        self.scut_previous_row = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.Key_Backtab), self)
-        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.visibility.activated.connect(self.prev_row)
+        self.scut_previous_row.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_previous_row.activated.connect(self.prev_row)
 
         # Next & previous image
-        self.visibility = QtWidgets.QShortcut(
+        self.scut_next_image = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.Key_Space), self)
-        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.visibility.activated.connect(self.next_image)
+        self.scut_next_image.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_next_image.activated.connect(self.next_image)
 
-        self.visibility = QtWidgets.QShortcut(
+        self.scut_next_annotated_image = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Space), self)
-        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.visibility.activated.connect(self.next_annotated_image)
+        self.scut_next_annotated_image.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_next_annotated_image.activated.connect(self.next_annotated_image)
 
-        self.visibility = QtWidgets.QShortcut(
+        self.scut_previous_image = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_Space), self)
-        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.visibility.activated.connect(self.previous_image)
+        self.scut_previous_image.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_previous_image.activated.connect(self.previous_image)
 
-        self.visibility = QtWidgets.QShortcut(
+        self.scut_previous_annotated_image = QtWidgets.QShortcut(
             QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.SHIFT + QtCore.Qt.Key_Space), self)
-        self.visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
-        self.visibility.activated.connect(self.previous_annotated_image)
+        self.scut_previous_annotated_image.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_previous_annotated_image.activated.connect(self.previous_annotated_image)
 
     def add_analyst(self, name):
         if self.data is not None:

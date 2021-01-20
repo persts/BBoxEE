@@ -258,11 +258,11 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             # delete
             self.mode = Mode.Delete
         elif button == QtCore.Qt.RightButton:
+            self.mode = Mode.Pan
             # manufacture a shift+click event
             handmade_event = QtGui.QMouseEvent(
                 QtCore.QEvent.MouseButtonPress, QtCore.QPointF(event.pos()),
                 QtCore.Qt.LeftButton, event.buttons(), QtCore.Qt.ShiftModifier)
-
             self.mousePressEvent(handmade_event)
 
         elif button == QtCore.Qt.LeftButton and event.modifiers() == QtCore.Qt.ShiftModifier:  # QtCore.Qt.NoModifier
