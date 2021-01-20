@@ -225,13 +225,8 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                     '\n\nPlease review install requirements.'
                 QtWidgets.QMessageBox.critical(self, 'Export', message)
         elif export_to == 'Darknet YOLOv3':
-            try:
-                from bboxee.exporter.yolo import Exporter
-                module_loaded = True
-            except ModuleNotFoundError:
-                message = 'Required Torch or Yolov3 modules not found.\n\n' \
-                    'Please review install requirements.'
-                QtWidgets.QMessageBox.critical(self, 'Export', message)
+            from bboxee.exporter.yolo import Exporter
+            module_loaded = True
         elif export_to == 'COCO':
             from bboxee.exporter.coco import Exporter
             module_loaded = True

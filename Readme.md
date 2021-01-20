@@ -17,7 +17,7 @@ BBoxEE is being developed with Python 3.8.5 on Ubuntu 20.04 with the following l
 * PyQt5 (5.15.1)
 * Pillow (8.0.1)
 * Numpy (1.18.5)
-* TensorFlow (2.3.1)
+* TensorFlow (2.4.0)
 
 Build a virtual environment and install the dependencies:
 ```bash
@@ -90,32 +90,7 @@ A typical user can install TensorFlow in a virtual environment with:
 # Make sure your Python virtual environment is active
 pip install tensorflow
 
-# For 1.x tensorflow -- requires Python 3.6.12 or lower
-pip install tensorflow-gpu==1.15
 ```
 
 ## Assisted Annotation with YOLOv3 (Torch)
-**Note YOLO support is outdated and may be removed in future versions
-
-### Additional Dependencies:
-* Torch
-* Matplotlib
-* Opencv-python
-
-``` bash
-# Make sure your Python virtual environment is active
-pip install torch
-pip install matplotlib
-pip install opencv-python
-```
-
-Clone Ultralytics YOLOv3 repo:
-``` bash
-git clone https://github.com/ultralytics/yolov3 DESTINATION
-```
-### PYTHONPATH
-Add Libraries to PYTHONPATH:
-``` bash
-export PYTHONPATH=$PYTHONPATH:DESTINATION
-```
-Note: This export command needs to run from every new terminal you start. If you wish to avoid running this manually, you can add it as a new line to the end of your ~/.bashrc file.
+**Note YOLO support has been removed

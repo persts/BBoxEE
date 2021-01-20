@@ -58,14 +58,6 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.model = None
         self.pushButtonLabelMapV2.clicked.connect(self.get_label_map_2)
 
-        self.pushButtonYolo.clicked.connect(self.yolo_selected)
-        self.data_config = None
-        self.pushButtonDataConfig.clicked.connect(self.get_data_config)
-        self.network_config = None
-        self.pushButtonNetworkConfig.clicked.connect(self.get_network_config)
-        self.weights = None
-        self.pushButtonWeights.clicked.connect(self.get_weights)
-
     def tensorflow_v1_frozen_selected(self):
         """Load a frozen inference graph and label map."""
         self.pushButtonTFV1.setDisabled(True)
@@ -108,27 +100,6 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.pushButtonLabelMapV2.setDisabled(False)
         self.pushButtonTFModel.setDisabled(False)
 
-    def yolo_selected(self):
-        """Load a YOLO v3 model."""
-        self.pushButtonYolo.setDisabled(True)
-        try:
-            from bboxee.annotator.yolo import Annotator
-            data_config = self.lineEditDataConfig.text()
-            net_config = self.lineEditNetworkConfig.text()
-            weights = self.lineEditWeights.text()
-            image_size = self.spinBoxImageSize.value()
-            self.annotator = Annotator(data_config,
-                                       net_config,
-                                       weights,
-                                       image_size)
-            self.selected.emit(self.annotator)
-            self.hide()
-        except ModuleNotFoundError:
-            message = 'Required Torch or YOLOv3 modules not found.\n\n\
-                Please review install requirements.'
-            QtWidgets.QMessageBox.critical(self, 'Export', message)
-        self.pushButtonYolo.setDisabled(False)
-
     # Helper functions
     def get_inference_graph(self):
         file_name = (QtWidgets.
@@ -139,51 +110,29 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         if file_name[0] != '':
             self.lineEditTFGraph.setText(file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
-            self.pushButtonLabelMapV1.setDisabled(False)
+            self.pushButtonTFV1.setDisabled(False)
 
     def get_label_map(self):
         file_name = (QtWidgets.
                      QFileDialog.
                      getOpenFileName(self,
                                      'Select Label Map',
-                                     self.last_dir, 'Label Map (*.pbtxt)'))
+                                     self.last_dir, 'Label Map (*.pbtxt *.txt)'))
         if file_name[0] != '':
             self.lineEditLabelMapV1.setText(file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
-            self.pushButtonTFV1.setDisabled(False)
+            self.pushButtonTFGraph.setDisabled(False)
 
     def get_label_map_2(self):
         file_name = (QtWidgets.
                      QFileDialog.
                      getOpenFileName(self,
                                      'Select Label Map',
-                                     self.last_dir, 'Label Map (*.pbtxt)'))
+                                     self.last_dir, 'Label Map (*.pbtxt *.txt)'))
         if file_name[0] != '':
             self.lineEditLabelMapV2.setText(file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
-            self.pushButtonTFV2.setDisabled(False)
-
-    def get_data_config(self):
-        file_name = (QtWidgets.
-                     QFileDialog.
-                     getOpenFileName(self,
-                                     'Select Data Config',
-                                     self.last_dir, 'Data (*.data)'))
-        if file_name[0] != '':
-            self.lineEditDataConfig.setText(file_name[0])
-            self.last_dir = os.path.split(file_name[0])[0]
-            self.pushButtonNetworkConfig.setDisabled(False)
-
-    def get_network_config(self):
-        file_name = (QtWidgets.
-                     QFileDialog.
-                     getOpenFileName(self,
-                                     'Select Network Config',
-                                     self.last_dir, 'Config (*.cfg)'))
-        if file_name[0] != '':
-            self.lineEditNetworkConfig.setText(file_name[0])
-            self.last_dir = os.path.split(file_name[0])[0]
-            self.pushButtonWeights.setDisabled(False)
+            self.pushButtonTFModel.setDisabled(False)
 
     def get_saved_model(self):
         directory = (QtWidgets.
@@ -194,15 +143,4 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         if directory != '':
             self.lineEditTFModel.setText(directory)
             self.last_dir = directory
-            self.pushButtonLabelMapV2.setDisabled(False)
-
-    def get_weights(self):
-        file_name = (QtWidgets.
-                     QFileDialog.
-                     getOpenFileName(self,
-                                     'Load weights',
-                                     self.last_dir, 'PyTorch (*.pt)'))
-        if file_name[0] != '':
-            self.lineEditWeights.setText(file_name[0])
-            self.last_dir = os.path.split(file_name[0])[0]
-            self.pushButtonYolo.setDisabled(False)
+            self.pushButtonTFV2.setDisabled(False)
