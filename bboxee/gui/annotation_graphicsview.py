@@ -22,8 +22,10 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-from PyQt5 import QtWidgets, QtCore, QtGui
+from typing import Tuple
+import numpy as np
 from enum import Enum
+from PyQt5 import QtWidgets, QtCore, QtGui
 
 
 # where in the bbox?
@@ -74,7 +76,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
     """Custom QGraphicsView for creating and editing annotation
     bounding boxes."""
 
-    created = QtCore.pyqtSignal(QtCore.QRectF)
+    created = QtCore.pyqtSignal(QtCore.QRectF, tuple)
     resized = QtCore.pyqtSignal(QtCore.QRectF)
     moved = QtCore.pyqtSignal(QtCore.QRectF)
     select_bbox = QtCore.pyqtSignal(QtCore.QPointF)
@@ -94,7 +96,13 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
         self.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
 
-        self.img_size = (0, 0)  # width, height
+        self.image_size = (0, 0)  # width, height
+        self.image_data = None
+        self.q_image = None
+        self.pixmap = None
+        self.mid_point = 128
+        self.LUT = np.array([x for x in range(256)], dtype=np.uint8)
+
         self.bboxes = []
         self.graphics_scene = QtWidgets.QGraphicsScene()
         self.setScene(self.graphics_scene)
@@ -392,7 +400,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 self.verify_rect(rect)
                 item_rect = AnnotationGraphicsView.inverseRectTransform(bbox, rect)
                 bbox.setRect(item_rect)
-                self.created.emit(rect)
+                self.created.emit(rect, self.image_size)
 
         elif(self.mode == Mode.Delete):
             self.mode = None
@@ -430,29 +438,64 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.fitInView(bounding_rect, QtCore.Qt.KeepAspectRatio)
         self.setSceneRect(bounding_rect)
 
+    def set_mid_point(self, mid_point):
+        self.mid_point = mid_point
+
+        LUT = []
+        for value in range(0, 256):
+            if value < self.mid_point:
+                # Scale bottom range
+                old_range = self.mid_point
+                new_range = 128
+                LUT.append(int((((value - 0) * new_range) / old_range) + 0))
+            else:
+                # Scale top range
+                old_range = 255 - self.mid_point
+                new_range = 128
+                val = int((((value - self.mid_point) * new_range) / old_range) + 128)
+                if val > 255:
+                    LUT.append(255)
+                else:
+                    LUT.append(val)
+
+        self.LUT = np.array(LUT, dtype=np.uint8)
+
+        if self.image_data is not None:
+            self.enhance_image()
+
+    def enhance_image(self):
+        h, w, c = self.image_data.shape
+        self.image_size = (w, h)
+        bpl = int(self.image_data.nbytes / h)
+
+        array = self.LUT[self.image_data]
+
+        if c == 4:
+            self.qt_image = QtGui.QImage(self.image_data.data,
+                                         w,
+                                         h,
+                                         QtGui.QImage.Format_RGBA8888)
+        else:
+            self.qt_image = QtGui.QImage(array.data,
+                                         w,
+                                         h,
+                                         bpl,
+                                         QtGui.QImage.Format_RGB888)
+        if self.pixmap is None:
+            self.pixmap = self.graphics_scene.addPixmap(QtGui.QPixmap.fromImage(self.qt_image))
+        else:
+            self.pixmap.setPixmap(QtGui.QPixmap.fromImage(self.qt_image))
+
     def load_image(self, array):
         self.point = None
         self.graphics_items = []
         self.selected_bbox = None
         self.graphics_scene.clear()
         self.bboxes = []
-        h, w, c = array.shape
-        self.img_size = (w, h)
 
-        bpl = int(array.nbytes / array.shape[0])
-        if array.shape[2] == 4:
-            self.qt_image = QtGui.QImage(array.data,
-                                         array.shape[1],
-                                         array.shape[0],
-                                         QtGui.QImage.Format_RGBA8888)
-        else:
-            self.qt_image = QtGui.QImage(array.data,
-                                         array.shape[1],
-                                         array.shape[0],
-                                         bpl,
-                                         QtGui.QImage.Format_RGB888)
-
-        self.graphics_scene.addPixmap(QtGui.QPixmap.fromImage(self.qt_image))
+        self.pixmap = None
+        self.image_data = array
+        self.enhance_image()
 
         self.resize()
         self.sticky_bbox = False
@@ -467,7 +510,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         # graphics_item.setCursor(QtCore.Qt.OpenHandCursor)
 
         # scale font size based on image resolution
-        height = self.img_size[1]
+        height = self.image_size[1]
         LABEL_FONT_SIZE = 7  # at 640
         LABEL_FONT_SIZE = int(LABEL_FONT_SIZE * height / 640)
         # display label at top left
@@ -499,7 +542,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def nudge_right(self):
         bbox = self.selected_bbox
-        if bbox is None or bbox.sceneBoundingRect().right() >= self.img_size[0]:
+        if bbox is None or bbox.sceneBoundingRect().right() >= self.image_size[0]:
             return False
 
         self.selected_bbox.moveBy(1, 0)
@@ -526,7 +569,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def nudge_down(self):
         bbox = self.selected_bbox
-        if bbox is None or bbox.sceneBoundingRect().bottom() >= self.img_size[1]:
+        if bbox is None or bbox.sceneBoundingRect().bottom() >= self.image_size[1]:
             return False
 
         self.selected_bbox.moveBy(0, 1)
@@ -535,7 +578,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
     def expand_right(self):
         bbox = self.selected_bbox
-        if bbox is None or bbox.sceneBoundingRect().right() >= self.img_size[0]:
+        if bbox is None or bbox.sceneBoundingRect().right() >= self.image_size[0]:
             return False
 
         rect = bbox.rect()
@@ -597,8 +640,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         if(annotations is None):
             return
 
-        width = self.img_size[0]
-        height = self.img_size[1]
+        width = self.image_size[0]
+        height = self.image_size[1]
 
         for index, annotation in enumerate(annotations):
 

@@ -125,6 +125,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.tw_labels.cellChanged.connect(self.cell_changed)
         self.checkBoxDisplayAnnotationData.clicked.connect(self.display_bboxes)
 
+        self.verticalSliderMidPoint.valueChanged.connect(self.graphicsView.set_mid_point)
+
         (self.tw_labels.
          setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows))
         (self.tw_labels.
@@ -311,7 +313,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     rec['license_url'] = license['license_url']
                     self.set_dirty(True)
 
-    def bbox_created(self, rect, meta=None):
+    def bbox_created(self, rect, image_size, meta=None):
         """(Slot) save the newly created bbox and display it."""
         if rect.width() > 0 and rect.height() > 0:
             self.set_dirty(True)
@@ -321,10 +323,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             rec = self.data['images'][self.current_file_name]
             metadata = schema.annotation()
             metadata['created_by'] = 'human'
-            metadata['bbox']['xmin'] = rect.left() / self.graphicsView.img_size[0]
-            metadata['bbox']['xmax'] = rect.right() / self.graphicsView.img_size[0]
-            metadata['bbox']['ymin'] = rect.top() / self.graphicsView.img_size[1]
-            metadata['bbox']['ymax'] = rect.bottom() / self.graphicsView.img_size[1]
+            metadata['bbox']['xmin'] = rect.left() / image_size[0]
+            metadata['bbox']['xmax'] = rect.right() / image_size[0]
+            metadata['bbox']['ymin'] = rect.top() / image_size[1]
+            metadata['bbox']['ymax'] = rect.bottom() / image_size[1]
 
             if meta is not None:
                 metadata['label'] = meta['label']
@@ -452,6 +454,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.tw_labels.selectionModel().blockSignals(True)
         self.tw_labels.setRowCount(0)
         self.tw_labels.blockSignals(True)
+        image_size = self.graphicsView.image_size
         if self.current_file_name in self.data['images']:
             rec = self.data['images'][self.current_file_name]
             rows = len(rec['annotations'])
@@ -470,8 +473,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 combo.currentIndexChanged.connect(self.label_change_handler)
                 self.tw_labels.setCellWidget(row, 0, combo)
 
-                width = int((annotation['bbox']['xmax'] - annotation['bbox']['xmin']) * self.graphicsView.img_size[0])
-                height = int((annotation['bbox']['ymax'] - annotation['bbox']['ymin']) * self.graphicsView.img_size[1])
+                width = int((annotation['bbox']['xmax'] - annotation['bbox']['xmin']) * image_size[0])
+                height = int((annotation['bbox']['ymax'] - annotation['bbox']['ymin']) * image_size[1])
                 item = QtWidgets.QTableWidgetItem("{:d} x {:d}".format(width, height))
                 self.tw_labels.setItem(row, 1, item)
 
@@ -528,10 +531,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         if self.selected_row is None or self.selected_row < 0:
             return
 
-        self.selected_row
         # get metadata
         rec = self.data['images'][self.current_file_name]
         metadata = rec['annotations'][self.selected_row]
+        image_size = self.graphicsView.image_size
 
         # get rect
         selected_rect = self.graphicsView.selected_bbox.rect()
@@ -547,7 +550,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         new_bbox = self.graphicsView.add_bbox(rect, None, QtCore.Qt.green)
         self.graphicsView.selected_bbox = new_bbox
 
-        self.bbox_created(rect, meta=metadata)
+        self.bbox_created(rect, image_size, meta=metadata)
 
     def enableButtons(self):
         """Enable UI for interacting with the image and annotations"""
@@ -807,8 +810,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def select_bbox(self, point):
         if self.data is not None and self.current_file_name in self.data['images']:
-            width = self.graphicsView.img_size[0]
-            height = self.graphicsView.img_size[1]
+            width = self.graphicsView.image_size[0]
+            height = self.graphicsView.image_size[1]
             rec = self.data['images'][self.current_file_name]
             found = False
             current_index = 0
@@ -841,8 +844,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def select_mask(self):
         """(Slot) Select mask from disk."""
-        filter_string = '{}_{}.png'.format(self.graphicsView.img_size[0],
-                                           self.graphicsView.img_size[1])
+        filter_string = '{}_{}.png'.format(self.graphicsView.image_size[0],
+                                           self.graphicsView.image_size[1])
         file = (QtWidgets.
                 QFileDialog.getOpenFileName(self,
                                             'Select Mask',
@@ -850,7 +853,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                                             'PNG (*' + filter_string + ')'))
         if file[0] != '':
             img = Image.open(file[0])
-            if self.graphicsView.img_size == img.size:
+            if self.graphicsView.image_size == img.size:
                 img = np.array(img)
                 img = np.clip(img, 0, 1)
                 self.mask = img
@@ -910,10 +913,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             rec = self.data['images'][self.current_file_name]
             ann = rec['annotations'][self.selected_row]
             ann['updated_by'] = 'human'
-            ann['bbox']['xmin'] = rect.left() / self.graphicsView.img_size[0]
-            ann['bbox']['xmax'] = rect.right() / self.graphicsView.img_size[0]
-            ann['bbox']['ymin'] = rect.top() / self.graphicsView.img_size[1]
-            ann['bbox']['ymax'] = rect.bottom() / self.graphicsView.img_size[1]
+            ann['bbox']['xmin'] = rect.left() / self.graphicsView.image_size[0]
+            ann['bbox']['xmax'] = rect.right() / self.graphicsView.image_size[0]
+            ann['bbox']['ymin'] = rect.top() / self.graphicsView.image_size[1]
+            ann['bbox']['ymax'] = rect.bottom() / self.graphicsView.image_size[1]
             self.update_annotation(ann)
 
     def update_license(self, license):
