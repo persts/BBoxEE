@@ -40,6 +40,7 @@ class Annotator(QtCore.QThread):
     def __init__(self, inference_graph, label_map):
         """Class init function."""
         QtCore.QThread.__init__(self)
+        self.stop = False
         self.image_list = []
         self.threshold = 0.95
         self.image_directory = ''
@@ -82,6 +83,7 @@ class Annotator(QtCore.QThread):
 
     def run(self):
         """The starting point for the thread."""
+        self.stop = False
         self.data = schema.annotation_file()
         self.data['analysts'].append('Machine Generated')
         counter = 0
@@ -109,6 +111,8 @@ class Annotator(QtCore.QThread):
                 num_detections = (self.detection_graph.
                                   get_tensor_by_name('num_detections:0'))
                 for img in self.image_list:
+                    if self.stop:
+                        break
                     file_name = os.path.join(self.image_directory, img)
                     image = Image.open(file_name)
                     # the array based representation of the image will be
@@ -151,3 +155,6 @@ class Annotator(QtCore.QThread):
                     counter += 1
                     self.progress.emit(counter, img, entry)
         self.finished.emit(self.data)
+
+    def stop_annotation(self):
+        self.stop = True

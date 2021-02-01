@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1188</width>
-    <height>713</height>
+    <width>1569</width>
+    <height>952</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -566,6 +566,16 @@
              </widget>
             </item>
             <item>
+             <widget class="QPushButton" name="pb_annotate">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
+              <property name="text">
+               <string>Annotate</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <spacer name="horizontalSpacer_5">
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -579,12 +589,12 @@
              </spacer>
             </item>
             <item>
-             <widget class="QPushButton" name="pb_annotate">
+             <widget class="QPushButton" name="pb_cancel">
               <property name="enabled">
                <bool>false</bool>
               </property>
               <property name="text">
-               <string>Annotate</string>
+               <string>Cancel</string>
               </property>
              </widget>
             </item>

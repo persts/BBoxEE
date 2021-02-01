@@ -80,6 +80,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_label_file.setIcon(QtGui.QIcon(':/icons/file.svg'))
 
         self.pb_visible.clicked.connect(self.graphicsView.toggle_visibility)
+        self.pb_visible.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pb_visible.setIcon(QtGui.QIcon(':/icons/visibility.svg'))
 
         self.pb_zoom_in.clicked.connect(self.graphicsView.zoom_in)
         self.pb_zoom_in.setIconSize(QtCore.QSize(icon_size, icon_size))
@@ -264,6 +266,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.table_frame.setDisabled(True)
             self.pb_annotater.setDisabled(True)
             self.pb_annotate.setDisabled(True)
+            self.pb_cancel.setEnabled(True)
 
             self.progressBar.setRange(0, len(self.image_list))
             self.progressBar.setValue(0)
@@ -285,6 +288,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.table_frame.setEnabled(True)
         self.pb_annotater.setEnabled(True)
         self.pb_annotate.setEnabled(True)
+        self.pb_cancel.setDisabled(True)
         self.set_dirty(True)
 
     def annotation_progress(self, progress, image, annotations):
@@ -301,6 +305,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.annotator = annotator
         self.annotator.progress.connect(self.annotation_progress)
         self.annotator.finished.connect(self.annotation_complete)
+        self.pb_cancel.clicked.connect(self.annotator.stop_annotation)
         self.pb_annotate.setEnabled(True)
 
     def apply_license(self, license):
