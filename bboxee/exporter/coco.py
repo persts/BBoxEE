@@ -71,6 +71,7 @@ class Exporter(QtCore.QThread):
             m = np.array(masks[mask], dtype='uint8')
             self.masks[mask] = np.dstack((m, m, m))
 
+        # TODO: How handle negative images in COCO
         labels = set()
         for label in label_map:
             if label_map[label].lower() != 'exclude':

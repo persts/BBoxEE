@@ -487,6 +487,9 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             self.pixmap.setPixmap(QtGui.QPixmap.fromImage(self.qt_image))
 
     def load_image(self, array):
+        initial_resize = False
+        if self.pixmap is None:
+            initial_resize = True
         self.point = None
         self.graphics_items = []
         self.selected_bbox = None
@@ -497,7 +500,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.image_data = array
         self.enhance_image()
 
-        self.resize()
+        if initial_resize:
+            self.resize()
         self.sticky_bbox = False
 
     def add_bbox(self, rect, annotation, color, display_details=False):

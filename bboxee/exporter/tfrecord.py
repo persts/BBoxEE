@@ -93,7 +93,7 @@ class Exporter(QtCore.QThread):
 
         labels = set()
         for label in label_map:
-            if label_map[label].lower() != 'exclude':
+            if label_map[label].lower() != 'exclude' and label.lower() != 'negative':
                 if label_map[label] == '':
                     self.label_map[label] = label
                 labels.add(self.label_map[label])
@@ -155,6 +155,8 @@ class Exporter(QtCore.QThread):
             truncated = []
             difficult = []
             for annotation in example['annotations']:
+                if annotation['label'].lower() == 'negative':
+                    break
                 label = self.label_map[annotation['label']]
                 xmins.append(annotation['bbox']['xmin'])
                 ymins.append(annotation['bbox']['ymin'])
