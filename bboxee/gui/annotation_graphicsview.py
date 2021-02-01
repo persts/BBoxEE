@@ -22,7 +22,6 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-from typing import Tuple
 import numpy as np
 from enum import Enum
 from PyQt5 import QtWidgets, QtCore, QtGui
