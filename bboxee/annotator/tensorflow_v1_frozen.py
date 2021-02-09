@@ -137,6 +137,7 @@ class Annotator(QtCore.QThread):
                         if scores[i] >= self.threshold:
                             annotation = schema.annotation()
                             annotation['created_by'] = 'machine'
+                            annotation['confidence'] = float(scores[i])
                             bbox = boxes[i]
                             annotation['bbox']['xmin'] = float(bbox[1])
                             annotation['bbox']['xmax'] = float(bbox[3])

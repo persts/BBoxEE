@@ -552,7 +552,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         bottom_right = QtCore.QPoint(center.x() + (width - width // 2), center.y() + (height - height // 2))
         rect = QtCore.QRectF(top_left, bottom_right)
 
-        new_bbox = self.graphicsView.add_bbox(rect, None, QtCore.Qt.green)
+        new_bbox = self.graphicsView.add_bbox(rect, None)
         self.graphicsView.selected_bbox = new_bbox
 
         self.bbox_created(rect, image_size, meta=metadata)
@@ -717,6 +717,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.current_image = 1
             self.labelImages.setText('of ' + str(len(self.image_list)))
             self.lineEditCurrentImage.setText('1')
+            self.graphicsView.pixmap = None  # Force resize
             self.load_image()
 
     def next_annotated_image(self):
@@ -918,6 +919,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             rec = self.data['images'][self.current_file_name]
             ann = rec['annotations'][self.selected_row]
             ann['updated_by'] = 'human'
+            ann['confidence'] = 1.0
             ann['bbox']['xmin'] = rect.left() / self.graphicsView.image_size[0]
             ann['bbox']['xmax'] = rect.right() / self.graphicsView.image_size[0]
             ann['bbox']['ymin'] = rect.top() / self.graphicsView.image_size[1]

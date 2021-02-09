@@ -67,6 +67,7 @@ def annotation_block():
     """Factory for an annotation block."""
     return {'created_by': '',
             'updated_by': '',
+            'confidence': 1.0,
             'bbox': {'xmin': 0,
                      'xmax': 0,
                      'ymin': 0,
@@ -172,6 +173,7 @@ with detection_graph.as_default():
                     if scores[i] >= THRESHOLD:
                         annotation = annotation_block()
                         annotation['created_by'] = 'machine'
+                        annotation['confidence'] = float(scores[i])
                         bbox = boxes[i]
                         annotation['bbox']['xmin'] = float(bbox[1])
                         annotation['bbox']['xmax'] = float(bbox[3])

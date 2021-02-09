@@ -57,6 +57,8 @@ for bbx in bbx_list:
             if a['label'] not in categories:
                 categories.append(a['label'])
             detection = {'category': '', 'conf': 1.0, 'bbox': []}
+            if 'confidence' in a:
+                detection['conf'] = a['confidence']
             detection['category'] = str(categories.index(a['label']) + 1)
             detection['bbox'].append(a['bbox']['xmin'])
             detection['bbox'].append(a['bbox']['ymin'])

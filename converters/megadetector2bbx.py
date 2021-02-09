@@ -57,6 +57,7 @@ def annotation_block():
     """Factory for an annotation block."""
     return {'created_by': '',
             'updated_by': '',
+            'confidence': 1.0,
             'bbox': {'xmin': 0,
                      'xmax': 0,
                      'ymin': 0,
@@ -111,6 +112,7 @@ for image in data_in['images']:
             if detection['conf'] >= CONF:
                 annotation = annotation_block()
                 annotation['created_by'] = 'machine'
+                annotation['confidence'] = detection['conf']
                 annotation['label'] = labels[detection['category']]
                 annotation['bbox']['xmin'] = detection['bbox'][0]
                 annotation['bbox']['xmax'] = detection['bbox'][0] + detection['bbox'][2]

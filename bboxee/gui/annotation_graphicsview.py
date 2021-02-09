@@ -318,7 +318,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 self.mouse_down = point
                 rect = QtCore.QRectF(point, point)
 
-                new_bbox = self.add_bbox(rect, None, QtCore.Qt.green)
+                new_bbox = self.add_bbox(rect, None)
                 self.selected_bbox = new_bbox
 
     @staticmethod
@@ -503,7 +503,23 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             self.resize()
         self.sticky_bbox = False
 
-    def add_bbox(self, rect, annotation, color, display_details=False):
+    def add_bbox(self, rect, annotation, selected=False, display_details=False):
+        label = ''
+        if selected:
+            color = QtCore.Qt.red
+            label = annotation['label']
+        elif annotation is None:
+            color = QtCore.Qt.green
+        elif (annotation['created_by'] == 'machine' and annotation['updated_by'] == ''):
+            color = QtCore.Qt.magenta
+            if 'confidence' in annotation:
+                label = '{} [{:0.2f}]'.format(annotation['label'], annotation['confidence'])
+            else:
+                label = annotation['label']
+        else:
+            color = QtCore.Qt.yellow
+            label = annotation['label']
+
         brush = QtGui.QBrush(color, QtCore.Qt.SolidPattern)
         pen = QtGui.QPen(brush, BOX_LINE_WIDTH)
 
@@ -522,7 +538,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             font = QtGui.QFont()
             font.setPointSize(int(LABEL_FONT_SIZE))
 
-            text = QtWidgets.QGraphicsTextItem(annotation['label'])
+            text = QtWidgets.QGraphicsTextItem(label)
             text.setFont(font)
             text_color = QtCore.Qt.white if color == QtCore.Qt.red else QtCore.Qt.black
             text.setDefaultTextColor(text_color)
@@ -662,14 +678,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
             rect = QtCore.QRectF(top_left, bottom_right)
 
-            if index == selected_row:
-                color = QtCore.Qt.red
-            elif (annotation['created_by'] == 'machine' and annotation['updated_by'] == ''):
-                color = QtCore.Qt.magenta
-            else:
-                color = QtCore.Qt.yellow
-
-            graphics_item = self.add_bbox(rect, annotation, color, display_details)
+            graphics_item = self.add_bbox(rect, annotation, index == selected_row, display_details)
             graphics_item.setVisible(self.visible)
 
             if index == selected_row:
