@@ -280,8 +280,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         reset current image to 1."""
         self.data = data
         self.display_analysts()
-        self.current_image = 0
-        self.next_image()
         self.license.setEnabled(True)
         self.analysts.setEnabled(True)
         self.main_frame.setEnabled(True)
@@ -290,6 +288,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_annotate.setEnabled(True)
         self.pb_cancel.setDisabled(True)
         self.set_dirty(True)
+        self.current_image = 0
+        self.next_image()
 
     def annotation_progress(self, progress, image, annotations):
         """(SLOT) Show progress and current detections (annotations) as
@@ -368,6 +368,9 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         # update annotations
         rec = self.data['images'][self.current_file_name]
         rec['annotations'][row][header] = text
+        if column == 0:
+            rec['annotations'][row]['updated_by'] = 'human'
+            rec['annotations'][row]['confidence'] = 1.0
         self.set_dirty(True)
         if column == 0:
             self.display_bboxes()
@@ -460,7 +463,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.tw_labels.setRowCount(0)
         self.tw_labels.blockSignals(True)
         image_size = self.graphicsView.image_size
-        if self.current_file_name in self.data['images']:
+        if self.table_frame.isEnabled() and self.current_file_name in self.data['images']:
             rec = self.data['images'][self.current_file_name]
             rows = len(rec['annotations'])
             self.tw_labels.setRowCount(rows)

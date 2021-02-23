@@ -128,7 +128,11 @@ class Exporter(QtCore.QThread):
             encoded_jpg_io = io.BytesIO(encoded_jpg)
             image = Image.open(encoded_jpg_io)
             if image.format != 'JPEG':
-                raise ValueError('Image format not JPEG')
+                # raise ValueError('Image format not JPEG')
+                buf = io.BytesIO()
+                image.save(buf, format='JPEG')
+                encoded_jpg = buf.getvalue()
+                buf.close()
 
             if self.strip_metadata:
                 array = np.array(image)
