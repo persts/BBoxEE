@@ -268,6 +268,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.pb_annotate.setDisabled(True)
             self.pb_cancel.setEnabled(True)
 
+            self.progressBar.setFormat("Loading Model...")
             self.progressBar.setRange(0, len(self.image_list))
             self.progressBar.setValue(0)
             self.annotator.threshold = self.doubleSpinBoxThreshold.value()
@@ -300,11 +301,15 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.data['images'][image] = annotations
         self.next_image()
 
+    def annotation_started(self):
+        self.progressBar.setFormat("%p%")
+
     def annotator_selected(self, annotator):
         """ (SLOT) save and hook up annotator."""
         self.annotator = annotator
         self.annotator.progress.connect(self.annotation_progress)
         self.annotator.finished.connect(self.annotation_complete)
+        self.annotator.model_loaded.connect(self.annotation_started)
         self.pb_cancel.clicked.connect(self.annotator.stop_annotation)
         self.pb_annotate.setEnabled(True)
 

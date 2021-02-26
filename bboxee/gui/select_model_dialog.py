@@ -24,7 +24,6 @@
 # --------------------------------------------------------------------------
 import os
 import sys
-import tensorflow as tf
 from PyQt5 import QtCore, QtWidgets, uic
 
 if getattr(sys, 'frozen', False):
@@ -71,8 +70,7 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
             self.selected.emit(self.annotator)
             self.hide()
         except ModuleNotFoundError:
-            message = 'Required TensorFlow modules not found.\n\n\
-                Please review install requirements.'
+            message = 'Required TensorFlow modules not found.'
             QtWidgets.QMessageBox.critical(self, 'Export', message)
         self.pushButtonTFV1.setDisabled(False)
         self.pushButtonLabelMapV1.setDisabled(False)
@@ -84,6 +82,7 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.pushButtonLabelMapV2.setDisabled(True)
         self.pushButtonTFModel.setDisabled(True)
         try:
+            import tensorflow as tf
             if tf.__version__[0] == '1':
                 raise ModuleNotFoundError('')
             from bboxee.annotator.tensorflow_v2_saved import Annotator
@@ -93,8 +92,7 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
             self.selected.emit(self.annotator)
             self.hide()
         except ModuleNotFoundError:
-            message = 'Required TensorFlow modules not found.\n\n\
-                Please review install requirements.'
+            message = 'Required TensorFlow modules not found.'
             QtWidgets.QMessageBox.critical(self, 'Export', message)
         self.pushButtonTFV2.setDisabled(False)
         self.pushButtonLabelMapV2.setDisabled(False)

@@ -221,8 +221,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                 from bboxee.exporter.tfrecord import Exporter
                 module_loaded = True
             except ModuleNotFoundError:
-                message = 'Required TensorFlow modules not found.' \
-                    '\n\nPlease review install requirements.'
+                message = 'Required TensorFlow modules not found.'
                 QtWidgets.QMessageBox.critical(self, 'Export', message)
         elif export_to == 'Darknet YOLOv3':
             from bboxee.exporter.yolo import Exporter

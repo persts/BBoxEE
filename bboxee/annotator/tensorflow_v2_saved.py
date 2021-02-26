@@ -36,6 +36,7 @@ class Annotator(QtCore.QThread):
 
     progress = QtCore.pyqtSignal(int, str, dict)
     finished = QtCore.pyqtSignal(dict)
+    model_loaded = QtCore.pyqtSignal()
 
     def __init__(self, model_dir, label_map):
         """Class init function."""
@@ -86,6 +87,7 @@ class Annotator(QtCore.QThread):
         self.data = schema.annotation_file()
         self.data['analysts'].append('Machine Generated')
         model = tf.saved_model.load(self.model_dir)
+        self.model_loaded.emit()
         counter = 0
         for img in self.image_list:
             if self.stop:

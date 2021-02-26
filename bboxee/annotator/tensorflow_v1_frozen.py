@@ -36,6 +36,7 @@ class Annotator(QtCore.QThread):
 
     progress = QtCore.pyqtSignal(int, str, dict)
     finished = QtCore.pyqtSignal(dict)
+    model_loaded = QtCore.pyqtSignal()
 
     def __init__(self, inference_graph, label_map):
         """Class init function."""
@@ -93,6 +94,7 @@ class Annotator(QtCore.QThread):
                 serialized_graph = fid.read()
                 graph_def.ParseFromString(serialized_graph)
                 tf.import_graph_def(graph_def, name='')
+            self.model_loaded.emit()
             with tf.Session(graph=self.detection_graph) as sess:
                 # Definite input and output Tensors for detection_graph
                 image_tensor = (self.detection_graph.
