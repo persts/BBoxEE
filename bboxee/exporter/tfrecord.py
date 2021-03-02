@@ -56,7 +56,7 @@ class Exporter(QtCore.QThread):
     """Export annotated image examples into the TensorFlow Record format."""
 
     progress = QtCore.pyqtSignal(int)
-    exported = QtCore.pyqtSignal()
+    exported = QtCore.pyqtSignal(int, int)
 
     def __init__(self,
                  directory,
@@ -218,4 +218,4 @@ class Exporter(QtCore.QThread):
             template = "item {{\n name: \"{}\"\n id: {}\n}}\n"
             file.write(template.format(self.labels[counter], counter + 1))
         file.close()
-        self.exported.emit()
+        self.exported.emit(self.train_size, len(self.images) - self.train_size)

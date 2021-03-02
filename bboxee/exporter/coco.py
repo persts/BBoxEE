@@ -36,7 +36,7 @@ class Exporter(QtCore.QThread):
     """Export annotated image into the COCO format."""
 
     progress = QtCore.pyqtSignal(int)
-    exported = QtCore.pyqtSignal()
+    exported = QtCore.pyqtSignal(int, int)
 
     def __init__(self,
                  directory,
@@ -198,4 +198,4 @@ class Exporter(QtCore.QThread):
         file = open(os.path.join(self.directory, 'validation.json'), 'w')
         json.dump(val, file, indent=4)
         file.close()
-        self.exported.emit()
+        self.exported.emit(self.train_size, len(self.images) - self.train_size)

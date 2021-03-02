@@ -34,7 +34,7 @@ class Exporter(QtCore.QThread):
     """Export annotated images into the Darknet yolov3 format."""
 
     progress = QtCore.pyqtSignal(int)
-    exported = QtCore.pyqtSignal()
+    exported = QtCore.pyqtSignal(int, int)
 
     def __init__(self,
                  directory,
@@ -182,4 +182,4 @@ class Exporter(QtCore.QThread):
         file.write('backup=backup/\n')
         file.write('eval=coco\n')
         file.close()
-        self.exported.emit()
+        self.exported.emit(self.train_size, len(self.images) - self.train_size)

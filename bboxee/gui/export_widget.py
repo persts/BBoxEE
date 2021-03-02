@@ -303,8 +303,10 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                     images.append(image)
         self.export(images)
 
-    def exported(self):
+    def exported(self, train_size, val_size):
         """(Slot) Enable buttons when packaging is completed."""
+        message = "Training images: {}\nValidation images: {} ".format(train_size, val_size)
+        QtWidgets.QMessageBox.information(self, 'Export Summary', message)
         self.pb_export.setEnabled(True)
         self.pb_select_directory.setEnabled(True)
 
