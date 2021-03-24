@@ -42,7 +42,7 @@ This is all you need to do to begin using the base annotation functionality of B
 
 ------
 ### Windows Virtual Environment
-Download and install Python3 (tested with Python 3.6.7). During the install make sure
+Download and install Python3 (tested with Python 3.8.5). During the install make sure
 to check the box that says "Add Python to environment variables".
 
 Once installed open a CMD window and type the following command to verify python is installed corretly.
