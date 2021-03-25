@@ -724,6 +724,11 @@
             </column>
             <column>
              <property name="text">
+              <string>Confidence</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
               <string>Dimensions</string>
              </property>
             </column>

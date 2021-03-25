@@ -138,10 +138,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         table_header.setStretchLastSection(False)
         table_header.ResizeMode = QtWidgets.QHeaderView.Interactive
         table_header.resizeSection(0, 150)
-        table_header.resizeSection(2, 30)
         table_header.resizeSection(3, 30)
         table_header.resizeSection(4, 30)
-        table_header.resizeSection(5, 50)
+        table_header.resizeSection(5, 30)
+        table_header.resizeSection(6, 50)
 
         #
         # Key bindings
@@ -359,26 +359,35 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         # get text
         text = ''
         header = table.horizontalHeaderItem(column).text().lower()
-        if column == 0:
-            text = table.cellWidget(row, 0).currentText()
+        if header == 'label':
+            text = table.cellWidget(row, column).currentText()
             self.last_label = text
+        elif header == 'confidence':
+            text = table.cellWidget(row, column).text()
         elif header in ('o', 't', 'd'):
             checked = table.item(row, column).checkState() == QtCore.Qt.Checked
             text = "Y" if checked else "N"
             mapping = {'o': 'occluded', 't': 'truncated', 'd': 'difficult'}
             header = mapping[header]
         else:
-            print("Got unexpected header: {}".format(header))
+            return
 
         # update annotations
         rec = self.data['images'][self.current_file_name]
-        rec['annotations'][row][header] = text
-        if column == 0:
+
+        if header == 'label':
             rec['annotations'][row]['updated_by'] = 'human'
             rec['annotations'][row]['confidence'] = 1.0
-        self.set_dirty(True)
-        if column == 0:
             self.display_bboxes()
+        elif header == 'confidence':
+            try:
+                rec['annotations'][row]['confidence'] = float(text)
+            except ValueError:
+                rec['annotations'][row]['confidence'] = 0.0
+            self.display_bboxes()
+        else:
+            rec['annotations'][row][header] = text
+        self.set_dirty(True)
 
     def clear_annotations(self):
         """(SLOT) Clear all annotations for the current image."""
@@ -486,31 +495,38 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 combo.currentIndexChanged.connect(self.label_change_handler)
                 self.tw_labels.setCellWidget(row, 0, combo)
 
+                conf = ''
+                if 'confidence' in annotation:
+                    conf = '{:0.2f}'.format(annotation['confidence'])
+                item = QtWidgets.QTableWidgetItem(conf)
+                self.tw_labels.setItem(row, 1, item)
+
                 width = int((annotation['bbox']['xmax'] - annotation['bbox']['xmin']) * image_size[0])
                 height = int((annotation['bbox']['ymax'] - annotation['bbox']['ymin']) * image_size[1])
                 item = QtWidgets.QTableWidgetItem("{:d} x {:d}".format(width, height))
-                self.tw_labels.setItem(row, 1, item)
-
-                item = QtWidgets.QTableWidgetItem()
-                item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                item.setCheckState(QtCore.Qt.Checked if annotation['truncated'] == "Y" else QtCore.Qt.Unchecked)
+                item.setFlags(QtCore.Qt.ItemIsSelectable)
                 self.tw_labels.setItem(row, 2, item)
 
                 item = QtWidgets.QTableWidgetItem()
                 item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                item.setCheckState(QtCore.Qt.Checked if annotation['occluded'] == "Y" else QtCore.Qt.Unchecked)
+                item.setCheckState(QtCore.Qt.Checked if annotation['truncated'] == "Y" else QtCore.Qt.Unchecked)
                 self.tw_labels.setItem(row, 3, item)
 
                 item = QtWidgets.QTableWidgetItem()
                 item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                item.setCheckState(QtCore.Qt.Checked if annotation['difficult'] == "Y" else QtCore.Qt.Unchecked)
+                item.setCheckState(QtCore.Qt.Checked if annotation['occluded'] == "Y" else QtCore.Qt.Unchecked)
                 self.tw_labels.setItem(row, 4, item)
+
+                item = QtWidgets.QTableWidgetItem()
+                item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+                item.setCheckState(QtCore.Qt.Checked if annotation['difficult'] == "Y" else QtCore.Qt.Unchecked)
+                self.tw_labels.setItem(row, 5, item)
 
                 delete = QtWidgets.QPushButton()
                 delete.setIconSize(QtCore.QSize(24, 24))
                 delete.setIcon(QtGui.QIcon(':/icons/delete.svg'))
                 delete.clicked.connect(self.delete_click_handler)
-                self.tw_labels.setCellWidget(row, 5, delete)
+                self.tw_labels.setCellWidget(row, 6, delete)
 
         self.tw_labels.blockSignals(False)
         self.tw_labels.selectionModel().blockSignals(False)
