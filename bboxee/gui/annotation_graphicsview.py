@@ -504,7 +504,12 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         self.sticky_bbox = False
 
     def add_bbox(self, rect, annotation, selected=False, display_details=False):
-        label = ''
+        if annotation is not None:
+            if'confidence' in annotation and annotation['confidence'] < 1.0:
+                label = '{} [{:0.2f}]'.format(annotation['label'], annotation['confidence'])
+            else:
+                label = annotation['label']
+
         if selected:
             color = QtCore.Qt.red
             label = annotation['label']
@@ -512,13 +517,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             color = QtCore.Qt.green
         elif (annotation['created_by'] == 'machine' and annotation['updated_by'] == ''):
             color = QtCore.Qt.magenta
-            if 'confidence' in annotation:
-                label = '{} [{:0.2f}]'.format(annotation['label'], annotation['confidence'])
-            else:
-                label = annotation['label']
         else:
             color = QtCore.Qt.yellow
-            label = annotation['label']
 
         brush = QtGui.QBrush(color, QtCore.Qt.SolidPattern)
         pen = QtGui.QPen(brush, BOX_LINE_WIDTH)

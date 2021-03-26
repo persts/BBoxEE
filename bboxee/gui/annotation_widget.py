@@ -274,6 +274,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.annotator.threshold = self.doubleSpinBoxThreshold.value()
             self.annotator.image_directory = self.image_directory
             self.annotator.image_list = self.image_list
+            if self.cb_start_from_current.isChecked():
+                self.annotator.starting_image = self.current_image - 1
+            else:
+                self.annotator.starting_image = 0
             self.annotator.start()
 
     def annotation_complete(self, data):
@@ -295,8 +299,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def annotation_progress(self, progress, image, annotations):
         """(SLOT) Show progress and current detections (annotations) as
         they are processed."""
-        if progress == 1:
-            self.current_image = 0
+        if progress - 1 != self.current_image:
+            self.current_image = progress - 1
         self.progressBar.setValue(progress)
         self.data['images'][image] = annotations
         self.next_image()
@@ -355,38 +359,32 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def cell_changed(self, row, column):
         """(Slot) Update annotation data on change."""
-        table = self.tw_labels
-        # get text
-        text = ''
-        header = table.horizontalHeaderItem(column).text().lower()
+        header = self.tw_labels.horizontalHeaderItem(column).text().lower()
+        rec = self.data['images'][self.current_file_name]
         if header == 'label':
-            text = table.cellWidget(row, column).currentText()
+            text = self.tw_labels.cellWidget(row, column).currentText()
             self.last_label = text
+            rec['annotations'][row]['updated_by'] = 'human'
+            rec['annotations'][row]['confidence'] = 1.0
+            rec['annotations'][row][header] = text
+            self.tw_labels.item(row, 1).setText('1.0')
+            self.display_bboxes()
         elif header == 'confidence':
-            text = table.cellWidget(row, column).text()
+            if self.tw_labels.cellWidget(row, column) is not None:
+                value = self.tw_labels.cellWidget(row, column).text()
+                try:
+                    rec['annotations'][row][header] = float(value)
+                except ValueError:
+                    rec['annotations'][row][header] = 0.0
+                self.display_bboxes()
         elif header in ('o', 't', 'd'):
-            checked = table.item(row, column).checkState() == QtCore.Qt.Checked
+            checked = self.tw_labels.item(row, column).checkState() == QtCore.Qt.Checked
             text = "Y" if checked else "N"
             mapping = {'o': 'occluded', 't': 'truncated', 'd': 'difficult'}
             header = mapping[header]
+            rec['annotations'][row][header] = text
         else:
             return
-
-        # update annotations
-        rec = self.data['images'][self.current_file_name]
-
-        if header == 'label':
-            rec['annotations'][row]['updated_by'] = 'human'
-            rec['annotations'][row]['confidence'] = 1.0
-            self.display_bboxes()
-        elif header == 'confidence':
-            try:
-                rec['annotations'][row]['confidence'] = float(text)
-            except ValueError:
-                rec['annotations'][row]['confidence'] = 0.0
-            self.display_bboxes()
-        else:
-            rec['annotations'][row][header] = text
         self.set_dirty(True)
 
     def clear_annotations(self):

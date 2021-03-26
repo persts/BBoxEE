@@ -554,6 +554,13 @@
            </layout>
           </item>
           <item>
+           <widget class="QCheckBox" name="cb_start_from_current">
+            <property name="text">
+             <string>Start from Current Image</string>
+            </property>
+           </widget>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
              <widget class="QPushButton" name="pb_annotater">

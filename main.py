@@ -29,11 +29,13 @@ from bboxee.gui import MainWindow
 
 if __name__ == "__main__":
     APP = QtWidgets.QApplication(sys.argv)
-    screen = APP.desktop().availableGeometry()
-    icon_size = int(screen.height() * 0.03)
-    GUI = MainWindow(icon_size)
-
-    GUI.resize(int(screen.width() * 0.8), int(screen.height() * 0.8))
+    screen = APP.primaryScreen()
+    for s in APP.screens():
+        if screen.geometry().width() < s.geometry().width():
+            screen = s
+    GUI = MainWindow(int(screen.geometry().height() * 0.025))
     GUI.show()
+    GUI.windowHandle().setScreen(screen)
+    GUI.resize(int(screen.geometry().width() * 0.9), int(screen.geometry().height() * 0.85))
 
     sys.exit(APP.exec_())
