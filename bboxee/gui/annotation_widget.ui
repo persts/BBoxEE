@@ -554,9 +554,9 @@
            </layout>
           </item>
           <item>
-           <widget class="QCheckBox" name="cb_start_from_current">
+           <widget class="QCheckBox" name="cb_start_and_merge">
             <property name="text">
-             <string>Start from Current Image</string>
+             <string>Start at Current Image and Merge</string>
             </property>
            </widget>
           </item>

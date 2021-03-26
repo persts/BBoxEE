@@ -274,7 +274,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.annotator.threshold = self.doubleSpinBoxThreshold.value()
             self.annotator.image_directory = self.image_directory
             self.annotator.image_list = self.image_list
-            if self.cb_start_from_current.isChecked():
+            if self.cb_start_and_merge.isChecked():
                 self.annotator.starting_image = self.current_image - 1
             else:
                 self.annotator.starting_image = 0
@@ -283,7 +283,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def annotation_complete(self, data):
         """(SLOT) Automatic annotation complete, reenable gui and
         reset current image to 1."""
-        self.data = data
+        if not self.cb_start_and_merge.isChecked():
+            self.data = data
         self.display_analysts()
         self.license.setEnabled(True)
         self.analysts.setEnabled(True)
