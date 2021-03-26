@@ -35,8 +35,8 @@ import tensorflow as tf  # noqa: E402
 
 # Usage check
 if len(sys.argv) != 5:
-    print('USAGE: python3 annotate_tf_1x.py TOP_FOLDER MODEL LABEL_MAP CONFIDENCE')
-    print('EXAMPLE: python3 annotate_tf_1x.py ../demo ../models/md_v4.1.0.pb ../models/label_map.pbtxt 0.8')
+    print('USAGE: python3 annotate_saved.py TOP_FOLDER MODEL LABEL_MAP CONFIDENCE')
+    print('EXAMPLE: python3 annotate_saved.py ../demo ../models/saved/ ../models/label_map.pbtxt 0.8')
     sys.exit()
 FORMATS = [".jpg", ".jpeg", ".png"]
 PATH = sys.argv[1]
@@ -124,70 +124,56 @@ for dirpath, dirs, files in walk_data:
 # Parse label map
 label_map = build_label_map(LABEL_MAP)
 
+# Load model
+model = tf.saved_model.load(MODEL)
 
-# Create the detection graph and read in model
-detection_graph = tf.Graph()
-graph_def = tf.compat.v1.GraphDef()
-with tf.io.gfile.GFile(MODEL, 'rb') as fid:
-    serialized_graph = fid.read()
-    graph_def.ParseFromString(serialized_graph)
+# Loop through all of the folder with images and process each image
+for index, (folder, images) in enumerate(folders):
+    print('Processing folder [{}] ({} of {})'.format(folder, str(index + 1), str(len(folders))))
+    bbx_file_name = '{}{}{}.bbx'.format(folder, os.path.sep, ntpath.split(folder)[1])
+    bbx_data = annotation_file()
+    bbx_data['analysts'].append('Machine Generated')
 
-with detection_graph.as_default():
-    # Import graph
-    tf.import_graph_def(graph_def, name='')
+    # Pass each image through model
+    for i in tqdm(range(len(images))):
+        img = images[i]
+        file_name = os.path.join(folder, img)
+        image = Image.open(file_name)
+        image = Image.open(file_name)
+        # the array based representation of the image will be
+        # used later in order to prepare the result image with
+        # boxes and labels on it.
+        image_np = np.array(image)
+        # Expand dimensions since the model expects images
+        # to have shape: [1, None, None, 3]
+        image_np_expanded = np.expand_dims(image_np, axis=0)
+        # Actual detection.
+        dets = model(image_np_expanded)
+        entry = annotation_file_entry()
+        scores = dets['detection_scores'][0].numpy()
+        boxes = dets['detection_boxes'][0].numpy()
+        classes = dets['detection_classes'][0].numpy()
+        for index, score in enumerate(scores):
+            if score >= THRESHOLD:
+                annotation = annotation_block()
+                annotation['created_by'] = 'machine'
+                annotation['confidence'] = float(score)
+                bbox = boxes[index]
+                annotation['bbox']['xmin'] = float(bbox[1])
+                annotation['bbox']['xmax'] = float(bbox[3])
+                annotation['bbox']['ymin'] = float(bbox[0])
+                annotation['bbox']['ymax'] = float(bbox[2])
+                class_number = int(classes[index])
+                if class_number in label_map:
+                    label = label_map[class_number]
+                else:
+                    label = 'unknown'
+                annotation['label'] = label
+                entry['annotations'].append(annotation)
+        if len(entry['annotations']) > 0:
+            bbx_data['images'][img] = entry
 
-    # Begin processing loop
-    with tf.compat.v1.Session(graph=detection_graph) as sess:
-        image_tensor = (detection_graph.get_tensor_by_name('image_tensor:0'))
-        d_boxes = (detection_graph.get_tensor_by_name('detection_boxes:0'))
-        d_scores = (detection_graph.get_tensor_by_name('detection_scores:0'))
-        d_classes = (detection_graph.get_tensor_by_name('detection_classes:0'))
-        num_detections = (detection_graph.get_tensor_by_name('num_detections:0'))
-
-        # Loop through all of the folder with images and process each image
-        for index, (folder, images) in enumerate(folders):
-            print('Processing folder [{}] ({} of {})'.format(folder, str(index + 1), str(len(folders))))
-            bbx_file_name = '{}{}{}.bbx'.format(folder, os.path.sep, ntpath.split(folder)[1])
-            bbx_data = annotation_file()
-            bbx_data['analysts'].append('Machine Generated')
-
-            # Pass each image through model
-            for i in tqdm(range(len(images))):
-                img = images[i]
-                file_name = os.path.join(folder, img)
-                image = Image.open(file_name)
-                image_np = np.array(image)
-                image_np_expanded = np.expand_dims(image_np, axis=0)
-                image.close()
-                fd = {image_tensor: image_np_expanded}
-                (boxes, scores, classes, num) = sess.run([d_boxes,
-                                                         d_scores,
-                                                         d_classes,
-                                                         num_detections],
-                                                         feed_dict=fd)
-                boxes = np.squeeze(boxes)
-                scores = np.squeeze(scores)
-                classes = np.squeeze(classes)
-                entry = annotation_file_entry()
-                for i in range(len(scores)):
-                    if scores[i] >= THRESHOLD:
-                        annotation = annotation_block()
-                        annotation['created_by'] = 'machine'
-                        annotation['confidence'] = float(scores[i])
-                        bbox = boxes[i]
-                        annotation['bbox']['xmin'] = float(bbox[1])
-                        annotation['bbox']['xmax'] = float(bbox[3])
-                        annotation['bbox']['ymin'] = float(bbox[0])
-                        annotation['bbox']['ymax'] = float(bbox[2])
-                        label = 'unknown'
-                        if classes[i] in label_map:
-                            label = label_map[classes[i]]
-                        annotation['label'] = label
-                        entry['annotations'].append(annotation)
-                if len(entry['annotations']) > 0:
-                    bbx_data['images'][img] = entry
-
-            # Dump annotations
-            bbxfile = open(bbx_file_name, 'w')
-            json.dump(bbx_data, bbxfile)
-            bbxfile.close()
+    # Dump annotations
+    bbxfile = open(bbx_file_name, 'w')
+    json.dump(bbx_data, bbxfile)
+    bbxfile.close()
