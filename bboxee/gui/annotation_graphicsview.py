@@ -377,6 +377,9 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
         elif(self.mode == Mode.Create):
             self.mode = None
+            # Fixes crash if you advance images while in the middle of drawing a box
+            if bbox is None:
+                return
             rect = AnnotationGraphicsView.sceneRectTransform(bbox)
             if(rect.width() < MIN_BOX_SIZE or rect.height() < MIN_BOX_SIZE):
                 # just a click, delete box and do click things
