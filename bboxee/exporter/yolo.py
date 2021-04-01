@@ -23,6 +23,7 @@
 #
 # --------------------------------------------------------------------------
 import os
+import json
 import random
 import numpy as np
 from shutil import copyfile
@@ -60,6 +61,7 @@ class Exporter(QtCore.QThread):
         self.images = images
         self.label_map = label_map
         self.train_size = int((1.0 - validation_split) * len(self.images))
+        self.stop = False
 
         self.masks = masks
         self.strip_metadata = strip_metadata
@@ -84,6 +86,7 @@ class Exporter(QtCore.QThread):
         After creating and instance of the class, calling start() will call
         this function which exports all of the annotaiton examples to disk.
         """
+        self.stop = False
         random.shuffle(self.images)
 
         # Create new directories
@@ -110,6 +113,8 @@ class Exporter(QtCore.QThread):
         val = []
         current = train
         for count, rec in enumerate(self.images):
+            if self.stop:
+                break
             if count > self.train_size:
                 img_path = os.path.join(image_val_path, 'val_')
                 label_path = os.path.join(label_val_path, 'val_')
@@ -181,5 +186,8 @@ class Exporter(QtCore.QThread):
         file.write('names={}\n'.format(file_name))
         file.write('backup=backup/\n')
         file.write('eval=coco\n')
+        file.close()
+        file = open(os.path.join(self.directory, 'label_remap.json'), 'w')
+        json.dump(self.label_map, file, indent=4)
         file.close()
         self.exported.emit(self.train_size, len(self.images) - self.train_size)

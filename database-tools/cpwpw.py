@@ -28,8 +28,44 @@ import json
 import glob
 import pyodbc
 import datetime
+import numpy as np
 from PIL import Image
 from tqdm import tqdm
+import tensorflow as tf
+
+
+def build_label_map(file_name):
+    # see if we can use this to eliminated the need for
+    # label_map_util dependency
+    a = open(file_name, 'r')
+    string = a.read()
+    a.close()
+    lines = string.split("\n")
+    parsed = ''
+    comma = ''
+    for line in lines:
+        if line == '':
+            pass
+        elif line.find('item') != -1:
+            parsed += '{'
+        elif line.find('}') != -1:
+            comma = ''
+            parsed += '},'
+        else:
+            parts = line.replace('\\', '').replace('\'', '"').split(':')
+            parsed += '{} "{}":{}'.format(comma, parts[0].lstrip(), parts[1])
+            comma = ','
+
+    string = "[{}]".format(parsed[0:-1])
+    j = json.loads(string)
+    label_map = {}
+    for entry in j:
+        if 'display_name' in entry:
+            label_map[entry['id']] = entry['display_name']
+        else:
+            label_map[entry['id']] = entry['name']
+    return label_map
+
 
 if 'Microsoft Access Driver (*.mdb, *.accdb)' not in pyodbc.drivers():
     print('No Microsoft Access Driver found.')
@@ -60,26 +96,35 @@ if "none" not in SPECIES:
     print('"None" label is missing from the species list')
     sys.exit(0)
 
-# Ask for .bbx file
-BBX_FILE = input('Enter the path and file name of your .bbx file: ')
-BBX_FILE = os.path.abspath(BBX_FILE)
-IMAGE_PATH = os.path.dirname(BBX_FILE) + os.sep
-try:
-    f = open(BBX_FILE)
-    DATA = json.load(f)
-    f.close()
-except FileNotFoundError:
-    print('Unable to open .bbx file.')
-    sys.exit(0)
+# Ask for labelmap file
+label_map_file = input('Enter the path and file name of your label map: ')
+label_map_file = os.path.abspath(label_map_file)
+LABEL_MAP = build_label_map(label_map_file)
 
 # Check species labels match
 print('Verifing species names...')
-for image in DATA['images']:
-    annotations = DATA['images'][image]['annotations']
-    for a in annotations:
-        if a['label'].lower() not in SPECIES:
-            print("Species list in the database does not contain [{}]".format(a['label']))
-            sys.exit(0)
+for label in LABEL_MAP:
+    if LABEL_MAP[label].lower() not in SPECIES:
+        print("Species list in the database does not contain [{}]".format(LABEL_MAP[label]))
+        sys.exit(0)
+print()
+
+# Ask for the saved model
+model_dir = input('Enter the path and file name of your saved model: ')
+print('Loading model...')
+MODEL = tf.saved_model.load(model_dir)
+print()
+
+# Get detection threshold
+value = input('Enter the confidence threshold (0.1 to 1.0): ')
+THRESHOLD = float(value)
+if THRESHOLD == 0.0:
+    print('Invalid threshold value.')
+    sys.exit(0)
+
+# Ask for image folder
+IMAGE_PATH = input('Enter the path and folder name with your images: ')
+IMAGE_PATH = os.path.abspath(IMAGE_PATH) + os.sep
 print()
 
 # Load observers and ask for ID number
@@ -119,7 +164,7 @@ if VISITID not in visit_id_list:
     sys.exit(0)
 
 # Get all image files
-files = glob.glob(IMAGE_PATH + '*')
+files = glob.glob(os.path.join(IMAGE_PATH, '*'))
 image_format = [".jpg", ".jpeg", ".png"]
 f = (lambda x: os.path.splitext(x)[1].lower() in image_format)
 image_list = list(filter(f, files))
@@ -131,6 +176,7 @@ counter = 1
 for name in tqdm(image_list):
     file_name = os.path.join(IMAGE_PATH, name)
     img = Image.open(file_name)
+    image_np = np.array(img)
     exif = img.getexif()
     img.close()
     created = exif.get(36867)
@@ -143,21 +189,37 @@ for name in tqdm(image_list):
     image_rec_id = float(cur.execute('SELECT @@Identity').fetchone()[0])
     counter += 1
 
-    if name in DATA['images']:
-        detections = {}
-        anno = DATA['images'][name]['annotations']
-        for a in anno:
-            bbox = a['bbox']
-            XLen = (bbox['xmax'] - bbox['xmin'])
-            YLen = (bbox['ymax'] - bbox['ymin'])
-            TagX = bbox['xmin'] + (XLen / 2.0)
-            TagY = bbox['ymin'] + (YLen / 2.0)
+    # Expand dimensions since the model expects images
+    # to have shape: [1, None, None, 3]
+    image_np_expanded = np.expand_dims(image_np, axis=0)
+    # Actual detection.
+    dets = MODEL(image_np_expanded)
+    scores = dets['detection_scores'][0].numpy()
+    boxes = dets['detection_boxes'][0].numpy()
+    classes = dets['detection_classes'][0].numpy()
+    detection = False
+    detections = {}
+    for index, score in enumerate(scores):
+        if score >= THRESHOLD:
+            detection = True
+            bbox = boxes[index]
+            xmin = float(bbox[1])
+            xmax = float(bbox[3])
+            ymin = float(bbox[0])
+            ymax = float(bbox[2])
+            class_number = int(classes[index])
+            label = LABEL_MAP[class_number]
+            XLen = xmax - xmin
+            YLen = ymax - ymin
+            TagX = xmin + (XLen / 2.0)
+            TagY = ymin + (YLen / 2.0)
             cur.execute('INSERT INTO PhotoTags (TagX, TagY, XLen, YLen, ImageID, ObsID) values (?, ?, ?, ?, ?, ?)', (TagX, TagY, XLen, YLen, image_rec_id, OBSID))
-            if a['label'] not in detections:
-                detections[a['label']] = 1.0
+            if label not in detections:
+                detections[label] = 1.0
             else:
-                detections[a['label']] += 1.0
+                detections[label] += 1.0
 
+    if detection:
         for d in detections.keys():
             cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES[d.lower()], detections[d], OBSID, image_rec_id))
     else:

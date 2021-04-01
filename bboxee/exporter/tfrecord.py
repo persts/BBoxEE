@@ -24,6 +24,7 @@
 # --------------------------------------------------------------------------
 import os
 import io
+import json
 import random
 import hashlib
 import numpy as np
@@ -83,6 +84,7 @@ class Exporter(QtCore.QThread):
         self.label_map = label_map
         self.train_size = int((1.0 - validation_split) * len(self.images))
         self.shards = shards
+        self.stop = False
 
         self.masks = masks
         self.strip_metadata = strip_metadata
@@ -107,6 +109,7 @@ class Exporter(QtCore.QThread):
         After creating and instance of the class, calling start() will call
         this function which exports all of the annotaiton examples to disk.
         """
+        self.stop = False
         random.shuffle(self.images)
 
         counter = 0
@@ -120,6 +123,8 @@ class Exporter(QtCore.QThread):
             val_path = os.path.join(self.directory, val_name)
             validation_writer.append(tf.io.TFRecordWriter(val_path))
         for example in self.images:
+            if self.stop:
+                break
             file_name = os.path.join(
                 example['directory'], example['file_name'])
 
@@ -217,5 +222,8 @@ class Exporter(QtCore.QThread):
         for counter in range(len(self.labels)):
             template = "item {{\n name: \"{}\"\n id: {}\n}}\n"
             file.write(template.format(self.labels[counter], counter + 1))
+        file.close()
+        file = open(os.path.join(self.directory, 'label_remap.json'), 'w')
+        json.dump(self.label_map, file, indent=4)
         file.close()
         self.exported.emit(self.train_size, len(self.images) - self.train_size)

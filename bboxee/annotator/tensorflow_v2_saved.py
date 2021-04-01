@@ -47,6 +47,7 @@ class Annotator(QtCore.QThread):
         self.starting_image = 0
         self.image_directory = ''
         self.data = None
+        self.model = None
         self.model_dir = model_dir
         self.label_map = self.build_label_map(label_map)
 
@@ -87,7 +88,8 @@ class Annotator(QtCore.QThread):
         self.stop = False
         self.data = schema.annotation_file()
         self.data['analysts'].append('Machine Generated')
-        model = tf.saved_model.load(self.model_dir)
+        if self.model is None:
+            self.model = tf.saved_model.load(self.model_dir)
         self.model_loaded.emit()
         counter = 0
         for img in self.image_list:
@@ -104,7 +106,7 @@ class Annotator(QtCore.QThread):
                 # to have shape: [1, None, None, 3]
                 image_np_expanded = np.expand_dims(image_np, axis=0)
                 # Actual detection.
-                dets = model(image_np_expanded)
+                dets = self.model(image_np_expanded)
                 entry = schema.annotation_file_entry()
                 scores = dets['detection_scores'][0].numpy()
                 boxes = dets['detection_boxes'][0].numpy()

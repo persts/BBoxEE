@@ -26,6 +26,7 @@ from PyQt5 import QtWidgets
 
 from bboxee.gui import ExportWidget
 from bboxee.gui import AnnotationWidget
+from bboxee.gui import AccuracyWidget
 from bboxee import __version__
 
 
@@ -38,6 +39,7 @@ class MainWindow(QtWidgets.QMainWindow):
         widget = QtWidgets.QTabWidget()
         widget.addTab(self.annotation_widget, 'Annotate')
         widget.addTab(ExportWidget(icon_size), 'Export')
+        widget.addTab(AccuracyWidget(icon_size), 'Accuracy Report')
         self.setCentralWidget(widget)
 
     def closeEvent(self, event):

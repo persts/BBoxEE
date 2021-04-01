@@ -79,6 +79,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_label_file.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_label_file.setIcon(QtGui.QIcon(':/icons/file.svg'))
 
+        self.pb_summary.clicked.connect(self.summary)
+        self.pb_summary.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pb_summary.setIcon(QtGui.QIcon(':/icons/analytics.svg'))
+
         self.pb_visible.clicked.connect(self.graphicsView.toggle_visibility)
         self.pb_visible.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_visible.setIcon(QtGui.QIcon(':/icons/visibility.svg'))
@@ -322,7 +326,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         if self.data is not None:
             for image in self.data['images']:
                 if 'annotations' in self.data['images'][image] and self.data['images'][image]['annotations']:
-                    rec = self.combodata['images'][image]
+                    rec = self.data['images'][image]
                     rec['attribution'] = license['attribution']
                     rec['license'] = license['license']
                     rec['license_url'] = license['license_url']
@@ -923,6 +927,19 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def set_sticky(self):
         self.graphicsView.sticky_bbox = True
+
+    def summary(self):
+        summary = {}
+        for image in self.data['images']:
+            for ann in self.data['images'][image]['annotations']:
+                if ann['label'] not in summary:
+                    summary[ann['label']] = 0
+                summary[ann['label']] += 1
+
+        message = ''
+        for label in summary:
+            message += "{}: {}\n".format(label, summary[label])
+        QtWidgets.QMessageBox.information(self, 'Annotation Summary', message)
 
     def update_annotation(self, annotation_data):
         """(Slot) Update annotation table widget."""

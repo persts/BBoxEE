@@ -120,6 +120,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.base_data = {}
         self.masks = {}
         self.label_map = {}
+        self.exporter = None
 
         self.globber = Globber()
         self.globber.finished.connect(self.display)
@@ -131,9 +132,14 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.pb_select_directory.setIcon(QtGui.QIcon(':/icons/folder.svg'))
         self.pb_select_directory.clicked.connect(self.load_annotation_files)
 
+        self.pb_label_map.setIconSize(size)
+        self.pb_label_map.setIcon(QtGui.QIcon(':/icons/file.svg'))
+        self.pb_label_map.clicked.connect(self.load_label_map)
+
         self.comboBoxFormat.currentIndexChanged.connect(self.check_format)
 
         self.pb_export.clicked.connect(self.export_preflight)
+        self.pb_cancel.clicked.connect(self.cancel)
 
         (self.tw_files.
             setSelectionBehavior(QtWidgets.
@@ -154,6 +160,10 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.cb_truncated.stateChanged.connect(self.exclude_changed)
         self.cb_occluded.stateChanged.connect(self.exclude_changed)
         self.cb_difficult.stateChanged.connect(self.exclude_changed)
+
+    def cancel(self):
+        if self.exporter is not None:
+            self.exporter.stop = True
 
     def check_format(self, index):
         format = self.comboBoxFormat.currentText()
@@ -326,6 +336,32 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
             self.globber.directory = directory
             self.globber.start()
 
+    def load_label_map(self):
+        file_name = (QtWidgets.QFileDialog.getOpenFileName(self, 'Load Remap File', ".", 'JSON (*.json)'))
+        if file_name[0] != '':
+            try:
+                file = open(file_name[0], 'r')
+                self.label_map = json.load(file)
+                file.close()
+            except json.decoder.JSONDecodeError as error:
+                file.close()
+                msg_box = QtWidgets.QMessageBox()
+                msg_box.setWindowTitle('Label Map')
+                msg_box.setText('{}'.format(file_name))
+                msg_box.setInformativeText(
+                    'Error found in remap object: {}'.format(error))
+                msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg_box.exec()
+            except PermissionError:
+                msg_box = QtWidgets.QMessageBox()
+                msg_box.setWindowTitle('Label Map')
+                msg_box.setText('{}'.format(file_name))
+                msg_box.setInformativeText(
+                    'You do not have permission to read this file.')
+                msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg_box.exec()
+            self.selection_changed()
+
     def selection_changed(self):
         labels = {}
         for index in self.tw_files.selectionModel().selectedRows():
@@ -345,8 +381,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
     def update_remap_table(self, labels):
         self.tw_remap.blockSignals(True)
         self.tw_remap.setRowCount(len(labels.keys()))
-        row = 0
-        for label in sorted(labels.keys()):
+        for row, label in enumerate(sorted(labels.keys())):
             if label not in self.label_map:
                 self.label_map[label] = ''
             item = QtWidgets.QTableWidgetItem(label)
@@ -357,5 +392,4 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
             self.tw_remap.setItem(row, 1, item)
             item = QtWidgets.QTableWidgetItem(self.label_map[label])
             self.tw_remap.setItem(row, 2, item)
-            row += 1
         self.tw_remap.blockSignals(False)

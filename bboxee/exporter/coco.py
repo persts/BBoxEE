@@ -63,6 +63,7 @@ class Exporter(QtCore.QThread):
         self.images = images
         self.label_map = label_map
         self.train_size = int((1.0 - validation_split) * len(self.images))
+        self.stop = False
 
         self.masks = masks
         self.strip_metadata = strip_metadata
@@ -88,6 +89,7 @@ class Exporter(QtCore.QThread):
         After creating and instance of the class, calling start() will call
         this function which exports all of the annotaiton examples to disk.
         """
+        self.stop = False
         random.shuffle(self.images)
 
         license_name = ['No License']
@@ -121,6 +123,8 @@ class Exporter(QtCore.QThread):
         current = train
         annotation_count = 0
         for count, rec in enumerate(self.images):
+            if self.stop:
+                break
             if count > self.train_size:
                 current = val
                 prefix = 'val_'
@@ -198,4 +202,9 @@ class Exporter(QtCore.QThread):
         file = open(os.path.join(self.directory, 'validation.json'), 'w')
         json.dump(val, file, indent=4)
         file.close()
+
+        file = open(os.path.join(self.directory, 'label_remap.json'), 'w')
+        json.dump(self.label_map, file, indent=4)
+        file.close()
+
         self.exported.emit(self.train_size, len(self.images) - self.train_size)

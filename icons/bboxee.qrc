@@ -17,5 +17,6 @@
     <file>flagged.svg</file>
     <file>visibility.svg</file>
     <file>visibility_off.svg</file>
+    <file>analytics.svg</file>
   </qresource>
 </RCC>
