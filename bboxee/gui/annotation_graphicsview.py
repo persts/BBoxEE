@@ -229,12 +229,13 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             if not self.sticky_bbox:
                 distance = 10000000.0
                 candidate = None
-                for graphic in self.scene().items():
-                    if type(graphic) == QtWidgets.QGraphicsRectItem and graphic.sceneBoundingRect().contains(point):
-                        line = QtCore.QLineF(point, graphic.sceneBoundingRect().center())
-                        if line.length() < distance:
-                            candidate = graphic
-                            distance = line.length()
+                count = 0
+                for graphic in self.bboxes:
+                    line = QtCore.QLineF(point, graphic.sceneBoundingRect().center())
+                    if line.length() < distance and abs(line.length() - distance) > 0.00001:
+                        candidate = graphic
+                        distance = line.length()
+                    count += 1
                 if candidate != bbox:
                     self.select_bbox.emit(point)
                     return
@@ -494,17 +495,17 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             initial_resize = True
         self.point = None
         self.graphics_items = []
+        self.sticky_bbox = False
         self.selected_bbox = None
+
         self.graphics_scene.clear()
         self.bboxes = []
-
         self.pixmap = None
+
         self.image_data = array
         self.enhance_image()
-
         if initial_resize:
             self.resize()
-        self.sticky_bbox = False
 
     def add_bbox(self, rect, annotation, selected=False, display_details=False):
         if annotation is not None:

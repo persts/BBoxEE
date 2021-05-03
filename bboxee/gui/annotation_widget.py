@@ -401,6 +401,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         if self.data is not None and self.current_file_name in self.data['images']:
             del self.data['images'][self.current_file_name]
         self.graphicsView.sticky_bbox = False
+        self.graphicsView.selected_bbox = None
         self.graphicsView.setFocus()
         self.display_bboxes()
         self.set_dirty(True)
@@ -432,18 +433,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         if self.selected_row is None or self.selected_row < 0:
             return
 
-        # select new row at same position, or previous row if last
-        next_row = self.selected_row
-
-        # last row selected?
-        if(next_row == self.tw_labels.rowCount() - 1):
-            # next selection will be previous row
-            next_row -= 1
-
         self.delete_row(self.selected_row)
-
-        self.tw_labels.selectRow(next_row)
+        self.tw_labels.clearSelection()
         self.graphicsView.sticky_bbox = False
+        self.graphicsView.selected_bbox = None
 
     def dirty_data_check(self):
         """Display alert of annotations are dirty and need to be saved before
