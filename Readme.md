@@ -17,6 +17,7 @@ BBoxEE is being developed with Python 3.8.5 on Ubuntu 20.04 with the following l
 * PyQt5 (5.15.1)
 * Pillow (8.0.1)
 * Numpy (1.18.5)
+* Tabulate (0.8.9)
 * TensorFlow (2.4.0)
 
 Build a virtual environment and install the dependencies:
@@ -26,9 +27,10 @@ cd python-envs
 python -m venv bboxee-env
 source bboxee-env/bin/activate
 python -m pip install --upgrade pip
-pip install numpy
-pip install pillow
-pip install pyqt5
+python -m pip install numpy
+python -m pip install pillow
+python -m pip install pyqt5
+python -m pip install tabulate
 ```
 
 ### Clone and Launch BBoxEE
@@ -59,9 +61,10 @@ cd python-envs
 python -m venv bboxee-env
 bboxee-env\Scripts\activate.bat
 python -m pip install --upgrade pip
-pip install numpy
-pip install pillow
-pip install pyqt5
+python -m pip install numpy
+python -m pip install pillow
+python -m pip install pyqt5
+python -m pip install tabulate
 ```
 ### Launching BBoxEE
 Clone or download BBoxEE (https://github.com/persts/BBoxEE) into c:\python
@@ -88,7 +91,7 @@ For detailed steps to install TensorFlow, follow the [TensorFlow installation in
 A typical user can install TensorFlow in a virtual environment with:
 ``` bash
 # Make sure your Python virtual environment is active
-pip install tensorflow
+python -m pip install tensorflow
 
 ```
 
