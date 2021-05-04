@@ -2,22 +2,15 @@
 # BBoxEE Quick Start Guide
 <div style='text-align: right;'> Release 1.0.0 </div>
 <div style='text-align: right;margin-top:20px;font-size:2em'> Peter J. Ersts </div>
-<div style='text-align: right;margin-top:20px'> June 2020</div>
+<div style='text-align: right;margin-top:20px'> May 2021</div>
+
 [TOC]
 
-___
-
-
-
-
+---
 
 
 
 This quick start guide is intended to introduce the basic functionality of BBoxEE. It is not intended to be a comprehensive user guide.
-
-
-
-
 
 
 
@@ -56,7 +49,7 @@ When you begin a new project, copy the default bboxee_config.json file to the to
 {
     "labels": [
         "Human",
-        "Whitetale Deer"
+        "Whitetail Deer"
     ],
     "license": {
         "default": {
@@ -73,18 +66,16 @@ When you begin a new project, copy the default bboxee_config.json file to the to
     }
 }
 ```
+### Special Label
+If you need to include hard negative images to help reduce false positives in your model, draw a single box on an image and assigned a label of *Negative*. During export, the image will be added to the training set without any bounding boxes.
+
+*Note this special label/behavior is currently only available when exporting to the TensorFlow Record format.*
 
 <div style="page-break-after: always;"></div>
 ## Annotating Images
+![Annotation Tab](./images/interface.png)
 
-### Loading Data
-
-There are two ways to load data into BBoxEE:
-
-1. Select a directory (![Folder Icon](../icons/folder.svg))
-2. Select an existing annotation file (![file icon](../icons/file.svg))
-
-Selecting an existing annotation file will allow you to pick up where you left off or edit/correct existing bounding boxes.
+<div style='text-align:center;font-size:0.8em'><strong>Figure 2.</strong> BBoxEE annotation interface.</div>
 
 ### Interface Buttons
 
@@ -96,22 +87,33 @@ Selecting an existing annotation file will allow you to pick up where you left o
 * (![Skip to previous](../icons/skip_previous.svg)) Jump the previous image with an annotation, skipping all unannotated images in between
 * (![Delete](../icons/delete.svg)) Delete all bounding boxes on the current image
 * (![Visibility](../icons/visibility.svg)) Toggle the visibility of bounding boxes
+* (![Summary](../icons/analytics.svg) Show a quick summary of annotations
+
+The vertical slider left of the image display area changes the mid point of the color range for each channel in your image to brighten or darken the image.
+
+### Loading Data
+
+There are two ways to load data into BBoxEE:
+
+1. Select a directory (![Folder Icon](../icons/folder.svg))
+2. Select an existing annotation file (![file icon](../icons/file.svg))
+
+Selecting an existing annotation file will allow you to pick up where you left off or edit/correct existing bounding boxes.
 
 ### Defining a Bounding Box
 
 1. Left click and drag on the image to define a new bounding box.
-2. Select your target's label from the Annotation Assistant dialog's select box and check any of the descriptive features that apply.
-3. Press the submit button.
+2. Select the label from the pull down menu in the bounding box table or hover over the bounding box to make it active and press the first letter of label you want to assign to cycle through all labels that begin with that letter. 
 
 If you need to draw a bounding box that starts or is completely contained within another bounding box, press and hold the CTRL key then left click and drag to define the new bounding box.
 
 ### Moving a Bounding Box
-1. Hover over an existing bouding box to make the box active.
+1. Hover over an existing bounding box to make the box active.
 2. Left click and drag to move the bounding box.
 
 ### Adjusting a Bounding Box
 
-1. Hover over an existing bouding box to make the box active.
+1. Hover over an existing bounding box to make the box active.
 2. Hover over the edge or corner that you want to adjust then left click and drag to adjust the bounding box.
 
 ### Deleting a Bounding Box
@@ -120,7 +122,7 @@ There are two ways to delete a bounding box.
 
 1. Press the ![Delete icon](../icons/delete.svg)button in a row of the bounding box table.
 2. Press the ![Delete icon](../icons/delete.svg)button in the tool bar to clear all bounding boxes for the current image.
-<div style="page-break-after: always;"></div>
+
 ### Selecting a Bounding Box ( Sticky Mode )
 There are two ways to select a bounding box.
 1. Hover over a bounding box to activate it then left mouse click.
@@ -150,14 +152,40 @@ You can export your bounding boxes for use in your favorite machine learning pip
 2. Press the ![Folder icon](../icons/folder.svg)button.
 3. Select the top level directory of your project. BBoxEE will find all of the annotation (.bbx) files and display them in the table.
 4. Select the rows that you want to include in the export.
-5. Select an export format from the pull down.
-6. Press the export button.
+5. Rename labels if needed.
+6. Select an export format from the pull down.
+7. Press the export button.
 
-![Export screen](./images/export.png)
+![Export Tab](./images/export.png)
 
-<div style='text-align:center;font-size:0.8em'><strong>Figure 2.</strong> Exporting bounding boxes to train object detectors.</div>
+<div style='text-align:center;font-size:0.8em'><strong>Figure 3.</strong> Exporting bounding boxes to train object detectors.</div>
+
+### Renaming and Excluding Labels
+To rename a label, simply double click in the New Label cell and type your new label.  If you want to skip bounding boxes with a certain label, type *Exclude* in the New Label cell.
+
+You can also merge labels. For example, if you have bounding boxes labeled *Red Squirrel* and *Gray Squirrel* you can enter a new label of *Squirrel* for both to merge them into a single class.
+
+During export a label_remap.json file will be created in your export directory. If you need to later re-export your data you can load an existing remap file, rather than typing in each new label, by clicking the ![File icon](../icons/file.svg) button and selecting an existing label_remap.json file.
+
+<div style="page-break-after: always;"></div>
+## Accuracy Assessment
+![Accuracy Tab](./images/accuracy.png)
+
+<div style='text-align:center;font-size:0.8em'><strong>Figure 4. </strong>Accuracy assessment.</div>
+1. Start by clicking the [Select .bbx File] button to load an existing set of bounding boxes that will be considered the gound truth or ideal expected results.
+2. If you have not labeled every image in the directory, click the check box to only use annotated images.
+3. Click the [Select Model] button to load the model you want to evaluate.
+4. Select a confidence threshold.
+5. If you renamed or merged several labels, click the Remap Labels check box to load the label_remap.json file associated with training data used to build the model being tested.
+6. Click [Run] button to start the evaluation. 
+
+The report will include a confusion matrix for the matching bounding bounding boxes and the average IoU (intersection over union).  A summary of false positive and false negative counts is also provided.
+
+Clicking on a row the results table will display the image the bounding boxes. The ground truth bounding boxes are yellow, and the machine generated bounding boxes are magenta.
+
 <div style="page-break-after: always;"></div>
 ## Keyboard Shortcuts
+
 ### Nudge
 You can use the arrow keys to move the active bounding box.
 
@@ -198,5 +226,5 @@ Right-click+Drag - Pan image.
 I would like to thank the following people for their feedback, data, and support during the development of BBoxEE.
 * Ned Horning, Center for Biodiversity and Conservation 
 * Mark Weckel, Gotham Coyote Project
-* Chris Nagy, Minus river Gorge
+* Chris Nagy, Minus River Gorge
 * Waylon Flinn [ Code Contributor ]
