@@ -24,7 +24,7 @@
 # --------------------------------------------------------------------------
 import os
 import sys
-from PyQt5 import QtCore, QtWidgets, uic
+from PyQt5 import QtCore, QtWidgets, QtGui, uic
 
 if getattr(sys, 'frozen', False):
     bundle_dir = sys._MEIPASS
@@ -45,7 +45,6 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.setWindowTitle('Select Model')
         self.last_dir = '.'
 
-        # TODO: Split this up into smaller components
         self.pushButtonTFV1.clicked.connect(self.tensorflow_v1_frozen_selected)
         self.pushButtonTFGraph.clicked.connect(self.get_inference_graph)
         self.interence_graph = None
@@ -57,6 +56,13 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.model = None
         self.pushButtonLabelMapV2.clicked.connect(self.get_label_map_2)
 
+    def set_label(self, label, text):
+        qfm = QtGui.QFontMetrics(label.font())
+        width = label.width() - 2
+        clipped = qfm.elidedText(text, QtCore.Qt.ElideMiddle, width)
+        label.setText(clipped)
+        label.raw_text = text
+
     def tensorflow_v1_frozen_selected(self):
         """Load a frozen inference graph and label map."""
         self.pushButtonTFV1.setDisabled(True)
@@ -64,8 +70,8 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.pushButtonTFGraph.setDisabled(True)
         try:
             from bboxee.annotator.tensorflow_v1_frozen import Annotator
-            graph = self.lineEditTFGraph.text()
-            label_map = self.lineEditLabelMapV1.text()
+            graph = self.labelTFGraph.raw_text
+            label_map = self.labelLabelMapV1.raw_text
             self.annotator = Annotator(graph, label_map)
             self.selected.emit(self.annotator)
             self.hide()
@@ -86,8 +92,8 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
             if tf.__version__[0] == '1':
                 raise ModuleNotFoundError('')
             from bboxee.annotator.tensorflow_v2_saved import Annotator
-            model = self.lineEditTFModel.text()
-            label_map = self.lineEditLabelMapV2.text()
+            model = self.labelTFModel.raw_text
+            label_map = self.labelLabelMapV2.raw_text
             self.annotator = Annotator(model, label_map)
             self.selected.emit(self.annotator)
             self.hide()
@@ -106,7 +112,7 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
                                      'Select Frozen Inference Graph',
                                      self.last_dir, 'TF Graph (*.pb)'))
         if file_name[0] != '':
-            self.lineEditTFGraph.setText(file_name[0])
+            self.set_label(self.labelTFGraph, file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
             self.pushButtonTFV1.setDisabled(False)
 
@@ -117,7 +123,7 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
                                      'Select Label Map',
                                      self.last_dir, 'Label Map (*.pbtxt *.txt)'))
         if file_name[0] != '':
-            self.lineEditLabelMapV1.setText(file_name[0])
+            self.set_label(self.labelLabelMapV1, file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
             self.pushButtonTFGraph.setDisabled(False)
 
@@ -128,7 +134,7 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
                                      'Select Label Map',
                                      self.last_dir, 'Label Map (*.pbtxt *.txt)'))
         if file_name[0] != '':
-            self.lineEditLabelMapV2.setText(file_name[0])
+            self.set_label(self.labelLabelMapV2, file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
             self.pushButtonTFModel.setDisabled(False)
 
@@ -139,6 +145,6 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
                                           'Select Saved Model Directory',
                                           self.last_dir))
         if directory != '':
-            self.lineEditTFModel.setText(directory)
+            self.set_label(self.labelTFModel, directory)
             self.last_dir = directory
             self.pushButtonTFV2.setDisabled(False)

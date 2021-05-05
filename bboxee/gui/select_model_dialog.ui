@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>638</width>
-    <height>391</height>
+    <width>608</width>
+    <height>255</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -52,7 +52,11 @@
         </layout>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEditLabelMapV2"/>
+        <widget class="QLabel" name="labelLabelMapV2">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_7">
@@ -82,7 +86,11 @@
         </layout>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEditTFModel"/>
+        <widget class="QLabel" name="labelTFModel">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer_3">
@@ -142,7 +150,11 @@
         </layout>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEditLabelMapV1"/>
+        <widget class="QLabel" name="labelLabelMapV1">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
        </item>
        <item>
         <layout class="QHBoxLayout" name="horizontalLayout_5">
@@ -172,7 +184,11 @@
         </layout>
        </item>
        <item>
-        <widget class="QLineEdit" name="lineEditTFGraph"/>
+        <widget class="QLabel" name="labelTFGraph">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
        </item>
        <item>
         <spacer name="verticalSpacer">
