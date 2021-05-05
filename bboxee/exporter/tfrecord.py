@@ -112,7 +112,6 @@ class Exporter(QtCore.QThread):
         self.stop = False
         random.shuffle(self.images)
 
-        counter = 0
         train_writer = []
         validation_writer = []
         for i in range(self.shards):
@@ -122,99 +121,99 @@ class Exporter(QtCore.QThread):
             val_name = 'validation_dataset.tfrecord-{:05}-{:05}'.format(i, self.shards)
             val_path = os.path.join(self.directory, val_name)
             validation_writer.append(tf.io.TFRecordWriter(val_path))
-        for example in self.images:
+        for count, example in enumerate(self.images):
             if self.stop:
                 break
             file_name = os.path.join(
                 example['directory'], example['file_name'])
 
-            with tf.io.gfile.GFile(file_name, 'rb') as fid:
-                encoded_jpg = fid.read()
-            encoded_jpg_io = io.BytesIO(encoded_jpg)
-            image = Image.open(encoded_jpg_io)
-            if image.format != 'JPEG':
-                # raise ValueError('Image format not JPEG')
-                buf = io.BytesIO()
-                image.save(buf, format='JPEG')
-                encoded_jpg = buf.getvalue()
-                buf.close()
+            if os.path.exists(file_name):
+                with tf.io.gfile.GFile(file_name, 'rb') as fid:
+                    encoded_jpg = fid.read()
+                encoded_jpg_io = io.BytesIO(encoded_jpg)
+                image = Image.open(encoded_jpg_io)
+                if image.format != 'JPEG':
+                    # raise ValueError('Image format not JPEG')
+                    buf = io.BytesIO()
+                    image.save(buf, format='JPEG')
+                    encoded_jpg = buf.getvalue()
+                    buf.close()
 
-            if self.strip_metadata:
-                array = np.array(image)
-                if example['mask_name'] in self.masks:
-                    array = array * self.masks[example['mask_name']]
-                img = Image.fromarray(array)
-                buf = io.BytesIO()
-                img.save(buf, format='JPEG')
-                encoded_jpg = buf.getvalue()
-                buf.close()
-                img.close()
+                if self.strip_metadata:
+                    array = np.array(image)
+                    if example['mask_name'] in self.masks:
+                        array = array * self.masks[example['mask_name']]
+                    img = Image.fromarray(array)
+                    buf = io.BytesIO()
+                    img.save(buf, format='JPEG')
+                    encoded_jpg = buf.getvalue()
+                    buf.close()
+                    img.close()
 
-            key = hashlib.sha256(encoded_jpg).hexdigest()
-            size = image.size  # PIL (width, height)
-            image.close()
+                key = hashlib.sha256(encoded_jpg).hexdigest()
+                size = image.size  # PIL (width, height)
+                image.close()
 
-            xmins = []
-            ymins = []
-            xmaxs = []
-            ymaxs = []
-            classes = []
-            classes_text = []
-            occluded = []
-            truncated = []
-            difficult = []
-            for annotation in example['annotations']:
-                if annotation['label'].lower() == 'negative':
-                    break
-                label = self.label_map[annotation['label']]
-                xmins.append(annotation['bbox']['xmin'])
-                ymins.append(annotation['bbox']['ymin'])
-                xmaxs.append(annotation['bbox']['xmax'])
-                ymaxs.append(annotation['bbox']['ymax'])
-                classes_text.append(label.encode('utf8'))
-                classes.append(self.labels.index(label) + 1)
-                if annotation['occluded'] == 'Y':
-                    occluded.append(1)
+                xmins = []
+                ymins = []
+                xmaxs = []
+                ymaxs = []
+                classes = []
+                classes_text = []
+                occluded = []
+                truncated = []
+                difficult = []
+                for annotation in example['annotations']:
+                    if annotation['label'].lower() == 'negative':
+                        break
+                    label = self.label_map[annotation['label']]
+                    xmins.append(annotation['bbox']['xmin'])
+                    ymins.append(annotation['bbox']['ymin'])
+                    xmaxs.append(annotation['bbox']['xmax'])
+                    ymaxs.append(annotation['bbox']['ymax'])
+                    classes_text.append(label.encode('utf8'))
+                    classes.append(self.labels.index(label) + 1)
+                    if annotation['occluded'] == 'Y':
+                        occluded.append(1)
+                    else:
+                        occluded.append(0)
+
+                    if annotation['truncated'] == 'Y':
+                        truncated.append(1)
+                    else:
+                        truncated.append(0)
+
+                    if annotation['difficult'] == 'Y':
+                        difficult.append(1)
+                    else:
+                        difficult.append(0)
+
+                feature_dict = {
+                    'image/height': int64_feature(size[1]),
+                    'image/width': int64_feature(size[0]),
+                    'image/filename': bytes_feature(file_name.encode('utf8')),
+                    'image/source_id': bytes_feature(file_name.encode('utf8')),
+                    'image/key/sha256': bytes_feature(key.encode('utf8')),
+                    'image/encoded': bytes_feature(encoded_jpg),
+                    'image/format': bytes_feature('jpeg'.encode('utf8')),
+                    'image/object/bbox/xmin': float_list_feature(xmins),
+                    'image/object/bbox/xmax': float_list_feature(xmaxs),
+                    'image/object/bbox/ymin': float_list_feature(ymins),
+                    'image/object/bbox/ymax': float_list_feature(ymaxs),
+                    'image/object/class/text': bytes_list_feature(classes_text),
+                    'image/object/class/label': int64_list_feature(classes),
+                    'image/object/difficult': int64_list_feature(difficult),
+                    'image/object/truncated': int64_list_feature(truncated),
+                    'image/object/occluded': int64_list_feature(occluded),
+                }
+                tf_example = tf.train.Example(
+                    features=tf.train.Features(feature=feature_dict))
+                index = count % self.shards
+                if count <= self.train_size:
+                    train_writer[index].write(tf_example.SerializeToString())
                 else:
-                    occluded.append(0)
-
-                if annotation['truncated'] == 'Y':
-                    truncated.append(1)
-                else:
-                    truncated.append(0)
-
-                if annotation['difficult'] == 'Y':
-                    difficult.append(1)
-                else:
-                    difficult.append(0)
-
-            feature_dict = {
-                'image/height': int64_feature(size[1]),
-                'image/width': int64_feature(size[0]),
-                'image/filename': bytes_feature(file_name.encode('utf8')),
-                'image/source_id': bytes_feature(file_name.encode('utf8')),
-                'image/key/sha256': bytes_feature(key.encode('utf8')),
-                'image/encoded': bytes_feature(encoded_jpg),
-                'image/format': bytes_feature('jpeg'.encode('utf8')),
-                'image/object/bbox/xmin': float_list_feature(xmins),
-                'image/object/bbox/xmax': float_list_feature(xmaxs),
-                'image/object/bbox/ymin': float_list_feature(ymins),
-                'image/object/bbox/ymax': float_list_feature(ymaxs),
-                'image/object/class/text': bytes_list_feature(classes_text),
-                'image/object/class/label': int64_list_feature(classes),
-                'image/object/difficult': int64_list_feature(difficult),
-                'image/object/truncated': int64_list_feature(truncated),
-                'image/object/occluded': int64_list_feature(occluded),
-            }
-            tf_example = tf.train.Example(
-                features=tf.train.Features(feature=feature_dict))
-            index = counter % self.shards
-            if counter <= self.train_size:
-                train_writer[index].write(tf_example.SerializeToString())
-            else:
-                validation_writer[index].write(tf_example.SerializeToString())
-            counter += 1
-            self.progress.emit(counter)
+                    validation_writer[index].write(tf_example.SerializeToString())
+                self.progress.emit(count + 1)
         for i in range(self.shards):
             train_writer[i].close()
             validation_writer[i].close()

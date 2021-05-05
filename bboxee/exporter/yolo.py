@@ -124,36 +124,37 @@ class Exporter(QtCore.QThread):
             current.append(img_file)
 
             src_file = os.path.join(rec['directory'], rec['file_name'])
-            if self.strip_metadata:
-                img = Image.open(src_file)
-                array = np.array(img)
-                img.close()
-                if rec['mask_name'] in self.masks:
-                    array = array * self.masks[rec['mask_name']]
-                img = Image.fromarray(array)
-                img.save(img_file)
-                img.close()
-            else:
-                copyfile(src_file, img_file)
+            if os.path.exists(src_file):
+                if self.strip_metadata:
+                    img = Image.open(src_file)
+                    array = np.array(img)
+                    img.close()
+                    if rec['mask_name'] in self.masks:
+                        array = array * self.masks[rec['mask_name']]
+                    img = Image.fromarray(array)
+                    img.save(img_file)
+                    img.close()
+                else:
+                    copyfile(src_file, img_file)
 
-            file = open(label_file, 'w')
-            nl = ""
-            for a in rec['annotations']:
-                bbox = a['bbox']
-                remap = self.label_map[a['label']]
-                label = self.labels.index(remap)
-                width = bbox['xmax'] - bbox['xmin']
-                height = bbox['ymax'] - bbox['ymin']
-                x = bbox['xmin'] + (width / 2.0)
-                y = bbox['ymin'] + (height / 2.0)
-                template = "{}{} {} {} {} {}"
-                file.write(template.format(nl, label, x, y, width, height))
-                nl = "\n"
-            file.close()
+                file = open(label_file, 'w')
+                nl = ""
+                for a in rec['annotations']:
+                    bbox = a['bbox']
+                    remap = self.label_map[a['label']]
+                    label = self.labels.index(remap)
+                    width = bbox['xmax'] - bbox['xmin']
+                    height = bbox['ymax'] - bbox['ymin']
+                    x = bbox['xmin'] + (width / 2.0)
+                    y = bbox['ymin'] + (height / 2.0)
+                    template = "{}{} {} {} {} {}"
+                    file.write(template.format(nl, label, x, y, width, height))
+                    nl = "\n"
+                file.close()
 
-            # TODO: Really need to export the license information for each file
+                # TODO: Really need to export the license information for each file
 
-            self.progress.emit(count + 1)
+                self.progress.emit(count + 1)
 
         nl = ""
         file = open(os.path.join(self.directory, 'names.txt'), 'w')

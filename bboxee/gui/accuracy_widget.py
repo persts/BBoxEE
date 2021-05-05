@@ -339,45 +339,46 @@ class AccuracyWidget(QtWidgets.QWidget, WIDGET):
             row = selected.indexes()[0].row()
             name = self.tw_results.item(row, 0).text()
             file_name = os.path.join(self.directory, name)
-            img = Image.open(file_name)
-            image = np.array(img)
-            h, w, c = image.shape
-            bpl = int(image.nbytes / h)
-            if c == 4:
-                qt_image = QtGui.QImage(image.data, w, h, QtGui.QImage.Format_RGBA8888)
-            else:
-                qt_image = QtGui.QImage(image.data, w, h, bpl, QtGui.QImage.Format_RGB888)
-            self.scene.addPixmap(QtGui.QPixmap.fromImage(qt_image))
-            bounding_rect = self.scene.itemsBoundingRect()
-            self.gv_display.fitInView(bounding_rect, QtCore.Qt.KeepAspectRatio)
+            if os.path.exists(file_name):
+                img = Image.open(file_name)
+                image = np.array(img)
+                h, w, c = image.shape
+                bpl = int(image.nbytes / h)
+                if c == 4:
+                    qt_image = QtGui.QImage(image.data, w, h, QtGui.QImage.Format_RGBA8888)
+                else:
+                    qt_image = QtGui.QImage(image.data, w, h, bpl, QtGui.QImage.Format_RGB888)
+                self.scene.addPixmap(QtGui.QPixmap.fromImage(qt_image))
+                bounding_rect = self.scene.itemsBoundingRect()
+                self.gv_display.fitInView(bounding_rect, QtCore.Qt.KeepAspectRatio)
 
-            brush = QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern)
-            pen = QtGui.QPen(brush, 2)
+                brush = QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern)
+                pen = QtGui.QPen(brush, 2)
 
-            for ann in self.summary[name]['reference']:
-                bbox = ann['bbox']
-                x = bbox['xmin'] * w
-                y = bbox['ymin'] * h
-                top_left = QtCore.QPointF(x, y)
-                x = bbox['xmax'] * w
-                y = bbox['ymax'] * h
-                bottom_right = QtCore.QPointF(x, y)
-                rect = QtCore.QRectF(top_left, bottom_right)
-                self.scene.addRect(rect, pen)
+                for ann in self.summary[name]['reference']:
+                    bbox = ann['bbox']
+                    x = bbox['xmin'] * w
+                    y = bbox['ymin'] * h
+                    top_left = QtCore.QPointF(x, y)
+                    x = bbox['xmax'] * w
+                    y = bbox['ymax'] * h
+                    bottom_right = QtCore.QPointF(x, y)
+                    rect = QtCore.QRectF(top_left, bottom_right)
+                    self.scene.addRect(rect, pen)
 
-            brush = QtGui.QBrush(QtCore.Qt.magenta, QtCore.Qt.SolidPattern)
-            pen = QtGui.QPen(brush, 2)
+                brush = QtGui.QBrush(QtCore.Qt.magenta, QtCore.Qt.SolidPattern)
+                pen = QtGui.QPen(brush, 2)
 
-            for ann in self.summary[name]['predicted']:
-                bbox = ann['bbox']
-                x = bbox['xmin'] * w
-                y = bbox['ymin'] * h
-                top_left = QtCore.QPointF(x, y)
-                x = bbox['xmax'] * w
-                y = bbox['ymax'] * h
-                bottom_right = QtCore.QPointF(x, y)
-                rect = QtCore.QRectF(top_left, bottom_right)
-                self.scene.addRect(rect, pen)
+                for ann in self.summary[name]['predicted']:
+                    bbox = ann['bbox']
+                    x = bbox['xmin'] * w
+                    y = bbox['ymin'] * h
+                    top_left = QtCore.QPointF(x, y)
+                    x = bbox['xmax'] * w
+                    y = bbox['ymax'] * h
+                    bottom_right = QtCore.QPointF(x, y)
+                    rect = QtCore.QRectF(top_left, bottom_right)
+                    self.scene.addRect(rect, pen)
 
     def summarize(self, predicted, reference):
         summary = {}

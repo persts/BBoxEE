@@ -88,7 +88,6 @@ class Annotator(QtCore.QThread):
         self.stop = False
         self.data = schema.annotation_file()
         self.data['analysts'].append('Machine Generated')
-        counter = 0
         with self.detection_graph.as_default():
             graph_def = self.detection_graph.as_graph_def()
             with tf.io.gfile.GFile(self.inference_graph, 'rb') as fid:
@@ -113,50 +112,48 @@ class Annotator(QtCore.QThread):
                              get_tensor_by_name('detection_classes:0'))
                 num_detections = (self.detection_graph.
                                   get_tensor_by_name('num_detections:0'))
-                for img in self.image_list:
-                    if counter >= self.starting_image:
+                for count, img in enumerate(self.image_list):
+                    if count >= self.starting_image:
                         if self.stop:
                             break
                         file_name = os.path.join(self.image_directory, img)
-                        image = Image.open(file_name)
-                        # the array based representation of the image will be
-                        # used later in order to prepare the result image with
-                        # boxes and labels on it.
-                        image_np = np.array(image)
-                        # Expand dimensions since the model expects images
-                        # to have shape: [1, None, None, 3]
-                        image_np_expanded = np.expand_dims(image_np, axis=0)
-                        # Actual detection.
-                        fd = {image_tensor: image_np_expanded}
-                        (boxes, scores, classes, num) = sess.run([d_boxes, d_scores, d_classes, num_detections], feed_dict=fd)
-                        boxes = np.squeeze(boxes)
-                        scores = np.squeeze(scores)
-                        classes = np.squeeze(classes)
-                        entry = schema.annotation_file_entry()
-                        for i in range(len(scores)):
-                            if scores[i] >= self.threshold:
-                                annotation = schema.annotation()
-                                annotation['created_by'] = 'machine'
-                                annotation['confidence'] = float(scores[i])
-                                bbox = boxes[i]
-                                annotation['bbox']['xmin'] = float(bbox[1])
-                                annotation['bbox']['xmax'] = float(bbox[3])
-                                annotation['bbox']['ymin'] = float(bbox[0])
-                                annotation['bbox']['ymax'] = float(bbox[2])
-                                if classes[i] in self.label_map:
-                                    label = self.label_map[classes[i]]
-                                else:
-                                    label = 'unknown'
-                                # label = self.category_index[classes[i]]['name']
-                                annotation['label'] = label
-                                entry['annotations'].append(annotation)
-                        if len(entry['annotations']) > 0:
-                            self.data['images'][img] = entry
-                        image.close()
-                        counter += 1
-                        self.progress.emit(counter, img, entry)
-                    else:
-                        counter += 1
+                        if os.path.exists(file_name):
+                            image = Image.open(file_name)
+                            # the array based representation of the image will be
+                            # used later in order to prepare the result image with
+                            # boxes and labels on it.
+                            image_np = np.array(image)
+                            # Expand dimensions since the model expects images
+                            # to have shape: [1, None, None, 3]
+                            image_np_expanded = np.expand_dims(image_np, axis=0)
+                            # Actual detection.
+                            fd = {image_tensor: image_np_expanded}
+                            (boxes, scores, classes, num) = sess.run([d_boxes, d_scores, d_classes, num_detections], feed_dict=fd)
+                            boxes = np.squeeze(boxes)
+                            scores = np.squeeze(scores)
+                            classes = np.squeeze(classes)
+                            entry = schema.annotation_file_entry()
+                            for i in range(len(scores)):
+                                if scores[i] >= self.threshold:
+                                    annotation = schema.annotation()
+                                    annotation['created_by'] = 'machine'
+                                    annotation['confidence'] = float(scores[i])
+                                    bbox = boxes[i]
+                                    annotation['bbox']['xmin'] = float(bbox[1])
+                                    annotation['bbox']['xmax'] = float(bbox[3])
+                                    annotation['bbox']['ymin'] = float(bbox[0])
+                                    annotation['bbox']['ymax'] = float(bbox[2])
+                                    if classes[i] in self.label_map:
+                                        label = self.label_map[classes[i]]
+                                    else:
+                                        label = 'unknown'
+                                    # label = self.category_index[classes[i]]['name']
+                                    annotation['label'] = label
+                                    entry['annotations'].append(annotation)
+                            if len(entry['annotations']) > 0:
+                                self.data['images'][img] = entry
+                            image.close()
+                            self.progress.emit(count + 1, img, entry)
         self.finished.emit(self.data)
 
     def stop_annotation(self):
