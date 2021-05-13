@@ -88,10 +88,13 @@ results = cur.execute('Select ObserverID, LastName, FirstName from Observers').f
 for rec in results:
     observers[str(rec[0])] = '{}, {}'.format(rec[1], rec[2])
     print('{}: {},{}'.format(rec[0], rec[1], rec[2]))
-OBSID = input('Which ObserverID should the data be associated with? ')
-if OBSID not in observers:
-    print('That ObserverID is not recognized')
-    sys.exit(0)
+OBSID = {}
+for obs in DATA['analysts']:
+    obsid = input('Which ObserverID should be associated with observer [{}]? '.format(obs))
+    if obsid not in observers:
+        print('That ObserverID is not recognized')
+        sys.exit(0)
+    OBSID[obs] = obsid
 print()
 
 # Load VisitIDs
@@ -152,14 +155,17 @@ for name in tqdm(image_list):
             YLen = (bbox['ymax'] - bbox['ymin'])
             TagX = bbox['xmin'] + (XLen / 2.0)
             TagY = bbox['ymin'] + (YLen / 2.0)
-            cur.execute('INSERT INTO PhotoTags (TagX, TagY, XLen, YLen, ImageID, ObsID) values (?, ?, ?, ?, ?, ?)', (TagX, TagY, XLen, YLen, image_rec_id, OBSID))
+            for obs in OBSID.keys():
+                cur.execute('INSERT INTO PhotoTags (TagX, TagY, XLen, YLen, ImageID, ObsID) values (?, ?, ?, ?, ?, ?)', (TagX, TagY, XLen, YLen, image_rec_id, OBSID[obs]))
             if a['label'] not in detections:
                 detections[a['label']] = 1.0
             else:
                 detections[a['label']] += 1.0
 
         for d in detections.keys():
-            cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES[d.lower()], detections[d], OBSID, image_rec_id))
+            for obs in OBSID.keys():
+                cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES[d.lower()], detections[d], OBSID[obs], image_rec_id))
     else:
-        cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES['none'], 0.0, OBSID, image_rec_id))
+        for obs in OBSID.keys():
+            cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES['none'], 0.0, OBSID[obs], image_rec_id))
     conn.commit()

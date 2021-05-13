@@ -1,0 +1,16 @@
+# Leveraging an Existing Dataset
+
+Taylor has been contacted by a local forest preserve which would like assistance training an object detection model to help automate future sorting and labeling of images from camera traps. The preserve has had a small camera trapping initiative running for the last 10 years and has an archive of 150,000 labeled images. These images are stored in Colorado Parks and Wildlife's [CPW Photo Warehouse](https://cpw.state.co.us/learn/Pages/ResearchMammalsSoftware.aspx) , a Microsoft Access database. 
+
+Taylor plans to leverage the previous labeling efforts to get a jump start on creating labeled bounding boxes. Taylor exports the image filename and label from the database. Taylor then uses the [Image Level Label to Bounding Box Pipeline (IL2BB)](https://github.com/persts/IL2BB) to automate the generation of new labeled bounding boxes.
+
+Once the IL2BB process has finished, Taylor launches BBoxEE, selects the first batch of images, and systematically begins to review each generated bounding box. Reviewing entails adjusting the bounding box edges when needed, deleting false positive detections, and manually creating bounding boxes for false negatives.
+
+Taylor spends the next several months reviewing the generated bounding boxes. When all of the bounding boxes have been reviewed, Taylor exports the images and bounding boxes into multiple shards and starts training models. After several weeks of training and testing, Taylor has found a model architecture and set of hyper-parameters that has resulted in a production level model.
+
+The forest preserve uses a multi observer process for importing and reviewing images in CPW Photo Warehouse. Since Taylor was able to train a production level model that meets the preserve's accuracy requirement, new data can be automatically imported and labeled using the [database bridge](https://github.com/persts/BBoxEE/tree/master/database-tools) provided with BBoxEE. The model produced labels are treated as the "first observer" in the multi observer process, which in turn frees up one analysts to do other things. 
+
+Taylor and the researchers at the forest preserve all agree that they should continue to add to their training set. So each time there is a collection event, i.e. pulling cards from the cameras, data from one camera are set a side so that new bounding boxes can be created and labeled. Taylor launches BBoxEE and selects the reserved directory of images. Taylor then loads their production model by clicking the ***Select Model*** button in the Automated Annotation panel and sets a threshold of 0.8 before clicking the ***Annotate*** button. Once the annotation process has completed, Taylor systematically reviews each new bounding box.
+
+By reviewing the new bounding boxes, Taylor has effectively completed the role of the second observer which would normally be done directly in CPW Photo Warehouse. Taylor clicks the ***Add Analyst*** button in the Creator and Reviewer History panel and adds their name.  Taylor then runs the [bbx2cpwpw.py](https://github.com/persts/BBoxEE/tree/master/converters) script to import the reserved images and their labels directly into CPW Photo Warehouse, which in turn documents in the database that the images have been reviewed by two analysts. 
+

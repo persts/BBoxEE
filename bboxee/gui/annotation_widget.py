@@ -923,16 +923,17 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def summary(self):
         summary = {}
-        for image in self.data['images']:
-            for ann in self.data['images'][image]['annotations']:
-                if ann['label'] not in summary:
-                    summary[ann['label']] = 0
-                summary[ann['label']] += 1
+        if self.data is not None:
+            for image in self.data['images']:
+                for ann in self.data['images'][image]['annotations']:
+                    if ann['label'] not in summary:
+                        summary[ann['label']] = 0
+                    summary[ann['label']] += 1
 
-        message = ''
-        for label in summary:
-            message += "{}: {}\n".format(label, summary[label])
-        QtWidgets.QMessageBox.information(self, 'Annotation Summary', message)
+            message = ''
+            for label in summary:
+                message += "{}: {}\n".format(label, summary[label])
+            QtWidgets.QMessageBox.information(self, 'Annotation Summary', message)
 
     def update_annotation(self, annotation_data):
         """(Slot) Update annotation table widget."""
