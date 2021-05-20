@@ -264,14 +264,16 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
         # redirect middle click to shift click
         if button == QtCore.Qt.MiddleButton:
             # delete
-            self.mode = Mode.Delete
+            if self.mode != Mode.Create:
+                self.mode = Mode.Delete
         elif button == QtCore.Qt.RightButton:
-            self.mode = Mode.Pan
-            # manufacture a shift+click event
-            handmade_event = QtGui.QMouseEvent(
-                QtCore.QEvent.MouseButtonPress, QtCore.QPointF(event.pos()),
-                QtCore.Qt.LeftButton, event.buttons(), QtCore.Qt.ShiftModifier)
-            self.mousePressEvent(handmade_event)
+            if self.mode != Mode.Create:
+                self.mode = Mode.Pan
+                # manufacture a shift+click event
+                handmade_event = QtGui.QMouseEvent(
+                    QtCore.QEvent.MouseButtonPress, QtCore.QPointF(event.pos()),
+                    QtCore.Qt.LeftButton, event.buttons(), QtCore.Qt.ShiftModifier)
+                self.mousePressEvent(handmade_event)
 
         elif button == QtCore.Qt.LeftButton and event.modifiers() == QtCore.Qt.ShiftModifier:  # QtCore.Qt.NoModifier
             # pan the background image
