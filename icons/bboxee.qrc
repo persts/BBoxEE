@@ -18,5 +18,8 @@
     <file>visibility.svg</file>
     <file>visibility_off.svg</file>
     <file>analytics.svg</file>
+    <file>search.svg</file>
+    <file>filter.svg</file>
+    <file>reset.svg</file>
   </qresource>
 </RCC>

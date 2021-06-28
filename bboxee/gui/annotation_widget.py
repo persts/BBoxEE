@@ -54,6 +54,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.selected_row = -1
         self.current_image = 1
         self.image_list = []
+        self.original_image_list = []
         self.mask = None
         self.data = None
         self.labels = None
@@ -82,6 +83,14 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_summary.clicked.connect(self.summary)
         self.pb_summary.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_summary.setIcon(QtGui.QIcon(':/icons/analytics.svg'))
+
+        self.pb_filter.clicked.connect(self.filter)
+        self.pb_filter.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pb_filter.setIcon(QtGui.QIcon(':/icons/filter.svg'))
+
+        self.pb_reset_filter.clicked.connect(self.filter_reset)
+        self.pb_reset_filter.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pb_reset_filter.setIcon(QtGui.QIcon(':/icons/reset.svg'))
 
         self.pb_visible.clicked.connect(self.graphicsView.toggle_visibility)
         self.pb_visible.setIconSize(QtCore.QSize(icon_size, icon_size))
@@ -588,6 +597,24 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_next_ann.setEnabled(True)
         self.pb_clear.setEnabled(True)
 
+    def filter(self):
+        if len(self.image_list) > 0:
+            label = QtWidgets.QInputDialog.getText(self, 'Filter images list for ...', 'Label')[0]
+            if label == '':
+                self.image_list = self.original_image_list
+            else:
+                self.image_list = []
+                for image in self.data['images']:
+                    ann = self.data['images'][image]['annotations']
+                    for a in ann:
+                        if a['label'] == label:
+                            self.image_list.append(image)
+            self.load_first_image()
+
+    def filter_reset(self):
+        self.image_list = self.original_image_list
+        self.load_first_image()
+
     def jump_to_image(self):
         """(Slot) Just to a specific image when when line edit changes."""
         try:
@@ -649,6 +676,13 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             history.append(file_name)
             dir_name = os.path.split(dir_name)[0]
             file_name = os.path.join(dir_name, 'bboxee_config.json')
+
+    def load_first_image(self):
+        self.current_image = 1
+        self.labelImages.setText('of ' + str(len(self.image_list)))
+        self.lineEditCurrentImage.setText('1')
+        self.graphicsView.pixmap = None  # Force resize
+        self.load_image()
 
     def load_from_directory(self):
         """(Slot) Load image data from directory."""
@@ -726,6 +760,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def load_image_list(self):
         """Glob the image files and save to image list."""
         if self.image_directory != '':
+            self.original_image_list = []
             self.image_list = []
             self.image_directory += os.path.sep
             files = glob.glob(self.image_directory + '*')
@@ -734,11 +769,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.image_list = list(filter(f, files))
             self.image_list = [os.path.basename(x) for x in self.image_list]
             self.image_list = sorted(self.image_list)
-            self.current_image = 1
-            self.labelImages.setText('of ' + str(len(self.image_list)))
-            self.lineEditCurrentImage.setText('1')
-            self.graphicsView.pixmap = None  # Force resize
-            self.load_image()
+            self.original_image_list = self.image_list
+            self.load_first_image()
 
     def next_annotated_image(self):
         """(Slot) Jump to the next image that has been annotated."""

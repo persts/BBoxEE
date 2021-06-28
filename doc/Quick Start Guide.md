@@ -2,7 +2,7 @@
 # BBoxEE Quick Start Guide
 <div style='text-align: right;'> Release 1.0.0 </div>
 <div style='text-align: right;margin-top:20px;font-size:2em'> Peter J. Ersts </div>
-<div style='text-align: right;margin-top:20px'> May 2021</div>
+<div style='text-align: right;margin-top:20px'> June 2021</div>
 
 [TOC]
 
@@ -87,7 +87,9 @@ If you need to include hard negative images to help reduce false positives in yo
 * (![Skip to previous](../icons/skip_previous.svg)) Jump the previous image with an annotation, skipping all unannotated images in between
 * (![Delete](../icons/delete.svg)) Delete all bounding boxes on the current image
 * (![Visibility](../icons/visibility.svg)) Toggle the visibility of bounding boxes
-* (![Summary](../icons/analytics.svg) Show a quick summary of annotations
+* (![Summary](../icons/analytics.svg)) Show a quick summary of annotations
+* (![Summary](../icons/filter.svg)) Filter image list by label
+* (![Summary](../icons/reset.svg)) Reset label filter
 
 The vertical slider left of the image display area changes the mid point of the color range for each channel in your image to brighten or darken the image.
 

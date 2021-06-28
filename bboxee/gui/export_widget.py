@@ -136,6 +136,10 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.pb_label_map.setIcon(QtGui.QIcon(':/icons/file.svg'))
         self.pb_label_map.clicked.connect(self.load_label_map)
 
+        self.pb_search.setIconSize(size)
+        self.pb_search.setIcon(QtGui.QIcon(':/icons/search.svg'))
+        self.pb_search.clicked.connect(self.search)
+
         self.comboBoxFormat.currentIndexChanged.connect(self.check_format)
 
         self.pb_export.clicked.connect(self.export_preflight)
@@ -361,6 +365,19 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                 msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 msg_box.exec()
             self.selection_changed()
+
+    def search(self):
+        if len(self.base_data.keys()) > 0:
+            label = QtWidgets.QInputDialog.getText(self, 'Search for ...', 'Label')[0]
+            message = ''
+            if label != '':
+                for bbx_file in self.base_data:
+                    labels = self.base_data[bbx_file]['labels']
+                    if label in labels:
+                        message += "{}\n".format(bbx_file)
+                if message == '':
+                    message = 'No bbx files were found containing the label: {}'.format(label)
+                QtWidgets.QMessageBox.information(self, 'Matching BBX Files', message)
 
     def selection_changed(self):
         labels = {}
