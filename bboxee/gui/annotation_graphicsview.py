@@ -226,6 +226,8 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
             bbox.setRect(rect)
         elif bbox.sceneBoundingRect().contains(point):
             # Check to see if we should select a different box when overlap occurs
+            # This is still not quite right -- If internal bounding box edge is closer to the outerbox center the outerbox
+            # will activate
             if not self.sticky_bbox:
                 distance = 10000000.0
                 candidate = None
@@ -236,7 +238,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                         candidate = graphic
                         distance = line.length()
                     count += 1
-                if candidate != bbox:
+                if candidate != bbox and graphic.sceneBoundingRect().contains(point):
                     self.select_bbox.emit(point)
                     return
 
