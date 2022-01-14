@@ -28,8 +28,14 @@ import json
 import glob
 import pyodbc
 import datetime
-from PIL import Image
 from tqdm import tqdm
+from PIL import Image
+from PIL.ExifTags import TAGS
+
+for key, value in TAGS.items():
+    if value == "ExifOffset":
+        break
+EXIF_OFFSET = key
 
 if 'Microsoft Access Driver (*.mdb, *.accdb)' not in pyodbc.drivers():
     print('No Microsoft Access Driver found.')
@@ -136,11 +142,12 @@ for name in tqdm(image_list):
     img = Image.open(file_name)
     exif = img.getexif()
     img.close()
-    created = exif.get(36867)
-    if created is None:
-        timestamp = None
-    else:
+    info = exif.get_ifd(EXIF_OFFSET)
+    try:
+        created = info[36867]
         timestamp = datetime.datetime.fromisoformat(created.replace(':', '-', 2))
+    except KeyError:
+        timestamp = None
     cur.execute('INSERT INTO Photos (ImageNum, FileName, ImageDate, FilePath, VisitID) VALUES (?, ?, ?, ?, ?)', (counter, name, timestamp, IMAGE_PATH, VISITID))
     conn.commit()
     image_rec_id = float(cur.execute('SELECT @@Identity').fetchone()[0])
