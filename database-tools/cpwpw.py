@@ -29,9 +29,15 @@ import glob
 import pyodbc
 import datetime
 import numpy as np
-from PIL import Image
 from tqdm import tqdm
 import tensorflow as tf
+from PIL import Image
+from PIL.ExifTags import TAGS
+
+for key, value in TAGS.items():
+    if value == "ExifOffset":
+        break
+EXIF_OFFSET = key
 
 
 def build_label_map(file_name):
@@ -179,11 +185,12 @@ for name in tqdm(image_list):
     image_np = np.array(img)
     exif = img.getexif()
     img.close()
-    created = exif.get(36867)
-    if created is None:
-        timestamp = None
-    else:
+    info = exif.get_ifd(EXIF_OFFSET)
+    try:
+        created = info[36867]
         timestamp = datetime.datetime.fromisoformat(created.replace(':', '-', 2))
+    except KeyError:
+        timestamp = None
     cur.execute('INSERT INTO Photos (ImageNum, FileName, ImageDate, FilePath, VisitID) VALUES (?, ?, ?, ?, ?)', (counter, name, timestamp, IMAGE_PATH, VISITID))
     conn.commit()
     image_rec_id = float(cur.execute('SELECT @@Identity').fetchone()[0])
@@ -223,5 +230,5 @@ for name in tqdm(image_list):
         for d in detections.keys():
             cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES[d.lower()], detections[d], OBSID, image_rec_id))
     else:
-        cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES['none'], 0.0, OBSID, image_rec_id))
+        cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES['none'], 1.0, OBSID, image_rec_id))
     conn.commit()
