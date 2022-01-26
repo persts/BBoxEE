@@ -174,5 +174,5 @@ for name in tqdm(image_list):
                 cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES[d.lower()], detections[d], OBSID[obs], image_rec_id))
     else:
         for obs in OBSID.keys():
-            cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES['none'], 0.0, OBSID[obs], image_rec_id))
+            cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES['none'], 1.0, OBSID[obs], image_rec_id))
     conn.commit()
