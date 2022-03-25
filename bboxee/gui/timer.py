@@ -22,20 +22,30 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-import sys
-from PyQt5 import QtWidgets
+from PyQt5 import QtCore
 
-from bboxee.gui import MainWindow
 
-if __name__ == "__main__":
-    APP = QtWidgets.QApplication(sys.argv)
-    screen = APP.primaryScreen()
-    for s in APP.screens():
-        if screen.geometry().width() < s.geometry().width():
-            screen = s
-    GUI = MainWindow(int(screen.geometry().height() * 0.025))
-    GUI.show()
-    GUI.windowHandle().setScreen(screen)
-    GUI.resize(int(screen.geometry().width()), int(screen.geometry().height() * 0.85))
+class Timer(QtCore.QObject):
+    """Timer object for auto advancing through images."""
+    advance = QtCore.pyqtSignal()
 
-    sys.exit(APP.exec_())
+    def __init__(self):
+        QtCore.QObject.__init__(self)
+        self.speed = 1
+        self.stop_timer = False
+
+    def run(self):
+        self.advance.emit()
+        if not self.stop_timer:
+            QtCore.QTimer.singleShot(int(1000 / self.speed), self.run)
+
+    @QtCore.pyqtSlot(int)
+    def set_speed(self, speed):
+        self.speed = speed
+
+    def start(self):
+        self.stop_timer = False
+        self.run()
+
+    def stop(self):
+        self.stop_timer = True

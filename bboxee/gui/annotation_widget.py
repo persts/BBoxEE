@@ -32,6 +32,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from bboxee import schema
 from bboxee.gui import SelectModelDialog
 from bboxee.gui import AnalystDialog
+from .timer import Timer
 
 if getattr(sys, 'frozen', False):
     bundle_dir = sys._MEIPASS
@@ -156,6 +157,16 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         table_header.resizeSection(5, 30)
         table_header.resizeSection(6, 50)
 
+        # Set up auto advance buttom and timers
+        self.pb_auto_advance.clicked.connect(self.auto_advance_clicked)
+        self.pb_auto_advance.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pb_auto_advance.setIcon(QtGui.QIcon(':/icons/fast_forward.svg'))
+        self.timer = Timer()
+        self.timer.advance.connect(self.auto_advance)
+        self.vs_speed.valueChanged.connect(self.timer.set_speed)
+        self.timer_thread = QtCore.QThread()
+        self.timer.moveToThread(self.timer_thread)
+        self.timer_thread.start()
         #
         # Key bindings
         #
@@ -253,6 +264,12 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.scut_previous_annotated_image.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
         self.scut_previous_annotated_image.activated.connect(self.previous_annotated_image)
 
+        # Cancel auto advance
+        self.scut_stop_auto_advance = QtWidgets.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key_Escape), self)
+        self.scut_stop_auto_advance.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_stop_auto_advance.activated.connect(self.stop_auto_advance)
+
     def add_analyst(self, name):
         if self.data is not None:
             last_index = len(self.data['analysts']) - 1
@@ -340,6 +357,20 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     rec['license'] = license['license']
                     rec['license_url'] = license['license_url']
                     self.set_dirty(True)
+
+    def auto_advance(self):
+        if self.pb_auto_advance.isChecked():
+            if not self.next_image():
+                self.pb_auto_advance.setChecked(False)
+                self.timer.stop()
+        else:
+            self.timer.stop()
+    
+    def auto_advance_clicked(self):
+        if self.pb_auto_advance.isChecked():
+            self.timer.start()
+        else:
+            self.timer.stop()
 
     def bbox_created(self, rect, image_size, meta=None):
         """(Slot) save the newly created bbox and display it."""
@@ -586,7 +617,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
         self.bbox_created(rect, image_size, meta=metadata)
 
-    def enableButtons(self):
+    def enable_buttons(self):
         """Enable UI for interacting with the image and annotations"""
         self.pb_zoom_in.setEnabled(True)
         self.pb_zoom_out.setEnabled(True)
@@ -596,6 +627,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_next.setEnabled(True)
         self.pb_next_ann.setEnabled(True)
         self.pb_clear.setEnabled(True)
+        self.pb_summary.setEnabled(True)
+        self.pb_auto_advance.setEnabled(True)
+        self.pb_filter.setEnabled(True)
+        self.pb_reset_filter.setEnabled(True)
 
     def filter(self):
         if len(self.image_list) > 0:
@@ -751,7 +786,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.graphicsView.load_image(array)
             array = None
 
-            self.enableButtons()
+            self.enable_buttons()
             self.display_bboxes()
             self.display_annotation_data()
             self.graphicsView.setFocus()
@@ -791,6 +826,9 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.current_image += 1
             self.lineEditCurrentImage.setText(str(self.current_image))
             self.load_image()
+            return True
+        else:
+            return False
 
     def next_row(self):
         if self.tw_labels.rowCount() != 0:
@@ -952,6 +990,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def set_sticky(self):
         self.graphicsView.sticky_bbox = True
+
+    def stop_auto_advance(self):
+        self.timer.stop()
+        self.pb_auto_advance.setChecked(False)
 
     def summary(self):
         summary = {}

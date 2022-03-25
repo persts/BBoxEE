@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="icons">
+    <file>fast_forward.svg</file>
     <file>clear.svg</file>
     <file>edit.svg</file>
     <file>edit_active.svg</file>
