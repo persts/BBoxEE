@@ -12,13 +12,13 @@ We have put together a [quick start guide](https://github.com/persts/BBoxEE/blob
 ## Installation
 
 ### Dependencies
-BBoxEE is being developed with Python 3.8.5 on Ubuntu 20.04 with the following libraries:
+BBoxEE is being developed with Python 3.8.10 on Ubuntu 20.04 with the following libraries:
 
-* PyQt5 (5.15.1)
-* Pillow (8.0.1)
-* Numpy (1.18.5)
+* PyQt5 (5.15.6)
+* Pillow (9.1.1)
+* Numpy (1.22.3)
 * Tabulate (0.8.9)
-* TensorFlow (2.4.0)
+* TensorFlow (2.8.0)
 
 Build a virtual environment and install the dependencies:
 ```bash
@@ -83,7 +83,7 @@ Assisted Annotation is the ability to load an existing object detection model an
 
 Exporting to some formats may require additional libraries / frameworks.
 
-## Assisted Annotation with TensorFlow and TFRecord Export
+## Assisted Annotation, TFRecord Export, and Accuracy Report
 
 ### Additional Dependencies:
 For detailed steps to install TensorFlow, follow the [TensorFlow installation instructions](https://www.tensorflow.org/install/). 

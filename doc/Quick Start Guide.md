@@ -88,8 +88,9 @@ If you need to include hard negative images to help reduce false positives in yo
 * (![Delete](../icons/delete.svg)) Delete all bounding boxes on the current image
 * (![Visibility](../icons/visibility.svg)) Toggle the visibility of bounding boxes
 * (![Summary](../icons/analytics.svg)) Show a quick summary of annotations
-* (![Summary](../icons/filter.svg)) Filter image list by label
-* (![Summary](../icons/reset.svg)) Reset label filter
+* (![Filter](../icons/filter.svg)) Filter image list by label
+* (![Reset filter](../icons/reset.svg)) Reset label filter
+* (![Auto advance](../icons/fast_forward.svg)) Auto advance through images
 
 The vertical slider left of the image display area changes the mid point of the color range for each channel in your image to brighten or darken the image.
 
@@ -230,3 +231,4 @@ I would like to thank the following people for their feedback, data, and support
 * Mark Weckel, Gotham Coyote Project
 * Chris Nagy, Minus River Gorge
 * Waylon Flinn [ Code Contributor ]
+* Shannon Lambert

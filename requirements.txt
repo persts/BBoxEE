@@ -1,0 +1,5 @@
+numpy
+pillow
+pyqt5
+tabulate
+tensorflow

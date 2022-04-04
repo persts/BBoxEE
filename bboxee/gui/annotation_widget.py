@@ -365,7 +365,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.timer.stop()
         else:
             self.timer.stop()
-    
+
     def auto_advance_clicked(self):
         if self.pb_auto_advance.isChecked():
             self.timer.start()
