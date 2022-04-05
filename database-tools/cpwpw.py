@@ -179,6 +179,8 @@ image_list = sorted(image_list)
 
 # Import data
 counter = 1
+active_start = None
+active_end = None
 for name in tqdm(image_list):
     file_name = os.path.join(IMAGE_PATH, name)
     img = Image.open(file_name)
@@ -190,10 +192,23 @@ for name in tqdm(image_list):
         created = info[36867]
         timestamp = datetime.datetime.fromisoformat(created.replace(':', '-', 2))
     except KeyError:
-        timestamp = None
-    cur.execute('INSERT INTO Photos (ImageNum, FileName, ImageDate, FilePath, VisitID) VALUES (?, ?, ?, ?, ?)', (counter, name, timestamp, IMAGE_PATH, VISITID))
+        # en: default to date modified in case 36867 (date taken) is unavailable
+        #   some makes/firmware versions don't include 36867 in the exif
+        timestamp = os.path.getmtime(file_name)
+    # en: added Pending and ObsCount flags
+    cur.execute(
+      '''INSERT INTO Photos (ImageNum, FileName, ImageDate, FilePath, VisitID, Pending, ObsCount) 
+      VALUES (?, ?, ?, ?, ?, True, 1 )''', (counter, name, timestamp, IMAGE_PATH, VISITID))
     conn.commit()
     image_rec_id = float(cur.execute('SELECT @@Identity').fetchone()[0])
+    # en: retain date of first photo for updating Visits table
+    #   uses min/max in case filenames are not in chronological order
+    if counter == 1:
+      active_start = timestamp
+      active_end = timestamp
+    else:
+      active_start = min(active_start, timestamp)
+      active_end = max(active_end, timestamp)
     counter += 1
 
     # Expand dimensions since the model expects images
@@ -232,3 +247,23 @@ for name in tqdm(image_list):
     else:
         cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES['none'], 1.0, OBSID, image_rec_id))
     conn.commit()
+
+    # en: update flags in photos table based on detection info
+    cur.execute(
+      '''update Photos 
+        set MultiSp = ?, NotNone = ? 
+        where ImageID = ?''', ((len(detections) > 1), detection, image_rec_id))
+    conn.commit()
+
+# en: Update active start and end fields
+cur.execute('UPDATE Visits SET ActiveStart = ?, ActiveEnd = ? WHERE VisitID = ?', (active_start, active_end, VISITID))
+conn.commit()
+
+# en: alternate version - probably less efficient but it avoids extra lines in
+#   the for loop
+# results = cur.execute('Select Min(ImageDate) As ActiveStart, Max(ImageDate) As ActiveEnd from Visits where VisitID = ?', VISITID).fetchall()
+# cur.execute('UPDATE Visits SET ActiveStart = ?, ActiveEnd = ? WHERE VisitID = ?', (results[0], results[1], VISITID))
+# conn.commit()
+
+# could be done in a single SQL statement in MS Access using DMin and DMax, but
+#   those aren't available via the access ODBC driver
