@@ -136,9 +136,10 @@ print()
 # Load observers and ask for ID number
 observers = {}
 results = cur.execute('Select ObserverID, LastName, FirstName from Observers').fetchall()
+print('{:<12}Last, First'.format('ObserverID'))
 for rec in results:
     observers[str(rec[0])] = '{}, {}'.format(rec[1], rec[2])
-    print('{}: {},{}'.format(rec[0], rec[1], rec[2]))
+    print('{:<12}{}, {}'.format(*rec))
 OBSID = input('Which ObserverID should the data be associated with? ')
 if OBSID not in observers:
     print('That ObserverID is not recognized')
@@ -146,24 +147,26 @@ if OBSID not in observers:
 print()
 
 # Load VisitIDs
-# TODO: Make just one SQL statement(?)
-# Pull StudyAreas data, StudyAreaID, StudyAreaName
-study_area = {}
-results = cur.execute('select StudyAreaID, StudyAreaName from StudyAreas').fetchall()
-for rec in results:
-    study_area[rec[0]] = rec[1]
-# Pull CameraLocations data, LocationID, StudyAreaID, LocationName
-locations = {}
-results = cur.execute('select LocationID, StudyAreaID, LocationName from CameraLocations').fetchall()
-for rec in results:
-    locations[rec[0]] = (rec[1], rec[2])
-# Pull Visits data, VisitID, LocationID, VisitTypeID=2 (Pull) order by VisitDate
-visit_type = {1: 'Check', 2: 'Pull'}
+# en: converted to one SQL statement
 visit_id_list = []
-results = cur.execute('select VisitID, LocationID, VisitDate, VisitTypeID from Visits where VisitTypeID = 2 or VisitTypeID = 1 order by VisitDate asc').fetchall()
+results = cur.execute(
+    '''select Visits.VisitID, 
+        StudyAreas.StudyAreaName,  CameraLocations.LocationName, 
+        Format(Visits.VisitDate, 'short date') As VisitDate, 
+        lkupVisitTypes.VisitType 
+    from ((StudyAreas inner join 
+      CameraLocations on 
+        StudyAreas.StudyAreaID = CameraLocations.StudyAreaID) inner join 
+      Visits on 
+        CameraLocations.LocationID = Visits.LocationID) inner join 
+      lkupVisitTypes on 
+        Visits.VisitTypeID = lkupVisitTypes.ID 
+    where Visits.VisitTypeID < 3 
+    order by Visits.VisitDate, Visits.VisitID;''').fetchall()
+print('{:<12}Description'.format('VisitID'))
 for rec in results:
     visit_id_list.append(str(rec[0]))
-    print('{}: {} - {} [{}] ({})'.format(rec[0], study_area[locations[rec[1]][0]], locations[rec[1]][1], rec[2], visit_type[rec[3]]))
+    print('{:<12}{} - {} - {} ({})'.format(*rec))
 VISITID = input('Which VisitID should the data be associated with? ')
 if VISITID not in visit_id_list:
     print('That VisitID is not recognized')
