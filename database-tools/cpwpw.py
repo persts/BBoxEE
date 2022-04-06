@@ -150,18 +150,18 @@ print()
 # en: converted to one SQL statement
 visit_id_list = []
 results = cur.execute(
-    '''select Visits.VisitID, 
-        StudyAreas.StudyAreaName,  CameraLocations.LocationName, 
-        Format(Visits.VisitDate, 'short date') As VisitDate, 
-        lkupVisitTypes.VisitType 
-    from ((StudyAreas inner join 
-      CameraLocations on 
-        StudyAreas.StudyAreaID = CameraLocations.StudyAreaID) inner join 
-      Visits on 
-        CameraLocations.LocationID = Visits.LocationID) inner join 
-      lkupVisitTypes on 
-        Visits.VisitTypeID = lkupVisitTypes.ID 
-    where Visits.VisitTypeID < 3 
+    '''select Visits.VisitID,
+        StudyAreas.StudyAreaName,  CameraLocations.LocationName,
+        Format(Visits.VisitDate, 'short date') As VisitDate,
+        lkupVisitTypes.VisitType
+    from ((StudyAreas inner join
+      CameraLocations on
+        StudyAreas.StudyAreaID = CameraLocations.StudyAreaID) inner join
+      Visits on
+        CameraLocations.LocationID = Visits.LocationID) inner join
+      lkupVisitTypes on
+        Visits.VisitTypeID = lkupVisitTypes.ID
+    where Visits.VisitTypeID < 3
     order by Visits.VisitDate, Visits.VisitID;''').fetchall()
 print('{:<12}Description'.format('VisitID'))
 for rec in results:
@@ -200,18 +200,18 @@ for name in tqdm(image_list):
         timestamp = os.path.getmtime(file_name)
     # en: added Pending and ObsCount flags
     cur.execute(
-      '''INSERT INTO Photos (ImageNum, FileName, ImageDate, FilePath, VisitID, Pending, ObsCount) 
-      VALUES (?, ?, ?, ?, ?, True, 1 )''', (counter, name, timestamp, IMAGE_PATH, VISITID))
+        '''INSERT INTO Photos (ImageNum, FileName, ImageDate, FilePath, VisitID, Pending, ObsCount)
+        VALUES (?, ?, ?, ?, ?, True, 1 )''', (counter, name, timestamp, IMAGE_PATH, VISITID))
     conn.commit()
     image_rec_id = float(cur.execute('SELECT @@Identity').fetchone()[0])
     # en: retain date of first photo for updating Visits table
     #   uses min/max in case filenames are not in chronological order
     if counter == 1:
-      active_start = timestamp
-      active_end = timestamp
+        active_start = timestamp
+        active_end = timestamp
     else:
-      active_start = min(active_start, timestamp)
-      active_end = max(active_end, timestamp)
+        active_start = min(active_start, timestamp)
+        active_end = max(active_end, timestamp)
     counter += 1
 
     # Expand dimensions since the model expects images
@@ -238,7 +238,9 @@ for name in tqdm(image_list):
             YLen = ymax - ymin
             TagX = xmin + (XLen / 2.0)
             TagY = ymin + (YLen / 2.0)
-            cur.execute('INSERT INTO PhotoTags (TagX, TagY, XLen, YLen, ImageID, ObsID) values (?, ?, ?, ?, ?, ?)', (TagX, TagY, XLen, YLen, image_rec_id, OBSID))
+            cur.execute(
+                '''INSERT INTO PhotoTags (TagX, TagY, XLen, YLen, ImageID, ObsID)
+                values (?, ?, ?, ?, ?, ?)''', (TagX, TagY, XLen, YLen, image_rec_id, OBSID))
             if label not in detections:
                 detections[label] = 1.0
             else:
@@ -246,15 +248,19 @@ for name in tqdm(image_list):
 
     if detection:
         for d in detections.keys():
-            cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES[d.lower()], detections[d], OBSID, image_rec_id))
+            cur.execute(
+                '''INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID)
+                values (?, ?, ?, ?)''', (SPECIES[d.lower()], detections[d], OBSID, image_rec_id))
     else:
-        cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES['none'], 1.0, OBSID, image_rec_id))
+        cur.execute(
+            '''INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID)
+            values (?, ?, ?, ?)''', (SPECIES['none'], 1.0, OBSID, image_rec_id))
     conn.commit()
 
     # en: update flags in photos table based on detection info
     cur.execute(
-      '''update Photos 
-        set MultiSp = ?, NotNone = ? 
+        '''update Photos
+        set MultiSp = ?, NotNone = ?
         where ImageID = ?''', ((len(detections) > 1), detection, image_rec_id))
     conn.commit()
 
