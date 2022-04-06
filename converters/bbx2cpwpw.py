@@ -91,9 +91,10 @@ print()
 # Load observers and ask for ID number
 observers = {}
 results = cur.execute('Select ObserverID, LastName, FirstName from Observers').fetchall()
+print('{:<12}Last, First'.format('ObserverID'))
 for rec in results:
     observers[str(rec[0])] = '{}, {}'.format(rec[1], rec[2])
-    print('{}: {},{}'.format(rec[0], rec[1], rec[2]))
+    print('{:<12}{}, {}'.format(*rec))
 OBSID = {}
 for obs in DATA['analysts']:
     obsid = input('Which ObserverID should be associated with observer [{}]? '.format(obs))
@@ -101,27 +102,32 @@ for obs in DATA['analysts']:
         print('That ObserverID is not recognized')
         sys.exit(0)
     OBSID[obs] = obsid
+STATUS_ID = 1
+if len(OBSID) > 1:
+    # If more than one observer, detection status is going to be considered verified
+    STATUS_ID = 2
 print()
 
 # Load VisitIDs
-# TODO: Make just one SQL statement(?)
-# Pull StudyAreas data, StudyAreaID, StudyAreaName
-study_area = {}
-results = cur.execute('select StudyAreaID, StudyAreaName from StudyAreas').fetchall()
-for rec in results:
-    study_area[rec[0]] = rec[1]
-# Pull CameraLocations data, LocationID, StudyAreaID, LocationName
-locations = {}
-results = cur.execute('select LocationID, StudyAreaID, LocationName from CameraLocations').fetchall()
-for rec in results:
-    locations[rec[0]] = (rec[1], rec[2])
-# Pull Visits data, VisitID, LocationID, VisitTypeID=2 (Pull) order by VisitDate
-visit_type = {1: 'Check', 2: 'Pull'}
 visit_id_list = []
-results = cur.execute('select VisitID, LocationID, VisitDate, VisitTypeID from Visits where VisitTypeID = 2 or VisitTypeID = 1 order by VisitDate asc').fetchall()
+results = cur.execute(
+    '''select Visits.VisitID,
+        StudyAreas.StudyAreaName,  CameraLocations.LocationName,
+        Format(Visits.VisitDate, 'short date') As VisitDate,
+        lkupVisitTypes.VisitType
+    from ((StudyAreas inner join
+      CameraLocations on
+        StudyAreas.StudyAreaID = CameraLocations.StudyAreaID) inner join
+      Visits on
+        CameraLocations.LocationID = Visits.LocationID) inner join
+      lkupVisitTypes on
+        Visits.VisitTypeID = lkupVisitTypes.ID
+    where Visits.VisitTypeID < 3
+    order by Visits.VisitDate, Visits.VisitID;''').fetchall()
+print('{:<12}Description'.format('VisitID'))
 for rec in results:
     visit_id_list.append(str(rec[0]))
-    print('{}: {} - {} [{}] ({})'.format(rec[0], study_area[locations[rec[1]][0]], locations[rec[1]][1], rec[2], visit_type[rec[3]]))
+    print('{:<12}{} - {} - {} ({})'.format(*rec))
 VISITID = input('Which VisitID should the data be associated with? ')
 if VISITID not in visit_id_list:
     print('That VisitID is not recognized')
@@ -137,6 +143,8 @@ image_list = sorted(image_list)
 
 # Import data
 counter = 1
+active_start = None
+active_end = None
 for name in tqdm(image_list):
     file_name = os.path.join(IMAGE_PATH, name)
     img = Image.open(file_name)
@@ -147,23 +155,39 @@ for name in tqdm(image_list):
         created = info[36867]
         timestamp = datetime.datetime.fromisoformat(created.replace(':', '-', 2))
     except KeyError:
-        timestamp = None
-    cur.execute('INSERT INTO Photos (ImageNum, FileName, ImageDate, FilePath, VisitID) VALUES (?, ?, ?, ?, ?)', (counter, name, timestamp, IMAGE_PATH, VISITID))
+        # en: default to date modified in case 36867 (date taken) is unavailable
+        #   some makes/firmware versions don't include 36867 in the exif
+        timestamp = os.path.getmtime(file_name)
+    cur.execute(
+        '''INSERT INTO Photos (ImageNum, FileName, ImageDate, FilePath, VisitID, Pending, ObsCount)
+        VALUES (?, ?, ?, ?, ?, True, 1 )''', (counter, name, timestamp, IMAGE_PATH, VISITID))
     conn.commit()
     image_rec_id = float(cur.execute('SELECT @@Identity').fetchone()[0])
+    # en: retain date of first photo for updating Visits table
+    #   uses min/max in case filenames are not in chronological order
+    if counter == 1:
+        active_start = timestamp
+        active_end = timestamp
+    else:
+        active_start = min(active_start, timestamp)
+        active_end = max(active_end, timestamp)
     counter += 1
 
+    detection = False
+    detections = {}
     if name in DATA['images']:
-        detections = {}
         anno = DATA['images'][name]['annotations']
         for a in anno:
+            detection = True
             bbox = a['bbox']
             XLen = (bbox['xmax'] - bbox['xmin'])
             YLen = (bbox['ymax'] - bbox['ymin'])
             TagX = bbox['xmin'] + (XLen / 2.0)
             TagY = bbox['ymin'] + (YLen / 2.0)
             for obs in OBSID.keys():
-                cur.execute('INSERT INTO PhotoTags (TagX, TagY, XLen, YLen, ImageID, ObsID) values (?, ?, ?, ?, ?, ?)', (TagX, TagY, XLen, YLen, image_rec_id, OBSID[obs]))
+                cur.execute(
+                    '''INSERT INTO PhotoTags (TagX, TagY, XLen, YLen, ImageID, ObsID)
+                    VALUES (?, ?, ?, ?, ?, ?)''', (TagX, TagY, XLen, YLen, image_rec_id, OBSID[obs]))
             if a['label'] not in detections:
                 detections[a['label']] = 1.0
             else:
@@ -171,8 +195,25 @@ for name in tqdm(image_list):
 
         for d in detections.keys():
             for obs in OBSID.keys():
-                cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES[d.lower()], detections[d], OBSID[obs], image_rec_id))
+                cur.execute(
+                    '''INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID, StatusID)
+                    VALUES (?, ?, ?, ?, ?)''', (SPECIES[d.lower()], detections[d], OBSID[obs], image_rec_id, STATUS_ID))
     else:
         for obs in OBSID.keys():
-            cur.execute('INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID) values (?, ?, ?, ?)', (SPECIES['none'], 1.0, OBSID[obs], image_rec_id))
+            cur.execute(
+                '''INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID, StatusID)
+                VALUES (?, ?, ?, ?, ?)''', (SPECIES['none'], 1.0, OBSID[obs], image_rec_id, STATUS_ID))
+    if len(OBSID) > 1:
+        cur.execute(
+            '''UPDATE Photos
+                SET Pending = False, Verified = True, ObsCount = ?
+                WHERE ImageID = ?''', (len(OBSID), image_rec_id))
+    cur.execute(
+        '''UPDATE Photos
+            SET MultiSp = ?, NotNone = ?
+            WHERE ImageID = ?''', ((len(detections) > 1), detection, image_rec_id))
     conn.commit()
+
+# en: Update active start and end fields
+cur.execute('UPDATE Visits SET ActiveStart = ?, ActiveEnd = ? WHERE VisitID = ?', (active_start, active_end, VISITID))
+conn.commit()

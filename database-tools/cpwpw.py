@@ -240,7 +240,7 @@ for name in tqdm(image_list):
             TagY = ymin + (YLen / 2.0)
             cur.execute(
                 '''INSERT INTO PhotoTags (TagX, TagY, XLen, YLen, ImageID, ObsID)
-                values (?, ?, ?, ?, ?, ?)''', (TagX, TagY, XLen, YLen, image_rec_id, OBSID))
+                VALUES (?, ?, ?, ?, ?, ?)''', (TagX, TagY, XLen, YLen, image_rec_id, OBSID))
             if label not in detections:
                 detections[label] = 1.0
             else:
@@ -250,18 +250,16 @@ for name in tqdm(image_list):
         for d in detections.keys():
             cur.execute(
                 '''INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID)
-                values (?, ?, ?, ?)''', (SPECIES[d.lower()], detections[d], OBSID, image_rec_id))
+                VALUES (?, ?, ?, ?)''', (SPECIES[d.lower()], detections[d], OBSID, image_rec_id))
     else:
         cur.execute(
             '''INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID)
-            values (?, ?, ?, ?)''', (SPECIES['none'], 1.0, OBSID, image_rec_id))
-    conn.commit()
-
+            VALUES (?, ?, ?, ?)''', (SPECIES['none'], 1.0, OBSID, image_rec_id))
     # en: update flags in photos table based on detection info
     cur.execute(
-        '''update Photos
-        set MultiSp = ?, NotNone = ?
-        where ImageID = ?''', ((len(detections) > 1), detection, image_rec_id))
+        '''UPDATE Photos
+        SET MultiSp = ?, NotNone = ?
+        WHERE ImageID = ?''', ((len(detections) > 1), detection, image_rec_id))
     conn.commit()
 
 # en: Update active start and end fields
