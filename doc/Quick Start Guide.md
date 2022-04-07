@@ -2,7 +2,7 @@
 # BBoxEE Quick Start Guide
 <div style='text-align: right;'> Release 1.0.0 </div>
 <div style='text-align: right;margin-top:20px;font-size:2em'> Peter J. Ersts </div>
-<div style='text-align: right;margin-top:20px'> June 2021</div>
+<div style='text-align: right;margin-top:20px'> April 2022</div>
 
 [TOC]
 
@@ -232,3 +232,4 @@ I would like to thank the following people for their feedback, data, and support
 * Chris Nagy, Minus River Gorge
 * Waylon Flinn [ Code Contributor ]
 * Shannon Lambert
+* Eric Newkirk [ Code Contributor ], Colorado Parks and Wildlife
