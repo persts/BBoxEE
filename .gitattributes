@@ -1,1 +1,10 @@
 * text=auto
+* eol=lf
+
+
+.github export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore
+/icons export-ignore
+/doc/*.md export-ignore
+/doc/images export-ignore
