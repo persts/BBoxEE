@@ -197,7 +197,7 @@ for name in tqdm(image_list):
     except KeyError:
         # en: default to date modified in case 36867 (date taken) is unavailable
         #   some makes/firmware versions don't include 36867 in the exif
-        timestamp = os.path.getmtime(file_name)
+        timestamp = datetime.datetime.fromtimestamp(os.path.getmtime(file_name))
     # en: added Pending and ObsCount flags
     cur.execute(
         '''INSERT INTO Photos (ImageNum, FileName, ImageDate, FilePath, VisitID, Pending, ObsCount)
