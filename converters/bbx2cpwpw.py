@@ -184,20 +184,24 @@ for name in tqdm(image_list):
             YLen = (bbox['ymax'] - bbox['ymin'])
             TagX = bbox['xmin'] + (XLen / 2.0)
             TagY = bbox['ymin'] + (YLen / 2.0)
+            # en: Moving the species lookup up a few lines avoids issues when
+            #   there are duplicate labels in the .bbx file, e.g. 'red deer' vs.
+            #   'Red Deer'
+            SPECIES_ID = SPECIES[a['label'].lower()]
             for obs in OBSID.keys():
                 cur.execute(
                     '''INSERT INTO PhotoTags (TagX, TagY, XLen, YLen, ImageID, ObsID)
                     VALUES (?, ?, ?, ?, ?, ?)''', (TagX, TagY, XLen, YLen, image_rec_id, OBSID[obs]))
-            if a['label'] not in detections:
-                detections[a['label']] = 1.0
+            if SPECIES_ID not in detections:
+                detections[SPECIES_ID] = 1.0
             else:
-                detections[a['label']] += 1.0
+                detections[SPECIES_ID] += 1.0
 
         for d in detections.keys():
             for obs in OBSID.keys():
                 cur.execute(
                     '''INSERT INTO Detections (SpeciesID, Individuals, ObsID, ImageID, StatusID)
-                    VALUES (?, ?, ?, ?, ?)''', (SPECIES[d.lower()], detections[d], OBSID[obs], image_rec_id, STATUS_ID))
+                    VALUES (?, ?, ?, ?, ?)''', (d, detections[d], OBSID[obs], image_rec_id, STATUS_ID))
     else:
         for obs in OBSID.keys():
             cur.execute(
