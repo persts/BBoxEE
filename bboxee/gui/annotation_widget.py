@@ -572,15 +572,15 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         """Display bboxes in graphics scene."""
 
         annotations = None
-
         if self.data is not None and self.current_file_name in self.data['images']:
             rec = self.data['images'][self.current_file_name]
             annotations = rec['annotations']
 
-        # forward to graphicsView
+        # Forward to graphicsView
         self.graphicsView.display_bboxes(annotations, self.selected_row, self.checkBoxDisplayAnnotationData.isChecked())
 
     def display_license(self):
+        """Pass license object to the license widget for display in UI"""
         lic = {'license': '', 'license_url': '', 'attribution': ''}
         if self.data is not None and self.current_file_name in self.data['images']:
             rec = self.data['images'][self.current_file_name]
@@ -593,17 +593,19 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.license.display_license(lic)
 
     def duplicate_selected_row(self):
+        """Duplicate the currently selected bounding box and place at cursor's location"""
         if self.selected_row is None or self.selected_row < 0:
             return
 
-        # get metadata
+        # Get metadata
         rec = self.data['images'][self.current_file_name]
         metadata = rec['annotations'][self.selected_row]
         image_size = self.graphicsView.image_size
 
-        # get rect
+        # Get rect
         selected_rect = self.graphicsView.selected_bbox.rect()
-        # create new of same size centerd on cursor
+
+        # Create new bbox of same size centerd on cursor
         width = selected_rect.width()
         height = selected_rect.height()
         center = QtGui.QCursor.pos()
@@ -728,16 +730,23 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                                               'Select Directory',
                                               self.image_directory))
             if directory != '':
-                self.load_config(directory)
+                # Search for first instance of config file and load the labels
                 self.image_directory = directory
-                self.data = schema.annotation_file()
+                self.load_config(directory)
                 self.populate_labels()
+                
+                # Generate an empty version of the schema
+                self.data = schema.annotation_file()
                 self.mask = None
-                self.load_image_list()
+                
+                # Update UI
                 self.pb_mask.setEnabled(True)
                 self.pb_annotater.setEnabled(True)
                 self.set_dirty(False)
                 self.label_image_directory.setText(self.image_directory)
+
+                # Load images from image directory
+                self.load_image_list()
 
     def load_from_file(self):
         """(Slot) Load existing annotation data from file."""
@@ -749,24 +758,38 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                                          self.image_directory,
                                          'BBoxEE (*.bbx)'))
             if file_name[0] != '':
+                # Read the bbx file
                 file = open(file_name[0], 'r')
                 self.data = json.load(file)
                 file.close()
+
+                # Search for first instance of config file and load the labels
                 self.image_directory = os.path.split(file_name[0])[0]
                 self.load_config(self.image_directory)
-
                 self.populate_labels()
+
                 if self.data['mask'] is not None:
                     tmp = np.array(self.data['mask'], dtype='uint8')
                     self.mask = np.dstack((tmp, tmp, tmp))
                 else:
                     self.mask = None
+
+                # Backward compatability. 
+                # Update schema but don't mark as dirty
+                if self.data['schema'] == '1.0.0':
+                    self.data['review'] = []
+                    self.data['skip_export'] = []
+                    self.data['schema'] = '1.1.0'
+
+                # Update UI
                 self.display_analysts()
-                self.load_image_list()
                 self.set_dirty(False)
                 self.pb_annotater.setEnabled(True)
                 self.pb_mask.setEnabled(True)
                 self.label_image_directory.setText(self.image_directory)
+
+                # Load images from image directory
+                self.load_image_list()
 
     def load_image(self):
         """Load image into graphics scene."""
@@ -774,18 +797,19 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
             self.selected_row = -1
             self.current_file_name = self.image_list[self.current_image - 1]
-            filename = os.path.join(self.image_directory, self.current_file_name)
 
+            # Load the image and apply the mask
+            filename = os.path.join(self.image_directory, self.current_file_name)
             img = Image.open(filename).convert("RGB")
             array = np.array(img)
             img.close()
-
             if self.mask is not None:
                 array = array * self.mask
 
             self.graphicsView.load_image(array)
             array = None
 
+            # Update UI
             self.enable_buttons()
             self.display_bboxes()
             self.display_annotation_data()

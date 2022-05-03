@@ -30,7 +30,9 @@ def annotation_file():
             'mask_name': '',
             'images': {},
             'analysts': [],
-            'schema': '1.0.0'}
+            'review': [],
+            'skip_export': [],
+            'schema': '1.1.0'}
 
 
 def annotation_file_entry():
