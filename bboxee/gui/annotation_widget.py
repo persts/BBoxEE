@@ -734,11 +734,11 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.image_directory = directory
                 self.load_config(directory)
                 self.populate_labels()
-                
+
                 # Generate an empty version of the schema
                 self.data = schema.annotation_file()
                 self.mask = None
-                
+
                 # Update UI
                 self.pb_mask.setEnabled(True)
                 self.pb_annotater.setEnabled(True)
@@ -774,7 +774,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 else:
                     self.mask = None
 
-                # Backward compatability. 
+                # Backward compatability.
                 # Update schema but don't mark as dirty
                 if self.data['schema'] == '1.0.0':
                     self.data['review'] = []
