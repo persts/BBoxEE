@@ -312,6 +312,27 @@
           </widget>
          </item>
          <item>
+          <widget class="QPushButton" name="pb_review">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>Flag for review</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../../icons/bboxee.qrc">
+             <normaloff>:/icons/flag.svg</normaloff>
+             <selectedon>:/icons/flagged.svg</selectedon>:/icons/flag.svg</iconset>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
           <spacer name="verticalSpacer_2">
            <property name="orientation">
             <enum>Qt::Vertical</enum>

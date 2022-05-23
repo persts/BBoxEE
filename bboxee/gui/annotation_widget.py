@@ -93,6 +93,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_reset_filter.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_reset_filter.setIcon(QtGui.QIcon(':/icons/reset.svg'))
 
+        self.pb_review.clicked.connect(self.toggle_for_review)
+        self.pb_review.setIconSize(QtCore.QSize(icon_size, icon_size))
+        self.pb_review.setIcon(QtGui.QIcon(':/icons/flag.svg'))
+
         self.pb_visible.clicked.connect(self.graphicsView.toggle_visibility)
         self.pb_visible.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_visible.setIcon(QtGui.QIcon(':/icons/visibility.svg'))
@@ -632,6 +636,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_summary.setEnabled(True)
         self.pb_auto_advance.setEnabled(True)
         self.pb_filter.setEnabled(True)
+        self.pb_review.setEnabled(True)
         self.pb_reset_filter.setEnabled(True)
 
     def filter(self):
@@ -811,6 +816,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
             # Update UI
             self.enable_buttons()
+            self.update_review_button()
             self.display_bboxes()
             self.display_annotation_data()
             self.graphicsView.setFocus()
@@ -1033,6 +1039,14 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 message += "{}: {}\n".format(label, summary[label])
             QtWidgets.QMessageBox.information(self, 'Annotation Summary', message)
 
+    def toggle_for_review(self):
+        if self.pb_review.isChecked():
+            self.data['review'].append(self.current_file_name)
+        else:
+            if self.current_file_name in self.data['review']:
+                self.data['review'].remove(self.current_file_name)
+        self.update_review_button()
+
     def update_annotation(self, annotation_data):
         """(Slot) Update annotation table widget."""
         if self.selected_row >= 0:
@@ -1064,3 +1078,12 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             rec['attribution'] = license['attribution']
             rec['license'] = license['license']
             rec['license_url'] = license['license_url']
+
+    def update_review_button(self):
+        if self.current_file_name in self.data['review']:
+            #change icon
+            self.pb_review.setIcon(QtGui.QIcon(':/icons/flagged.svg'))
+            self.pb_review.setChecked(True)
+        else:
+            self.pb_review.setIcon(QtGui.QIcon(':/icons/flag.svg'))
+            self.pb_review.setChecked(False)
