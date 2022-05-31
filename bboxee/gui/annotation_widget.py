@@ -1045,6 +1045,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         else:
             if self.current_file_name in self.data['review']:
                 self.data['review'].remove(self.current_file_name)
+
+        self.set_dirty(True)
         self.update_review_button()
 
     def update_annotation(self, annotation_data):
@@ -1081,7 +1083,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def update_review_button(self):
         if self.current_file_name in self.data['review']:
-            #change icon
             self.pb_review.setIcon(QtGui.QIcon(':/icons/flagged.svg'))
             self.pb_review.setChecked(True)
         else:

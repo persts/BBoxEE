@@ -459,7 +459,10 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 # Scale top range
                 old_range = 255 - self.mid_point
                 new_range = 128
-                val = int((((value - self.mid_point) * new_range) / old_range) + 128)
+                if old_range != 0:
+                    val = int((((value - self.mid_point) * new_range) / old_range) + 128)
+                else:
+                    val = int((((value - self.mid_point) * new_range)) + 128)
                 if val > 255:
                     LUT.append(255)
                 else:

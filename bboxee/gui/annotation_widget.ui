@@ -129,6 +129,13 @@
           </spacer>
          </item>
          <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Brighter</string>
+           </property>
+          </widget>
+         </item>
+         <item>
           <widget class="QSlider" name="verticalSliderMidPoint">
            <property name="toolTip">
             <string>Adjust image brightness</string>
@@ -153,6 +160,13 @@
            </property>
            <property name="tickInterval">
             <number>32</number>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="label_7">
+           <property name="text">
+            <string>Dimmer</string>
            </property>
           </widget>
          </item>
@@ -232,7 +246,41 @@
             <enum>Qt::Vertical</enum>
            </property>
            <property name="sizeType">
-            <enum>QSizePolicy::Minimum</enum>
+            <enum>QSizePolicy::Expanding</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>20</width>
+             <height>40</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pb_review">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="toolTip">
+            <string>Flag for review</string>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../../icons/bboxee.qrc">
+             <normaloff>:/icons/flag.svg</normaloff>
+             <selectedon>:/icons/flagged.svg</selectedon>:/icons/flag.svg</iconset>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <spacer name="verticalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Vertical</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -308,27 +356,6 @@
              <width>24</width>
              <height>24</height>
             </size>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pb_review">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="toolTip">
-            <string>Flag for review</string>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="icon">
-            <iconset resource="../../icons/bboxee.qrc">
-             <normaloff>:/icons/flag.svg</normaloff>
-             <selectedon>:/icons/flagged.svg</selectedon>:/icons/flag.svg</iconset>
-           </property>
-           <property name="checkable">
-            <bool>true</bool>
            </property>
           </widget>
          </item>
