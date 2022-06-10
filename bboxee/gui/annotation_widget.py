@@ -720,10 +720,13 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             file_name = os.path.join(dir_name, 'bboxee_config.json')
 
     def load_first_image(self):
+        # Update UI
+        self.enable_buttons()
         self.current_image = 1
         self.labelImages.setText('of ' + str(len(self.image_list)))
         self.lineEditCurrentImage.setText('1')
         self.graphicsView.pixmap = None  # Force resize
+
         self.load_image()
 
     def load_from_directory(self):
@@ -815,16 +818,20 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             array = None
 
             # Update UI
-            self.enable_buttons()
             self.update_review_button()
             self.display_bboxes()
             self.display_annotation_data()
             self.graphicsView.setFocus()
             self.display_license()
 
-    def load_image_list(self):
+    def load_image_list(self, image_list=[]):
         """Glob the image files and save to image list."""
-        if self.image_directory != '':
+        # Check if image_list is being passed in from filter dialog
+        if len(image_list) > 0:
+            self.image_list = image_list
+
+        # Glob the directory and filter for images
+        if len(image_list) == 0 and self.image_directory != '':
             self.original_image_list = []
             self.image_list = []
             self.image_directory += os.path.sep
@@ -834,7 +841,11 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.image_list = list(filter(f, files))
             self.image_list = [os.path.basename(x) for x in self.image_list]
             self.image_list = sorted(self.image_list)
+            # JY: Store original_image_list in filter dialog
             self.original_image_list = self.image_list
+
+        # If images exist load the first one
+        if len(self.image_list) > 0:
             self.load_first_image()
 
     def next_annotated_image(self):
