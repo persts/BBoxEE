@@ -32,6 +32,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from bboxee import schema
 from bboxee.gui import SelectModelDialog
 from bboxee.gui import AnalystDialog
+from bboxee.gui import FilterDialog
 from .timer import Timer
 
 if getattr(sys, 'frozen', False):
@@ -55,7 +56,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.selected_row = -1
         self.current_image = 1
         self.image_list = []
-        self.original_image_list = []
         self.mask = None
         self.data = None
         self.labels = None
@@ -66,6 +66,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.annotator = None
         self.model_selector = SelectModelDialog(self)
         self.model_selector.selected.connect(self.annotator_selected)
+
+        self.filter_dialog = FilterDialog(self)
 
         self.graphicsView.created.connect(self.bbox_created)
         self.graphicsView.resized.connect(self.update_bbox)
@@ -85,7 +87,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_summary.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_summary.setIcon(QtGui.QIcon(':/icons/analytics.svg'))
 
-        self.pb_filter.clicked.connect(self.filter)
+        self.pb_filter.clicked.connect(self.filter_widget.show())
         self.pb_filter.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_filter.setIcon(QtGui.QIcon(':/icons/filter.svg'))
 
@@ -171,6 +173,9 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.timer_thread = QtCore.QThread()
         self.timer.moveToThread(self.timer_thread)
         self.timer_thread.start()
+        
+        self.filter_dialog = FilterDialog(self.data, self)
+        
         #
         # Key bindings
         #
@@ -640,21 +645,11 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_reset_filter.setEnabled(True)
 
     def filter(self):
-        if len(self.image_list) > 0:
-            label = QtWidgets.QInputDialog.getText(self, 'Filter images list for ...', 'Label')[0]
-            if label == '':
-                self.image_list = self.original_image_list
-            else:
-                self.image_list = []
-                for image in self.data['images']:
-                    ann = self.data['images'][image]['annotations']
-                    for a in ann:
-                        if a['label'] == label:
-                            self.image_list.append(image)
-            self.load_first_image()
+        FilterDialog.data = self.data
+        FilterDialog.show()
 
     def filter_reset(self):
-        self.image_list = self.original_image_list
+        self.image_list = self.filter_dialog.original_file_list
         self.load_first_image()
 
     def jump_to_image(self):
@@ -832,7 +827,6 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
         # Glob the directory and filter for images
         if len(image_list) == 0 and self.image_directory != '':
-            self.original_image_list = []
             self.image_list = []
             self.image_directory += os.path.sep
             files = glob.glob(self.image_directory + '*')
@@ -842,7 +836,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.image_list = [os.path.basename(x) for x in self.image_list]
             self.image_list = sorted(self.image_list)
             # JY: Store original_image_list in filter dialog
-            self.original_image_list = self.image_list
+            self.filter_dialog.original_file_list = self.image_list
 
         # If images exist load the first one
         if len(self.image_list) > 0:
