@@ -46,38 +46,40 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
         self.pb_filter_confirmed.clicked.connect(self.filter)
 
     def filter(self):
-        self.label = self.input_label.text()
-        self.temp_image_list = []
-        if self.label == '':
+        label = self.input_label.text()
+        temp_image_list = []
+
+        if self.cb_flagged.isChecked():
+            temp_image_list = temp_image_list + self.data['review']
+            if label == "":
+                temp_image_list.sort()
+                self.filtered_list.emit(temp_image_list)
+                self.close
+
+        if label == "":
             self.close
         else:
-            if self.cb_flagged.isChecked():
-                self.temp_image_list = self.temp_image_list + self.data['review']
-                
-            if self.cb_case_sensitive.isChecked():
-                for image in self.data['images']:
-                    ann = self.data['images'][image]['annotations']
-                    for a in ann:
-                        if self.label in a['label'] and image not in self.temp_image_list:
-                            self.temp_image_list.append(image)
+            for image in self.data['images']:
+                ann = self.data['images'][image]['annotations']
+                for a in ann:
+                    if self.cb_case_sensitive.isChecked():
+                        if label in a['label'] and image not in temp_image_list:
+                            temp_image_list.append(image)
                             break
-            else:
-                self.label = self.label.lower()
-                for image in self.data['images']:
-                    ann = self.data['images'][image]['annotations']
-                    for a in ann:
-                        if self.label in a['label'].lower() and image not in self.temp_image_list:
-                            self.temp_image_list.append(image)
+                    else:
+                        label = label.lower()
+                        if label in a['label'].lower() and image not in temp_image_list:
+                            temp_image_list.append(image)
                             break
                 
-            if len(self.temp_image_list) == 0:
-                message = ('No results')
-                QtWidgets.QMessageBox.warning(self.parent(),
-                                                'ERROR',
-                                                message,
-                                                QtWidgets.QMessageBox.Ok)
-
-            self.temp_image_list.sort()
-        self.filtered_list.emit(self.temp_image_list)
-        self.close()
+        if len(temp_image_list) == 0:
+            message = ('No results')
+            QtWidgets.QMessageBox.warning(self.parent(),
+                                            'ERROR',
+                                            message,
+                                            QtWidgets.QMessageBox.Ok)
+        else:
+            temp_image_list.sort()
+            self.filtered_list.emit(temp_image_list)
+            self.close()
    
