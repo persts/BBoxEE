@@ -22,10 +22,9 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-
 import os
 import sys
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt5 import QtCore, QtWidgets, uic
 
 if getattr(sys, 'frozen', False):
     bundle_dir = sys._MEIPASS
@@ -40,8 +39,9 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
     def __init__(self, data, parent):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
+        self.setWindowTitle('Filter')
         self.data = data
-        
+
         self.pb_cancel.clicked.connect(self.close)
         self.pb_filter_confirmed.clicked.connect(self.filter)
 
@@ -51,14 +51,8 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
 
         if self.cb_flagged.isChecked():
             temp_image_list = temp_image_list + self.data['review']
-            if label == "":
-                temp_image_list.sort()
-                self.filtered_list.emit(temp_image_list)
-                self.close
 
-        if label == "":
-            self.close
-        else:
+        if label != "":
             for image in self.data['images']:
                 ann = self.data['images'][image]['annotations']
                 for a in ann:
@@ -71,15 +65,14 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
                         if label in a['label'].lower() and image not in temp_image_list:
                             temp_image_list.append(image)
                             break
-                
+
         if len(temp_image_list) == 0:
             message = ('No results')
-            QtWidgets.QMessageBox.warning(self.parent(),
-                                            'ERROR',
-                                            message,
-                                            QtWidgets.QMessageBox.Ok)
+            QtWidgets.QMessageBox.warning(self,
+                                          'WARNING',
+                                          message,
+                                          QtWidgets.QMessageBox.Ok)
         else:
             temp_image_list.sort()
             self.filtered_list.emit(temp_image_list)
             self.close()
-   
