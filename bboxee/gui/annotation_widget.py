@@ -32,6 +32,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from bboxee import schema
 from bboxee.gui import SelectModelDialog
 from bboxee.gui import AnalystDialog
+from bboxee.gui import FilterDialog
 from .timer import Timer
 
 if getattr(sys, 'frozen', False):
@@ -57,7 +58,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.image_list = []
         self.original_image_list = []
         self.mask = None
-        self.data = None
+        self.data = {}
         self.labels = None
         self.last_label = 'N/A'
         self.dirty = False
@@ -85,7 +86,9 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_summary.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_summary.setIcon(QtGui.QIcon(':/icons/analytics.svg'))
 
-        self.pb_filter.clicked.connect(self.filter)
+        self.filter_dialog = FilterDialog(self.data, self)
+        self.filter_dialog.filtered_list.connect(self.load_image_list)
+        self.pb_filter.clicked.connect(self.filter_dialog.show)
         self.pb_filter.setIconSize(QtCore.QSize(icon_size, icon_size))
         self.pb_filter.setIcon(QtGui.QIcon(':/icons/filter.svg'))
 
@@ -171,6 +174,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.timer_thread = QtCore.QThread()
         self.timer.moveToThread(self.timer_thread)
         self.timer_thread.start()
+        
         #
         # Key bindings
         #
@@ -275,7 +279,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.scut_stop_auto_advance.activated.connect(self.stop_auto_advance)
 
     def add_analyst(self, name):
-        if self.data is not None:
+        if self.data:
             last_index = len(self.data['analysts']) - 1
             if name not in self.data['analysts']:
                 self.data['analysts'].append(name)
@@ -287,7 +291,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.display_analysts()
 
     def add_analyst_dialog(self):
-        if self.data is not None:
+        if self.data:
             self.analyst_dialog.show()
 
     def annotate(self):
@@ -318,7 +322,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         """(SLOT) Automatic annotation complete, reenable gui and
         reset current image to 1."""
         if not self.cb_start_and_merge.isChecked():
-            self.data = data
+            self.data.clear()
+            self.data.update(data)
         self.display_analysts()
         self.license.setEnabled(True)
         self.analysts.setEnabled(True)
@@ -353,7 +358,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_annotate.setEnabled(True)
 
     def apply_license(self, license):
-        if self.data is not None:
+        if self.data:
             for image in self.data['images']:
                 if 'annotations' in self.data['images'][image] and self.data['images'][image]['annotations']:
                     rec = self.data['images'][image]
@@ -442,7 +447,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.tw_labels.setRowCount(0)
         self.tw_labels.selectionModel().blockSignals(False)
         self.tw_labels.clearSelection()
-        if self.data is not None and self.current_file_name in self.data['images']:
+        if 'images' in self.data and self.current_file_name in self.data['images']: #Check
             del self.data['images'][self.current_file_name]
         self.graphicsView.sticky_bbox = False
         self.graphicsView.selected_bbox = None
@@ -500,7 +505,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         return proceed
 
     def display_analysts(self):
-        if self.data is not None:
+        if self.data:
             # Backward compatibility check
             if 'analysts' not in self.data:
                 self.data['analysts'] = []
@@ -576,7 +581,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         """Display bboxes in graphics scene."""
 
         annotations = None
-        if self.data is not None and self.current_file_name in self.data['images']:
+        if 'images' in self.data and self.current_file_name in self.data['images']:
             rec = self.data['images'][self.current_file_name]
             annotations = rec['annotations']
 
@@ -586,7 +591,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def display_license(self):
         """Pass license object to the license widget for display in UI"""
         lic = {'license': '', 'license_url': '', 'attribution': ''}
-        if self.data is not None and self.current_file_name in self.data['images']:
+        if 'images' in self.data and self.current_file_name in self.data['images']:
             rec = self.data['images'][self.current_file_name]
             try:  # backward compatability
                 lic['license'] = rec['license']
@@ -639,22 +644,11 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.pb_review.setEnabled(True)
         self.pb_reset_filter.setEnabled(True)
 
-    def filter(self):
-        if len(self.image_list) > 0:
-            label = QtWidgets.QInputDialog.getText(self, 'Filter images list for ...', 'Label')[0]
-            if label == '':
-                self.image_list = self.original_image_list
-            else:
-                self.image_list = []
-                for image in self.data['images']:
-                    ann = self.data['images'][image]['annotations']
-                    for a in ann:
-                        if a['label'] == label:
-                            self.image_list.append(image)
-            self.load_first_image()
-
     def filter_reset(self):
         self.image_list = self.original_image_list
+        self.filter_dialog.input_label.setText("")
+        self.filter_dialog.cb_flagged.setChecked(False)
+        self.filter_dialog.cb_case_sensitive.setChecked(False)
         self.load_first_image()
 
     def jump_to_image(self):
@@ -744,7 +738,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 self.populate_labels()
 
                 # Generate an empty version of the schema
-                self.data = schema.annotation_file()
+                self.data.clear()
+                self.data.update(schema.annotation_file())
                 self.mask = None
 
                 # Update UI
@@ -768,7 +763,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             if file_name[0] != '':
                 # Read the bbx file
                 file = open(file_name[0], 'r')
-                self.data = json.load(file)
+                self.data.clear()
+                self.data.update(json.load(file))
                 file.close()
 
                 # Search for first instance of config file and load the labels
@@ -946,7 +942,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.model_selector.show()
 
     def select_bbox(self, point):
-        if self.data is not None and self.current_file_name in self.data['images']:
+        if 'images' in self.data and self.current_file_name in self.data['images']:
             width = self.graphicsView.image_size[0]
             height = self.graphicsView.image_size[1]
             rec = self.data['images'][self.current_file_name]
@@ -1038,7 +1034,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def summary(self):
         summary = {}
-        if self.data is not None:
+        if 'images' in self.data:
             for image in self.data['images']:
                 for ann in self.data['images'][image]['annotations']:
                     if ann['label'] not in summary:
@@ -1086,7 +1082,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
             self.update_annotation(ann)
 
     def update_license(self, license):
-        if self.data is not None and self.current_file_name in self.data['images']:
+        if 'images' in self.data and self.current_file_name in self.data['images']:
             rec = self.data['images'][self.current_file_name]
             rec['attribution'] = license['attribution']
             rec['license'] = license['license']
