@@ -877,9 +877,10 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     def populate_labels(self):
         if self.labels is None:
             label_set = set()
-            for image_name, annotations in self.data['images'].items():
-                for annotation in annotations['annotations']:
-                    label_set.add(annotation['label'])
+            if 'images' in self.data:
+                for image_name, annotations in self.data['images'].items():
+                    for annotation in annotations['annotations']:
+                        label_set.add(annotation['label'])
 
             self.labels = ['N/A'] + list(label_set)
 
