@@ -57,7 +57,7 @@ export PYTHONPATH=$PYTHONPATH:[Your BBoxEE workspace]/yolov5
 [Windows]
 git clone https://github.com/ultralytics/yolov5 YOLO5
 python -m pip install -r YOLO5\requirements.txt
-set PYTHONPATH=%PYTHONPATH%:[Your BBoxEE workspace]\yolov5
+set PYTHONPATH=%PYTHONPATH%;[Your BBoxEE workspace]\yolov5
 ```
 ### Note about YOLO5 support
 Some models may not work with the newest versions of Torch. If you get an exception when trying to use a model that looks similar to the messages below, 
