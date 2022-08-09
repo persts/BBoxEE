@@ -23,22 +23,25 @@
 #
 # --------------------------------------------------------------------------
 import sys
-from PyQt5 import QtWidgets
+import traceback
+from PyQt5 import QtCore
+DEBUG = True
 
-from bboxee.gui import MainWindow
-from bboxee import ExceptionHandler
 
-if __name__ == "__main__":
-    app = QtWidgets.QApplication(sys.argv)
-    handler = ExceptionHandler()
-    screen = app.primaryScreen()
-    for s in app.screens():
-        if screen.geometry().width() < s.geometry().width():
-            screen = s
-    gui = MainWindow(int(screen.geometry().height() * 0.025))
-    handler.exception.connect(gui.display_exception)
-    gui.show()
-    gui.windowHandle().setScreen(screen)
-    gui.resize(int(screen.geometry().width()), int(screen.geometry().height() * 0.85))
+class ExceptionHandler(QtCore.QObject):
+    exception = QtCore.pyqtSignal(list)
 
-    sys.exit(app.exec_())
+    def __init__(self):
+        QtCore.QObject.__init__(self)
+        sys.excepthook = self.handle_exception
+
+    def handle_exception(self, ex_type, ex_value, ex_traceback):
+        error = []
+        error.append(ex_type.__name__)
+        for line in traceback.format_tb(ex_traceback):
+            error.append(line)
+        self.exception.emit(error)
+
+        if(DEBUG):
+            for line in error:
+                print(line)

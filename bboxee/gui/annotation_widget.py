@@ -174,7 +174,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.timer_thread = QtCore.QThread()
         self.timer.moveToThread(self.timer_thread)
         self.timer_thread.start()
-        
+
         #
         # Key bindings
         #
@@ -447,7 +447,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         self.tw_labels.setRowCount(0)
         self.tw_labels.selectionModel().blockSignals(False)
         self.tw_labels.clearSelection()
-        if 'images' in self.data and self.current_file_name in self.data['images']: #Check
+        if 'images' in self.data and self.current_file_name in self.data['images']:  # Check
             del self.data['images'][self.current_file_name]
         self.graphicsView.sticky_bbox = False
         self.graphicsView.selected_bbox = None

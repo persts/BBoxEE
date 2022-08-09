@@ -67,7 +67,13 @@ class Globber(QtCore.QThread):
             data[bbx_file] = {'summary': '',
                               'labels': {},
                               'images': {},
-                              'mask_name': ''}
+                              'mask_name': '',
+                              'flagged_images': False}
+            # Backward compatability check
+            if 'review' in contents:
+                # Determine if bbx file contains images flagged for review
+                data[bbx_file]['flagged_images'] = len(contents['flagged']) > 0
+
             summary = {}
             # Store mask and set name in data object
             if contents['mask_name'] != '':
@@ -369,15 +375,19 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
     def search(self):
         if len(self.base_data.keys()) > 0:
             label = QtWidgets.QInputDialog.getText(self, 'Search for ...', 'Label')[0]
-            message = ''
+            self.list_widget = QtWidgets.QListWidget()
+            self.list_widget.setWindowTitle('Matching BBX Files')
+            matches = False
             if label != '':
                 for bbx_file in self.base_data:
-                    labels = self.base_data[bbx_file]['labels']
-                    if label in labels:
-                        message += "{}\n".format(bbx_file)
-                if message == '':
-                    message = 'No bbx files were found containing the label: {}'.format(label)
-                QtWidgets.QMessageBox.information(self, 'Matching BBX Files', message)
+                    if label in self.base_data[bbx_file]['labels']:
+                        matches = True
+                        self.list_widget.addItem(bbx_file)
+                if matches:
+                    self.list_widget.show()
+                    self.list_widget.resize(600, 100)
+                else:
+                    QtWidgets.QMessageBox.information(self, 'Matching BBX Files', 'No bbx files were found containing the label: {}'.format(label))
 
     def selection_changed(self):
         labels = {}

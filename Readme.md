@@ -14,86 +14,81 @@ We have put together a [quick start guide](https://github.com/persts/BBoxEE/blob
 ### Dependencies
 BBoxEE is being developed with Python 3.8.10 on Ubuntu 20.04 with the following libraries:
 
-* PyQt5 (5.15.6)
-* Pillow (9.1.1)
-* Numpy (1.22.3)
-* Tabulate (0.8.9)
-* TensorFlow (2.8.0)
+* PyQt5 (5.15.7)
+* Pillow (9.2.0)
+* Numpy (1.23.1)
+* Tabulate (0.8.10)
+* TensorFlow (2.9.1)
 
 Build a virtual environment and install the dependencies:
 ```bash
-mkdir python-envs
-cd python-envs
+cd [Your BBoxEE Workspace]
+
+[Linux]
 python -m venv bboxee-env
 source bboxee-env/bin/activate
-python -m pip install --upgrade pip
-python -m pip install numpy
-python -m pip install pillow
-python -m pip install pyqt5
-python -m pip install tabulate
-```
-
-### Clone and Launch BBoxEE
-```bash
 git clone https://github.com/persts/BBoxEE
-cd BBoxEE
-# Make sure your Python virtual environment is active
-python main.py
-```
-This is all you need to do to begin using the base annotation functionality of BBoxEE.
+python -m pip install --upgrade pip
+python -m pip install -r BBoxEE/requirements.txt
 
-------
-### Windows Virtual Environment
-Download and install Python3 (tested with Python 3.8.5). During the install make sure
-to check the box that says "Add Python to environment variables".
-
-Once installed open a CMD window and type the following command to verify python is installed corretly.
-```bash
-python --version
-```
-Then build a virtual environment and install the dependencies:
-```bash
-cd c:\
-mkdir python
-cd python
-mkdir python-envs
-cd python-envs
+[Windows]
 python -m venv bboxee-env
 bboxee-env\Scripts\activate.bat
+git clone https://github.com/persts/BBoxEE
 python -m pip install --upgrade pip
-python -m pip install numpy
-python -m pip install pillow
-python -m pip install pyqt5
-python -m pip install tabulate
+python -m pip install -r BBoxEE\requirements.txt
 ```
-### Launching BBoxEE
-Clone or download BBoxEE (https://github.com/persts/BBoxEE) into c:\python
 
+### Launch BBoxEE
 ```bash
-cd c:\python\bboxee
+cd BBoxEE
 python main.py
 ```
-**Note you will need to activate you virtual environment each time you open an new CMD window.
+### YOLO5 (Torch) Support
+Clone the YOLO5 repo and install dependencies
+```bash
+cd [Your BBoxEE Workspace]
 
-------
+[Linux]
+git clone https://github.com/ultralytics/yolov5 YOLO5
+python -m pip install -r YOLO5/requirements.txt
+export PYTHONPATH=$PYTHONPATH:[Your BBoxEE workspace]/yolov5
 
-## Assisted Annotation and Exporting
+[Windows]
+git clone https://github.com/ultralytics/yolov5 YOLO5
+python -m pip install -r YOLO5\requirements.txt
+set PYTHONPATH=%PYTHONPATH%:[Your BBoxEE workspace]\yolov5
+```
+### Note about YOLO5 support
+Some models may not work with the newest versions of Torch. If you get an exception when trying to use a model that looks similar to the messages below, 
 
-Assisted Annotation is the ability to load an existing object detection model and use the model's prediction(s) as initial annotated bounding box. Assisted Annotation is useful approach for visually assessing the accuracy and precision of your model as you continue to collect additional training data. 
+```code
+File "___lib/python3.8/site-packages/torch/nn/modules/upsampling.py", line 154, in forward
+    recompute_scale_factor=self.recompute_scale_factor)
 
-Exporting to some formats may require additional libraries / frameworks.
-
-## Assisted Annotation, TFRecord Export, and Accuracy Report
-
-### Additional Dependencies:
-For detailed steps to install TensorFlow, follow the [TensorFlow installation instructions](https://www.tensorflow.org/install/). 
-
-A typical user can install TensorFlow in a virtual environment with:
-``` bash
-# Make sure your Python virtual environment is active
-python -m pip install tensorflow
-
+File "___/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1207, in __getattr__
+    raise AttributeError("'{}' object has no attribute '{}'".format(
+```
+You will need to downgrade PyTorch or apply the "fix" below.
+```bash
+python -m pip install torch==1.10.1 torchvision==0.11.2
 ```
 
-## Assisted Annotation with YOLOv3 (Torch)
-**Note YOLO support has been removed
+If you want to use the newest version of PyTorch or need M1 support you will have to manually edit a file in your Python virtual environemnt. 
+```bash
+Edit the file:
+[VENV_PATH]/lib/python3.8/site-packages/torch/nn/modules/upsampling.py
+
+Change the following function from:
+
+def forward(self, input: Tensor) -> Tensor:
+        return F.interpolate(input, self.size, self.scale_factor, self.mode, self.align_corners,
+                             recompute_scale_factor=self.recompute_scale_factor)
+
+to:
+
+def forward(self, input: Tensor) -> Tensor:
+        return F.interpolate(input, self.size, self.scale_factor, self.mode, self.align_corners)
+```
+**At the time of writing this, M1 GPU support is only available in PyTorch >= v1.13 which has to be installed from the nighly builds.
+

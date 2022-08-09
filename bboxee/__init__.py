@@ -25,3 +25,4 @@
 __version__ = '1.1.0'
 
 from bboxee import gui  # noqa: F401
+from .exception_handler import ExceptionHandler  # noqa: F401

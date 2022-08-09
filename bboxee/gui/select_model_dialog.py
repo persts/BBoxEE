@@ -45,16 +45,20 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.setWindowTitle('Select Model')
         self.last_dir = '.'
 
-        self.pushButtonTFV1.clicked.connect(self.tensorflow_v1_frozen_selected)
         self.pushButtonTFGraph.clicked.connect(self.get_inference_graph)
         self.interence_graph = None
+
         self.pushButtonLabelMapV1.clicked.connect(self.get_label_map)
+        self.pushButtonLabelMapV2.clicked.connect(self.get_label_map_2)
         self.label_map = None
 
-        self.pushButtonTFV2.clicked.connect(self.tensorflow_v2_saved_model)
         self.pushButtonTFModel.clicked.connect(self.get_saved_model)
+        self.pushButtonYoloModelFile.clicked.connect(self.get_yolo_model)
         self.model = None
-        self.pushButtonLabelMapV2.clicked.connect(self.get_label_map_2)
+
+        self.pushButtonTFV1.clicked.connect(self.tensorflow_v1_frozen_selected)
+        self.pushButtonTFV2.clicked.connect(self.tensorflow_v2_saved_model)
+        self.pushButtonYolo.clicked.connect(self.yolo_model)
 
     def set_label(self, label, text):
         qfm = QtGui.QFontMetrics(label.font())
@@ -104,6 +108,20 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.pushButtonLabelMapV2.setDisabled(False)
         self.pushButtonTFModel.setDisabled(False)
 
+    def yolo_model(self):
+        """Load YOLO5 Model"""
+        self.pushButtonYoloModelFile.setDisabled(True)
+        try:
+            from bboxee.annotator.yolo import Annotator
+            model = self.labelYoloModelFile.raw_text
+            self.annotator = Annotator(model, self.spinBoxImageSize.value(), self.spinBoxStride.value())
+            self.selected.emit(self.annotator)
+            self.hide()
+        except ModuleNotFoundError:
+            message = 'Required Torch or YOLO5 modules not found.'
+            QtWidgets.QMessageBox.critical(self, 'Export', message)
+        self.pushButtonYoloModelFile.setEnabled(True)
+
     # Helper functions
     def get_inference_graph(self):
         file_name = (QtWidgets.
@@ -148,3 +166,13 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
             self.set_label(self.labelTFModel, directory)
             self.last_dir = directory
             self.pushButtonTFV2.setDisabled(False)
+
+    def get_yolo_model(self):
+        file_name = (QtWidgets.
+                     QFileDialog.
+                     getOpenFileName(self,
+                                     'Select YOLO5 Model',
+                                     self.last_dir, '(*.pt)'))
+        if file_name[0] != '':
+            self.set_label(self.labelYoloModelFile, file_name[0])
+            self.last_dir = os.path.split(file_name[0])[0]

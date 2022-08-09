@@ -22,7 +22,7 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-from PyQt5 import QtWidgets
+from PyQt5 import QtWidgets, QtCore
 
 from bboxee.gui import ExportWidget
 from bboxee.gui import AnnotationWidget
@@ -42,8 +42,19 @@ class MainWindow(QtWidgets.QMainWindow):
         widget.addTab(AccuracyWidget(icon_size), 'Accuracy Report')
         self.setCentralWidget(widget)
 
+        self.error_widget = QtWidgets.QTextBrowser()
+        self.error_widget.setWindowTitle('EXCEPTION DETECTED')
+        self.error_widget.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.error_widget.resize(900, 500)
+
     def closeEvent(self, event):
         if self.annotation_widget.dirty_data_check():
             event.accept()
         else:
             event.ignore()
+
+    def display_exception(self, error):
+        self.error_widget.clear()
+        for line in error:
+            self.error_widget.append(line)
+        self.error_widget.show()
