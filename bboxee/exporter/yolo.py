@@ -93,14 +93,14 @@ class Exporter(QtCore.QThread):
         image_path = os.path.join(self.directory, 'images')
         os.makedirs(image_path)
         image_train_path = os.path.join(image_path, 'train')
-        image_val_path = os.path.join(image_path, 'valiation')
+        image_val_path = os.path.join(image_path, 'validation')
         os.makedirs(image_train_path)
         os.makedirs(image_val_path)
 
         label_path = os.path.join(self.directory, 'labels')
         os.makedirs(label_path)
         label_train_path = os.path.join(label_path, 'train')
-        label_val_path = os.path.join(label_path, 'valiation')
+        label_val_path = os.path.join(label_path, 'validation')
         os.makedirs(label_train_path)
         os.makedirs(label_val_path)
 
