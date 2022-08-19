@@ -32,7 +32,7 @@ from PyQt5 import QtCore
 
 
 class Exporter(QtCore.QThread):
-    """Export annotated images into the Darknet yolov3 format."""
+    """Export annotated images into the YOLOv5 format."""
 
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal(int, int)
@@ -72,7 +72,7 @@ class Exporter(QtCore.QThread):
 
         labels = set()
         for label in label_map:
-            if label_map[label].lower() != 'exclude':
+            if label_map[label].lower() != 'exclude' and label.lower() != 'negative':
                 if label_map[label] == '':
                     self.label_map[label] = label
                 labels.add(self.label_map[label])
@@ -83,16 +83,13 @@ class Exporter(QtCore.QThread):
         """
         The starting point for the thread.
 
-        After creating and instance of the class, calling start() will call
+        After creating an instance of the class, calling start() will call
         this function which exports all of the annotaiton examples to disk.
         """
         self.stop = False
         random.shuffle(self.images)
 
         # Create new directories
-        cfg_path = os.path.join(self.directory, 'cfg')
-        os.makedirs(cfg_path)
-
         image_path = os.path.join(self.directory, 'images')
         os.makedirs(image_path)
         image_train_path = os.path.join(image_path, 'train')
@@ -107,24 +104,48 @@ class Exporter(QtCore.QThread):
         os.makedirs(label_train_path)
         os.makedirs(label_val_path)
 
+        # Create yaml file
+        file = open(os.path.join(self.directory, 'dataset.yaml'), 'w')
+        file.write("train: {}\n".format(image_train_path))
+        file.write("val: {}\n".format(image_val_path))
+        file.write("nc: {}\n".format(len(self.labels)))
+        file.write("names: {}".format(json.dumps(self.labels)))
+        file.close()
+
         img_path = os.path.join(image_train_path, 'train_')
         label_path = os.path.join(label_train_path, 'train_')
-        train = []
-        val = []
-        current = train
+        totals = {'train': 0, 'val': 0}
+        current = 'train'
         for count, rec in enumerate(self.images):
             if self.stop:
                 break
-            if count > self.train_size:
+            if count == self.train_size:
                 img_path = os.path.join(image_val_path, 'val_')
                 label_path = os.path.join(label_val_path, 'val_')
-                current = val
+                current = 'val'
             img_file = img_path + '{:010d}.jpg'.format(count)
             label_file = label_path + '{:010d}.txt'.format(count)
-            current.append(img_file)
+
+            nl = ""
+            label_string = ''
+            for ann in rec['annotations']:
+                if ann['label'] not in self.labels:
+                    label_string = ''
+                    break
+                bbox = ann['bbox']
+                remap = self.label_map[ann['label']]
+                label = self.labels.index(remap)
+                width = bbox['xmax'] - bbox['xmin']
+                height = bbox['ymax'] - bbox['ymin']
+                x = bbox['xmin'] + (width / 2.0)
+                y = bbox['ymin'] + (height / 2.0)
+                template = "{}{} {} {} {} {}"
+                label_string += template.format(nl, label, x, y, width, height)
+                nl = "\n"
 
             src_file = os.path.join(rec['directory'], rec['file_name'])
-            if os.path.exists(src_file):
+            if os.path.exists(src_file) and label_string != '':
+                totals[current] += 1
                 if self.strip_metadata:
                     img = Image.open(src_file)
                     array = np.array(img)
@@ -138,57 +159,11 @@ class Exporter(QtCore.QThread):
                     copyfile(src_file, img_file)
 
                 file = open(label_file, 'w')
-                nl = ""
-                for a in rec['annotations']:
-                    bbox = a['bbox']
-                    remap = self.label_map[a['label']]
-                    label = self.labels.index(remap)
-                    width = bbox['xmax'] - bbox['xmin']
-                    height = bbox['ymax'] - bbox['ymin']
-                    x = bbox['xmin'] + (width / 2.0)
-                    y = bbox['ymin'] + (height / 2.0)
-                    template = "{}{} {} {} {} {}"
-                    file.write(template.format(nl, label, x, y, width, height))
-                    nl = "\n"
+                file.write(label_string)
                 file.close()
-
-                # TODO: Really need to export the license information for each file
-
                 self.progress.emit(count + 1)
 
-        nl = ""
-        file = open(os.path.join(self.directory, 'names.txt'), 'w')
-        for label in self.labels:
-            file.write('{}{}'.format(nl, label))
-            nl = "\n"
-        file.close()
-
-        nl = ""
-        file = open(os.path.join(self.directory, 'train.txt'), 'w')
-        for file_name in train:
-            file.write('{}{}'.format(nl, file_name))
-            nl = "\n"
-        file.close()
-
-        nl = ""
-        file = open(os.path.join(self.directory, 'val.txt'), 'w')
-        for file_name in val:
-            file.write('{}{}'.format(nl, file_name))
-            nl = "\n"
-        file.close()
-
-        file = open(os.path.join(cfg_path, 'bboxee.data'), 'w')
-        file.write('classes={}\n'.format(len(self.labels)))
-        file_name = os.path.join(self.directory, 'train.txt')
-        file.write('train={}\n'.format(file_name))
-        file_name = os.path.join(self.directory, 'val.txt')
-        file.write('valid={}\n'.format(file_name))
-        file_name = os.path.join(self.directory, 'names.txt')
-        file.write('names={}\n'.format(file_name))
-        file.write('backup=backup/\n')
-        file.write('eval=coco\n')
-        file.close()
         file = open(os.path.join(self.directory, 'label_remap.json'), 'w')
         json.dump(self.label_map, file, indent=4)
         file.close()
-        self.exported.emit(self.train_size, len(self.images) - self.train_size)
+        self.exported.emit(totals['train'], totals['val'])
