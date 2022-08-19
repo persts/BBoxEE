@@ -114,38 +114,19 @@ class Exporter(QtCore.QThread):
 
         img_path = os.path.join(image_train_path, 'train_')
         label_path = os.path.join(label_train_path, 'train_')
-        totals = {'train': 0, 'val': 0}
-        current = 'train'
-        for count, rec in enumerate(self.images):
+        count = 0
+        for index, rec in enumerate(self.images):
             if self.stop:
                 break
-            if count == self.train_size:
+            if index == self.train_size:
                 img_path = os.path.join(image_val_path, 'val_')
                 label_path = os.path.join(label_val_path, 'val_')
-                current = 'val'
+                count = 0
             img_file = img_path + '{:010d}.jpg'.format(count)
             label_file = label_path + '{:010d}.txt'.format(count)
 
-            nl = ""
-            label_string = ''
-            for ann in rec['annotations']:
-                if ann['label'] not in self.labels:
-                    label_string = ''
-                    break
-                bbox = ann['bbox']
-                remap = self.label_map[ann['label']]
-                label = self.labels.index(remap)
-                width = bbox['xmax'] - bbox['xmin']
-                height = bbox['ymax'] - bbox['ymin']
-                x = bbox['xmin'] + (width / 2.0)
-                y = bbox['ymin'] + (height / 2.0)
-                template = "{}{} {} {} {} {}"
-                label_string += template.format(nl, label, x, y, width, height)
-                nl = "\n"
-
             src_file = os.path.join(rec['directory'], rec['file_name'])
-            if os.path.exists(src_file) and label_string != '':
-                totals[current] += 1
+            if os.path.exists(src_file):
                 if self.strip_metadata:
                     img = Image.open(src_file)
                     array = np.array(img)
@@ -158,12 +139,30 @@ class Exporter(QtCore.QThread):
                 else:
                     copyfile(src_file, img_file)
 
+                nl = ""
+                label_string = ''
+                for ann in rec['annotations']:
+                    if ann['label'].lower() == 'negative':
+                        label_string = ''
+                        break
+                    bbox = ann['bbox']
+                    remap = self.label_map[ann['label']]
+                    label = self.labels.index(remap)
+                    width = bbox['xmax'] - bbox['xmin']
+                    height = bbox['ymax'] - bbox['ymin']
+                    x = bbox['xmin'] + (width / 2.0)
+                    y = bbox['ymin'] + (height / 2.0)
+                    template = "{}{} {} {} {} {}"
+                    label_string += template.format(nl, label, x, y, width, height)
+                    nl = "\n"
+
                 file = open(label_file, 'w')
                 file.write(label_string)
                 file.close()
-                self.progress.emit(count + 1)
+                count += 1
+                self.progress.emit(index + 1)
 
         file = open(os.path.join(self.directory, 'label_remap.json'), 'w')
         json.dump(self.label_map, file, indent=4)
         file.close()
-        self.exported.emit(totals['train'], totals['val'])
+        self.exported.emit(self.train_size, len(self.images) - self.train_size)
