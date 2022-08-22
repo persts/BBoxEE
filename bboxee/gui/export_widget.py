@@ -307,7 +307,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                 for label in excludes:
                     if label in entry['labels']:
                         process = False
-                if process:
+                if process and len(entry['annotations']) > 0:
                     image = schema.package_entry()
                     image['directory'] = directory
                     image['file_name'] = img_name
