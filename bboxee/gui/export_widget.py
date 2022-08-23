@@ -29,6 +29,7 @@ import json
 from PyQt5 import QtCore, QtWidgets, QtGui, uic
 from bboxee.gui import CocoDialog
 from bboxee import schema
+from bboxee.gui import FilterDialog
 
 if getattr(sys, 'frozen', False):
     bundle_dir = sys._MEIPASS
@@ -72,7 +73,7 @@ class Globber(QtCore.QThread):
             # Backward compatability check
             if 'review' in contents:
                 # Determine if bbx file contains images flagged for review
-                data[bbx_file]['flagged_images'] = len(contents['flagged']) > 0
+                data[bbx_file]['flagged_images'] = len(contents['review']) > 0
 
             summary = {}
             # Store mask and set name in data object
@@ -144,7 +145,8 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
 
         self.pb_search.setIconSize(size)
         self.pb_search.setIcon(QtGui.QIcon(':/icons/search.svg'))
-        self.pb_search.clicked.connect(self.search)
+        self.filter_dialog = FilterDialog(self.base_data, self)
+        self.pb_search.clicked.connect(self.filter_dialog.show)
 
         self.comboBoxFormat.currentIndexChanged.connect(self.check_format)
 
@@ -199,7 +201,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.pb_select_directory.setEnabled(True)
         self.pb_export.setEnabled(True)
         self.progressBar.setRange(0, 1)
-        self.base_data = data
+        self.base_data.update(data)
         self.masks = masks
 
     def exclude_changed(self):
@@ -371,23 +373,6 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                 msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
                 msg_box.exec()
             self.selection_changed()
-
-    def search(self):
-        if len(self.base_data.keys()) > 0:
-            label = QtWidgets.QInputDialog.getText(self, 'Search for ...', 'Label')[0]
-            self.list_widget = QtWidgets.QListWidget()
-            self.list_widget.setWindowTitle('Matching BBX Files')
-            matches = False
-            if label != '':
-                for bbx_file in self.base_data:
-                    if label in self.base_data[bbx_file]['labels']:
-                        matches = True
-                        self.list_widget.addItem(bbx_file)
-                if matches:
-                    self.list_widget.show()
-                    self.list_widget.resize(600, 100)
-                else:
-                    QtWidgets.QMessageBox.information(self, 'Matching BBX Files', 'No bbx files were found containing the label: {}'.format(label))
 
     def selection_changed(self):
         labels = {}
