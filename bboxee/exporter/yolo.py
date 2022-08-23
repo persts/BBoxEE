@@ -28,7 +28,7 @@ import random
 import numpy as np
 from shutil import copyfile
 from PIL import Image
-from PyQt5 import QtCore
+from PyQt5 import QtCore, QtWidgets
 
 
 class Exporter(QtCore.QThread):
@@ -90,19 +90,34 @@ class Exporter(QtCore.QThread):
         random.shuffle(self.images)
 
         # Create new directories
-        image_path = os.path.join(self.directory, 'images')
-        os.makedirs(image_path)
-        image_train_path = os.path.join(image_path, 'train')
-        image_val_path = os.path.join(image_path, 'validation')
-        os.makedirs(image_train_path)
-        os.makedirs(image_val_path)
+        try:
+            image_path = os.path.join(self.directory, 'images')
+            os.makedirs(image_path)
+            image_train_path = os.path.join(image_path, 'train')
+            image_val_path = os.path.join(image_path, 'validation')
+            os.makedirs(image_train_path)
+            os.makedirs(image_val_path)
 
-        label_path = os.path.join(self.directory, 'labels')
-        os.makedirs(label_path)
-        label_train_path = os.path.join(label_path, 'train')
-        label_val_path = os.path.join(label_path, 'validation')
-        os.makedirs(label_train_path)
-        os.makedirs(label_val_path)
+            label_path = os.path.join(self.directory, 'labels')
+            os.makedirs(label_path)
+            label_train_path = os.path.join(label_path, 'train')
+            label_val_path = os.path.join(label_path, 'validation')
+            os.makedirs(label_train_path)
+            os.makedirs(label_val_path)
+        except FileExistsError:
+            QtWidgets.QMessageBox.critical(None,
+                                           'ERROR',
+                                           'Images and labels directory already exists',
+                                           QtWidgets.QMessageBox.Ok)
+            self.exported.emit(0, 0)
+            return None
+        except PermissionError:
+            QtWidgets.QMessageBox.critical(None,
+                                           'ERROR',
+                                           'You do not have write permission on \n{}'.format(self.directory),
+                                           QtWidgets.QMessageBox.Ok)
+            self.exported.emit(0, 0)
+            return None
 
         # Create yaml file
         file = open(os.path.join(self.directory, 'dataset.yaml'), 'w')
