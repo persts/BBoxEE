@@ -72,7 +72,7 @@ class Globber(QtCore.QThread):
             # Backward compatability check
             if 'review' in contents:
                 # Determine if bbx file contains images flagged for review
-                data[bbx_file]['flagged_images'] = len(contents['flagged']) > 0
+                data[bbx_file]['flagged_images'] = len(contents['review']) > 0
 
             summary = {}
             # Store mask and set name in data object
