@@ -74,7 +74,7 @@ You will need to downgrade PyTorch or apply the "fix" below.
 python -m pip install torch==1.10.1 torchvision==0.11.2
 ```
 
-If you want to use the newest version of PyTorch or need M1 support you will have to manually edit a file in your Python virtual environemnt. 
+If you want to use the newest version of PyTorch or need M1 support you will have to manually edit a file in your Python virtual environment. 
 ```bash
 Edit the file:
 [VENV_PATH]/lib/python3.8/site-packages/torch/nn/modules/upsampling.py
