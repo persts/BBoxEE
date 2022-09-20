@@ -23,7 +23,7 @@
 #
 # --------------------------------------------------------------------------
 import datetime
-from PyQt5 import QtWidgets
+from PyQt6 import QtWidgets
 
 
 class CocoDialog(QtWidgets.QDialog):
@@ -56,7 +56,7 @@ class CocoDialog(QtWidgets.QDialog):
         layout.addRow("Version", self.version)
         layout.addRow("Year", self.year)
         layout.addRow("Contributor", self.contrib)
-        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.Ok | QtWidgets.QDialogButtonBox.Cancel)
+        buttons = QtWidgets.QDialogButtonBox(QtWidgets.QDialogButtonBox.StandardButton.Ok | QtWidgets.QDialogButtonBox.StandardButton.Cancel)
         layout.addRow(buttons)
 
         buttons.accepted.connect(self.accept)

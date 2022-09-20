@@ -24,7 +24,7 @@
 # --------------------------------------------------------------------------
 import os
 import sys
-from PyQt5 import QtCore, QtWidgets, uic
+from PyQt6 import QtCore, QtWidgets, uic
 
 if getattr(sys, 'frozen', False):
     bundle_dir = sys._MEIPASS

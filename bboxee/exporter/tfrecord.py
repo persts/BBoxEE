@@ -30,7 +30,7 @@ import hashlib
 import numpy as np
 import tensorflow as tf
 from PIL import Image
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 
 
 def int64_feature(value):

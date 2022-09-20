@@ -1,4 +1,5 @@
 .vscode
+.env
 package
 temp
 data

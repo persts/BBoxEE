@@ -28,7 +28,7 @@ import glob
 import json
 import numpy as np
 from PIL import Image
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from bboxee import schema
 from bboxee.gui import SelectModelDialog
 from bboxee.gui import AnalystDialog
@@ -50,7 +50,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         """Class init function."""
         QtWidgets.QWidget.__init__(self, parent)
         self.setupUi(self)
-        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         self.image_directory = '.'
         self.current_file_name = ''
         self.selected_row = -1
@@ -76,61 +76,61 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
         self.pb_directory.clicked.connect(self.load_from_directory)
         self.pb_directory.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_directory.setIcon(QtGui.QIcon(':/icons/folder.svg'))
+        self.pb_directory.setIcon(QtGui.QIcon('icons:folder.svg'))
 
         self.pb_label_file.clicked.connect(self.load_from_file)
         self.pb_label_file.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_label_file.setIcon(QtGui.QIcon(':/icons/file.svg'))
+        self.pb_label_file.setIcon(QtGui.QIcon('icons:file.svg'))
 
         self.pb_summary.clicked.connect(self.summary)
         self.pb_summary.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_summary.setIcon(QtGui.QIcon(':/icons/analytics.svg'))
+        self.pb_summary.setIcon(QtGui.QIcon('icons:analytics.svg'))
 
         self.filter_dialog = FilterDialog(self.data, self)
         self.filter_dialog.filtered_list.connect(self.load_image_list)
         self.pb_filter.clicked.connect(self.filter_dialog.show)
         self.pb_filter.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_filter.setIcon(QtGui.QIcon(':/icons/filter.svg'))
+        self.pb_filter.setIcon(QtGui.QIcon('icons:filter.svg'))
 
         self.pb_reset_filter.clicked.connect(self.filter_reset)
         self.pb_reset_filter.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_reset_filter.setIcon(QtGui.QIcon(':/icons/reset.svg'))
+        self.pb_reset_filter.setIcon(QtGui.QIcon('icons:reset.svg'))
 
         self.pb_review.clicked.connect(self.toggle_for_review)
         self.pb_review.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_review.setIcon(QtGui.QIcon(':/icons/flag.svg'))
+        self.pb_review.setIcon(QtGui.QIcon('icons:flag.svg'))
 
         self.pb_visible.clicked.connect(self.graphicsView.toggle_visibility)
         self.pb_visible.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_visible.setIcon(QtGui.QIcon(':/icons/visibility.svg'))
+        self.pb_visible.setIcon(QtGui.QIcon('icons:visibility.svg'))
 
         self.pb_zoom_in.clicked.connect(self.graphicsView.zoom_in)
         self.pb_zoom_in.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_zoom_in.setIcon(QtGui.QIcon(':/icons/zoom_in.svg'))
+        self.pb_zoom_in.setIcon(QtGui.QIcon('icons:zoom_in.svg'))
 
         self.pb_zoom_out.clicked.connect(self.graphicsView.zoom_out)
         self.pb_zoom_out.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_zoom_out.setIcon(QtGui.QIcon(':/icons/zoom_out.svg'))
+        self.pb_zoom_out.setIcon(QtGui.QIcon('icons:zoom_out.svg'))
 
         self.pb_next_ann.clicked.connect(self.next_annotated_image)
         self.pb_next_ann.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_next_ann.setIcon(QtGui.QIcon(':/icons/skip_next.svg'))
+        self.pb_next_ann.setIcon(QtGui.QIcon('icons:skip_next.svg'))
 
         self.pb_previous_ann.clicked.connect(self.previous_annotated_image)
         self.pb_previous_ann.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_previous_ann.setIcon(QtGui.QIcon(':/icons/skip_previous.svg'))
+        self.pb_previous_ann.setIcon(QtGui.QIcon('icons:skip_previous.svg'))
 
         self.pb_next.clicked.connect(self.next_image)
         self.pb_next.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_next.setIcon(QtGui.QIcon(':/icons/next.svg'))
+        self.pb_next.setIcon(QtGui.QIcon('icons:next.svg'))
 
         self.pb_previous.clicked.connect(self.previous_image)
         self.pb_previous.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_previous.setIcon(QtGui.QIcon(':/icons/previous.svg'))
+        self.pb_previous.setIcon(QtGui.QIcon('icons:previous.svg'))
 
         self.pb_clear.clicked.connect(self.clear_annotations)
         self.pb_clear.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_clear.setIcon(QtGui.QIcon(':/icons/delete.svg'))
+        self.pb_clear.setIcon(QtGui.QIcon('icons:delete.svg'))
 
         self.license.license_changed.connect(self.update_license)
         self.license.apply_license.connect(self.apply_license)
@@ -150,24 +150,22 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
         self.verticalSliderMidPoint.valueChanged.connect(self.graphicsView.set_mid_point)
 
-        (self.tw_labels.
-         setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows))
-        (self.tw_labels.
-         setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection))
+        self.tw_labels.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tw_labels.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         self.tw_labels.verticalHeader().sectionClicked.connect(self.set_sticky)
         table_header = self.tw_labels.horizontalHeader()
         table_header.setStretchLastSection(False)
-        table_header.ResizeMode = QtWidgets.QHeaderView.Interactive
+        table_header.ResizeMode = QtWidgets.QHeaderView.ResizeMode.Interactive
         table_header.resizeSection(0, 150)
         table_header.resizeSection(3, 30)
         table_header.resizeSection(4, 30)
         table_header.resizeSection(5, 30)
         table_header.resizeSection(6, 50)
 
-        # Set up auto advance buttom and timers
+        # Set up auto advance buttom and timersQtGui.QShortcut
         self.pb_auto_advance.clicked.connect(self.auto_advance_clicked)
         self.pb_auto_advance.setIconSize(QtCore.QSize(icon_size, icon_size))
-        self.pb_auto_advance.setIcon(QtGui.QIcon(':/icons/fast_forward.svg'))
+        self.pb_auto_advance.setIcon(QtGui.QIcon('icons:fast_forward.svg'))
         self.timer = Timer()
         self.timer.advance.connect(self.auto_advance)
         self.vs_speed.valueChanged.connect(self.timer.set_speed)
@@ -180,102 +178,102 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         #
 
         # Arrow keys move bbox
-        self.scut_right_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Right), self)
-        self.scut_right_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_right_arrow = QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key.Key_Right), self)
+        self.scut_right_arrow.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_right_arrow.activated.connect(self.graphicsView.nudge_right)
 
-        self.scut_left_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Left), self)
-        self.scut_left_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_left_arrow = QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key.Key_Left), self)
+        self.scut_left_arrow.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_left_arrow.activated.connect(self.graphicsView.nudge_left)
 
-        self.scut_up_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Up), self)
-        self.scut_up_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_up_arrow = QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key.Key_Up), self)
+        self.scut_up_arrow.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_up_arrow.activated.connect(self.graphicsView.nudge_up)
 
-        self.scut_down_arrow = QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key_Down), self)
-        self.scut_down_arrow.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_down_arrow = QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.Key.Key_Down), self)
+        self.scut_down_arrow.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_down_arrow.activated.connect(self.graphicsView.nudge_down)
 
         # Expand & contract right and top
         self.scut_right_arrow_shift = \
-            QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Right), self)
-        self.scut_right_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+            QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ShiftModifier | QtCore.Qt.Key.Key_Right), self)
+        self.scut_right_arrow_shift.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_right_arrow_shift.activated.connect(self.graphicsView.expand_right)
 
         self.scut_left_arrow_shift = \
-            QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Left), self)
-        self.scut_left_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+            QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ShiftModifier | QtCore.Qt.Key.Key_Left), self)
+        self.scut_left_arrow_shift.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_left_arrow_shift.activated.connect(self.graphicsView.shrink_left)
 
         self.scut_up_arrow_shift = \
-            QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Up), self)
-        self.scut_up_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+            QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ShiftModifier | QtCore.Qt.Key.Key_Up), self)
+        self.scut_up_arrow_shift.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_up_arrow_shift.activated.connect(self.graphicsView.expand_up)
 
         self.scut_down_arrow_shift = \
-            QtWidgets.QShortcut(QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Down), self)
-        self.scut_down_arrow_shift.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+            QtGui.QShortcut(QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ShiftModifier | QtCore.Qt.Key.Key_Down), self)
+        self.scut_down_arrow_shift.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_down_arrow_shift.activated.connect(self.graphicsView.shrink_down)
 
         # Duplicate bbox
-        self.scut_duplicate = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_C), self)
-        self.scut_duplicate.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_duplicate = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.Key.Key_C), self)
+        self.scut_duplicate.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_duplicate.activated.connect(self.duplicate_selected_row)
 
         # Delete bbox
-        self.scut_clear = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.SHIFT + QtCore.Qt.Key_D), self)
-        self.scut_clear.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_clear = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.ShiftModifier | QtCore.Qt.Key.Key_D), self)
+        self.scut_clear.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_clear.activated.connect(self.clear_annotations)
 
-        self.scut_delete = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_D), self)
-        self.scut_delete.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_delete = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.Key.Key_D), self)
+        self.scut_delete.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_delete.activated.connect(self.delete_selected_row)
 
         # Toggle bbox visibility
-        self.scut_visibility = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_H), self)
-        self.scut_visibility.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_visibility = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.Key.Key_H), self)
+        self.scut_visibility.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_visibility.activated.connect(self.graphicsView.toggle_visibility)
 
         # Next & previous row
-        self.scut_next_row = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.Key_Tab), self)
-        self.scut_next_row.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_next_row = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key.Key_Tab), self)
+        self.scut_next_row.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_next_row.activated.connect(self.next_row)
 
-        self.scut_previous_row = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.Key_Backtab), self)
-        self.scut_previous_row.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_previous_row = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key.Key_Backtab), self)
+        self.scut_previous_row.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_previous_row.activated.connect(self.prev_row)
 
         # Next & previous image
-        self.scut_next_image = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.Key_Space), self)
-        self.scut_next_image.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_next_image = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key.Key_Space), self)
+        self.scut_next_image.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_next_image.activated.connect(self.next_image)
 
-        self.scut_next_annotated_image = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.SHIFT + QtCore.Qt.Key_Space), self)
-        self.scut_next_annotated_image.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_next_annotated_image = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ShiftModifier | QtCore.Qt.Key.Key_Space), self)
+        self.scut_next_annotated_image.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_next_annotated_image.activated.connect(self.next_annotated_image)
 
-        self.scut_previous_image = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.Key_Space), self)
-        self.scut_previous_image.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_previous_image = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.Key.Key_Space), self)
+        self.scut_previous_image.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_previous_image.activated.connect(self.previous_image)
 
-        self.scut_previous_annotated_image = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.CTRL + QtCore.Qt.SHIFT + QtCore.Qt.Key_Space), self)
-        self.scut_previous_annotated_image.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_previous_annotated_image = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.KeyboardModifier.ControlModifier | QtCore.Qt.KeyboardModifier.ShiftModifier | QtCore.Qt.Key.Key_Space), self)
+        self.scut_previous_annotated_image.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_previous_annotated_image.activated.connect(self.previous_annotated_image)
 
         # Cancel auto advance
-        self.scut_stop_auto_advance = QtWidgets.QShortcut(
-            QtGui.QKeySequence(QtCore.Qt.Key_Escape), self)
-        self.scut_stop_auto_advance.setContext(QtCore.Qt.WidgetWithChildrenShortcut)
+        self.scut_stop_auto_advance = QtGui.QShortcut(
+            QtGui.QKeySequence(QtCore.Qt.Key.Key_Escape), self)
+        self.scut_stop_auto_advance.setContext(QtCore.Qt.ShortcutContext.WidgetWithChildrenShortcut)
         self.scut_stop_auto_advance.activated.connect(self.stop_auto_advance)
 
     def add_analyst(self, name):
@@ -492,15 +490,17 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         proceeding to next step."""
         proceed = True
         if self.dirty:
-            msg_box = QtWidgets.QMessageBox()
+            msg_box = QtWidgets.QMessageBox(self)
+            msg_box.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
+            msg_box.setWindowTitle('Unsaved Changes')
             msg_box.setText('Annotations have been modified.')
             msg_box.setInformativeText('Do you want to save your changes?')
-            msg_box.setStandardButtons(QtWidgets.QMessageBox.Save | QtWidgets.QMessageBox.Cancel | QtWidgets.QMessageBox.Ignore)
-            msg_box.setDefaultButton(QtWidgets.QMessageBox.Save)
+            msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Save | QtWidgets.QMessageBox.StandardButton.Cancel | QtWidgets.QMessageBox.StandardButton.Ignore)
+            msg_box.setDefaultButton(QtWidgets.QMessageBox.StandardButton.Save)
             response = msg_box.exec()
-            if response == QtWidgets.QMessageBox.Save:
+            if response == QtWidgets.QMessageBox.StandardButton.Save:
                 proceed = self.save()
-            elif response == QtWidgets.QMessageBox.Cancel:
+            elif response == QtWidgets.QMessageBox.StandardButton.Cancel:
                 proceed = False
         return proceed
 
@@ -531,7 +531,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 text = annotation['label']
                 combo = QtWidgets.QComboBox()
                 combo.addItems(self.labels)
-                index = combo.findText(text, QtCore.Qt.MatchFixedString)
+                index = combo.findText(text, QtCore.Qt.MatchFlag.MatchFixedString)
                 if index >= 0:
                     combo.setCurrentIndex(index)
                 else:
@@ -549,27 +549,27 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 width = int((annotation['bbox']['xmax'] - annotation['bbox']['xmin']) * image_size[0])
                 height = int((annotation['bbox']['ymax'] - annotation['bbox']['ymin']) * image_size[1])
                 item = QtWidgets.QTableWidgetItem("{:d} x {:d}".format(width, height))
-                item.setFlags(QtCore.Qt.ItemIsSelectable)
+                item.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable)
                 self.tw_labels.setItem(row, 2, item)
 
                 item = QtWidgets.QTableWidgetItem()
-                item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                item.setCheckState(QtCore.Qt.Checked if annotation['truncated'] == "Y" else QtCore.Qt.Unchecked)
+                item.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                item.setCheckState(QtCore.Qt.CheckState.Checked if annotation['truncated'] == "Y" else QtCore.Qt.CheckState.Unchecked)
                 self.tw_labels.setItem(row, 3, item)
 
                 item = QtWidgets.QTableWidgetItem()
-                item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                item.setCheckState(QtCore.Qt.Checked if annotation['occluded'] == "Y" else QtCore.Qt.Unchecked)
+                item.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                item.setCheckState(QtCore.Qt.CheckState.Checked if annotation['occluded'] == "Y" else QtCore.Qt.CheckState.Unchecked)
                 self.tw_labels.setItem(row, 4, item)
 
                 item = QtWidgets.QTableWidgetItem()
-                item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
-                item.setCheckState(QtCore.Qt.Checked if annotation['difficult'] == "Y" else QtCore.Qt.Unchecked)
+                item.setFlags(QtCore.Qt.ItemFlag.ItemIsUserCheckable | QtCore.Qt.ItemFlag.ItemIsEnabled)
+                item.setCheckState(QtCore.Qt.CheckState.Checked if annotation['difficult'] == "Y" else QtCore.Qt.CheckState.Unchecked)
                 self.tw_labels.setItem(row, 5, item)
 
                 delete = QtWidgets.QPushButton()
                 delete.setIconSize(QtCore.QSize(24, 24))
-                delete.setIcon(QtGui.QIcon(':/icons/delete.svg'))
+                delete.setIcon(QtGui.QIcon('icons:delete.svg'))
                 delete.clicked.connect(self.delete_click_handler)
                 self.tw_labels.setCellWidget(row, 6, delete)
 
@@ -619,8 +619,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
         height = selected_rect.height()
         center = QtGui.QCursor.pos()
         center = self.graphicsView.mapToScene(self.graphicsView.mapFromGlobal(center))
-        top_left = QtCore.QPoint(center.x() - width // 2, center.y() - height // 2)
-        bottom_right = QtCore.QPoint(center.x() + (width - width // 2), center.y() + (height - height // 2))
+        top_left = QtCore.QPointF(center.x() - width // 2, center.y() - height // 2)
+        bottom_right = QtCore.QPointF(center.x() + (width - width // 2), center.y() + (height - height // 2))
         rect = QtCore.QRectF(top_left, bottom_right)
 
         new_bbox = self.graphicsView.add_bbox(rect, None)
@@ -697,7 +697,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     msg_box.setText('Found {}'.format(file_name))
                     msg_box.setInformativeText(
                         'Error found in config file: {}'.format(error))
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
                     msg_box.exec()
                     break
                 except PermissionError:
@@ -706,7 +706,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                     msg_box.setText('Found {}'.format(file_name))
                     msg_box.setInformativeText(
                         'You do not have permission to read this file.')
-                    msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                    msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
                     msg_box.exec()
                     break
             history.append(file_name)
@@ -936,7 +936,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 QtWidgets.QMessageBox.warning(self.parent(),
                                               'ERROR',
                                               message,
-                                              QtWidgets.QMessageBox.Ok)
+                                              QtWidgets.QMessageBox.StandardButton.Ok)
         return saved
 
     def select_annotator(self):
@@ -1091,8 +1091,8 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
 
     def update_review_button(self):
         if self.current_file_name in self.data['review']:
-            self.pb_review.setIcon(QtGui.QIcon(':/icons/flagged.svg'))
+            self.pb_review.setIcon(QtGui.QIcon('icons:flagged.svg'))
             self.pb_review.setChecked(True)
         else:
-            self.pb_review.setIcon(QtGui.QIcon(':/icons/flag.svg'))
+            self.pb_review.setIcon(QtGui.QIcon('icons:flag.svg'))
             self.pb_review.setChecked(False)

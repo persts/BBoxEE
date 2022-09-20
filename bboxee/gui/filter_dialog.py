@@ -24,7 +24,7 @@
 # --------------------------------------------------------------------------
 import os
 import sys
-from PyQt5 import QtCore, QtWidgets, uic
+from PyQt6 import QtCore, QtWidgets, uic
 
 if getattr(sys, 'frozen', False):
     bundle_dir = sys._MEIPASS
@@ -40,6 +40,7 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
         self.setWindowTitle('Filter')
+        self.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
         self.activateWindow()
         self.data = data
 
@@ -72,7 +73,7 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
             QtWidgets.QMessageBox.warning(self,
                                           'WARNING',
                                           message,
-                                          QtWidgets.QMessageBox.Ok)
+                                          QtWidgets.QMessageBox.StandardButton.Ok)
         else:
             temp_image_list.sort()
             self.filtered_list.emit(temp_image_list)
@@ -80,10 +81,11 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
 
     def filterBBX(self):
         if self.data:
-            label = self.input_label.text()
+            needle = self.input_label.text()
             temp_bbx_list = []
             self.list_widget = QtWidgets.QListWidget()
             self.list_widget.setWindowTitle('Matching BBX Files')
+            self.list_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
             matches = False
 
             for bbx_file in self.data:
@@ -91,22 +93,22 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
                     matches = True
                     temp_bbx_list.append(bbx_file)
                     continue
-                if label != '' and bbx_file not in temp_bbx_list:     
+                if needle != '' and bbx_file not in temp_bbx_list:
                     if self.cb_case_sensitive.isChecked():
-                        for l in self.data[bbx_file]['labels']:
-                            if label in l:
+                        for label in self.data[bbx_file]['labels']:
+                            if needle in label:
                                 matches = True
                                 temp_bbx_list.append(bbx_file)
                                 break
                     else:
-                        for l in self.data[bbx_file]['labels']:
-                            if label.lower() in l.lower():
+                        for label in self.data[bbx_file]['labels']:
+                            if needle.lower() in label.lower():
                                 matches = True
                                 temp_bbx_list.append(bbx_file)
                                 break
 
-            for b in temp_bbx_list:
-                self.list_widget.addItem(b)
+            for bbx_file in temp_bbx_list:
+                self.list_widget.addItem(bbx_file)
 
             if matches:
                 self.list_widget.show()

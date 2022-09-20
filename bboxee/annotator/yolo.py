@@ -24,7 +24,7 @@
 # --------------------------------------------------------------------------
 import os
 from PIL import Image
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 from bboxee import schema
 import numpy as np
 import torch

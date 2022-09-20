@@ -25,7 +25,7 @@
 import os
 import json
 from PIL import Image
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 from bboxee import schema
 import tensorflow as tf
 import numpy as np

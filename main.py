@@ -23,22 +23,23 @@
 #
 # --------------------------------------------------------------------------
 import sys
-from PyQt5 import QtWidgets
+from PyQt6 import QtWidgets, QtCore
 
 from bboxee.gui import MainWindow
 from bboxee import ExceptionHandler
 
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    handler = ExceptionHandler()
+    QtCore.QDir.addSearchPath('icons', './icons/')
+    # handler = ExceptionHandler()
     screen = app.primaryScreen()
     for s in app.screens():
         if screen.geometry().width() < s.geometry().width():
             screen = s
     gui = MainWindow(int(screen.geometry().height() * 0.025))
-    handler.exception.connect(gui.display_exception)
+    # handler.exception.connect(gui.display_exception)
     gui.show()
     gui.windowHandle().setScreen(screen)
     gui.resize(int(screen.geometry().width()), int(screen.geometry().height() * 0.85))
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

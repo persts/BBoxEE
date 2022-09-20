@@ -22,7 +22,7 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-from PyQt5 import QtWidgets, QtCore
+from PyQt6 import QtWidgets, QtCore
 
 from bboxee.gui import ExportWidget
 from bboxee.gui import AnnotationWidget
@@ -44,7 +44,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.error_widget = QtWidgets.QTextBrowser()
         self.error_widget.setWindowTitle('EXCEPTION DETECTED')
-        self.error_widget.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.error_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
         self.error_widget.resize(900, 500)
 
     def closeEvent(self, event):

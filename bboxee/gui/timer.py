@@ -22,7 +22,7 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 
 
 class Timer(QtCore.QObject):

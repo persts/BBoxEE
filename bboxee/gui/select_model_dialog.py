@@ -24,7 +24,7 @@
 # --------------------------------------------------------------------------
 import os
 import sys
-from PyQt5 import QtCore, QtWidgets, QtGui, uic
+from PyQt6 import QtCore, QtWidgets, QtGui, uic
 
 if getattr(sys, 'frozen', False):
     bundle_dir = sys._MEIPASS
@@ -63,7 +63,7 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
     def set_label(self, label, text):
         qfm = QtGui.QFontMetrics(label.font())
         width = label.width() - 2
-        clipped = qfm.elidedText(text, QtCore.Qt.ElideMiddle, width)
+        clipped = qfm.elidedText(text, QtCore.Qt.TextElideMode.ElideMiddle, width)
         label.setText(clipped)
         label.raw_text = text
 

@@ -26,9 +26,9 @@ import os
 import json
 import random
 import numpy as np
-from shutil import copyfile
+from shutil import copy2
 from PIL import Image
-from PyQt5 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtWidgets
 
 
 class Exporter(QtCore.QThread):
@@ -107,15 +107,15 @@ class Exporter(QtCore.QThread):
         except FileExistsError:
             QtWidgets.QMessageBox.critical(None,
                                            'ERROR',
-                                           'Images and labels directory already exists',
-                                           QtWidgets.QMessageBox.Ok)
+                                           'Image and label directory already exists in\n{}'.format(self.directory),
+                                           QtWidgets.QMessageBox.StandardButton.Ok)
             self.exported.emit(0, 0)
             return None
         except PermissionError:
             QtWidgets.QMessageBox.critical(None,
                                            'ERROR',
                                            'You do not have write permission on \n{}'.format(self.directory),
-                                           QtWidgets.QMessageBox.Ok)
+                                           QtWidgets.QMessageBox.StandardButton.Ok)
             self.exported.emit(0, 0)
             return None
 
@@ -152,7 +152,7 @@ class Exporter(QtCore.QThread):
                     img.save(img_file)
                     img.close()
                 else:
-                    copyfile(src_file, img_file)
+                    copy2(src_file, img_file)
 
                 nl = ""
                 label_string = ''

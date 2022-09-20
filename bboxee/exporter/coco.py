@@ -29,7 +29,7 @@ import datetime
 import numpy as np
 from shutil import copyfile
 from PIL import Image
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 
 
 class Exporter(QtCore.QThread):

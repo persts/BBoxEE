@@ -14,11 +14,12 @@ We have put together a [quick start guide](https://github.com/persts/BBoxEE/blob
 ### Dependencies
 BBoxEE is being developed with Python 3.8.10 on Ubuntu 20.04 with the following libraries:
 
-* PyQt5 (5.15.7)
+* PyQt6 (6.3.1)
 * Pillow (9.2.0)
-* Numpy (1.23.1)
+* Numpy (1.23.2)
 * Tabulate (0.8.10)
-* TensorFlow (2.9.1)
+* TensorFlow (2.10.0)
+* Torch (1.12.1+cu113)
 
 Build a virtual environment and install the dependencies:
 ```bash
@@ -69,26 +70,17 @@ File "___lib/python3.8/site-packages/torch/nn/modules/upsampling.py", line 154, 
 File "___/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1207, in __getattr__
     raise AttributeError("'{}' object has no attribute '{}'".format(
 ```
-You will need to downgrade PyTorch or apply the "fix" below.
+You can upgrade your existing model with the following code as a template.
 ```bash
-python -m pip install torch==1.10.1 torchvision==0.11.2
-```
+import torch
 
-If you want to use the newest version of PyTorch or need M1 support you will have to manually edit a file in your Python virtual environment. 
+ckpt = torch.load('model.0.1.pt')
+for m in ckpt['model'].modules():
+    if type(m) is torch.nn.Upsample:
+        m.recompute_scale_factor = None
+torch.save(ckpt, './model.0.2.pt')
+```
+**At the time of writing this, M1 GPU (MPS) support is only available with PyTorch >= v1.13, which has to be installed from the nighly builds.
 ```bash
-Edit the file:
-[VENV_PATH]/lib/python3.8/site-packages/torch/nn/modules/upsampling.py
-
-Change the following function from:
-
-def forward(self, input: Tensor) -> Tensor:
-        return F.interpolate(input, self.size, self.scale_factor, self.mode, self.align_corners,
-                             recompute_scale_factor=self.recompute_scale_factor)
-
-to:
-
-def forward(self, input: Tensor) -> Tensor:
-        return F.interpolate(input, self.size, self.scale_factor, self.mode, self.align_corners)
+pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 ```
-**At the time of writing this, M1 GPU support is only available in PyTorch >= v1.13 which has to be installed from the nighly builds.
-

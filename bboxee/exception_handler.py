@@ -24,7 +24,7 @@
 # --------------------------------------------------------------------------
 import sys
 import traceback
-from PyQt5 import QtCore
+from PyQt6 import QtCore
 DEBUG = True
 
 
@@ -42,6 +42,6 @@ class ExceptionHandler(QtCore.QObject):
             error.append(line)
         self.exception.emit(error)
 
-        if(DEBUG):
+        if DEBUG:
             for line in error:
                 print(line)

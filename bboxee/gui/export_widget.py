@@ -26,7 +26,7 @@ import os
 import sys
 import glob
 import json
-from PyQt5 import QtCore, QtWidgets, QtGui, uic
+from PyQt6 import QtCore, QtWidgets, QtGui, uic
 from bboxee.gui import CocoDialog
 from bboxee import schema
 from bboxee.gui import FilterDialog
@@ -136,15 +136,15 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
 
         size = QtCore.QSize(icon_size, icon_size)
         self.pb_select_directory.setIconSize(size)
-        self.pb_select_directory.setIcon(QtGui.QIcon(':/icons/folder.svg'))
+        self.pb_select_directory.setIcon(QtGui.QIcon('icons:folder.svg'))
         self.pb_select_directory.clicked.connect(self.load_annotation_files)
 
         self.pb_label_map.setIconSize(size)
-        self.pb_label_map.setIcon(QtGui.QIcon(':/icons/file.svg'))
+        self.pb_label_map.setIcon(QtGui.QIcon('icons:file.svg'))
         self.pb_label_map.clicked.connect(self.load_label_map)
 
         self.pb_search.setIconSize(size)
-        self.pb_search.setIcon(QtGui.QIcon(':/icons/search.svg'))
+        self.pb_search.setIcon(QtGui.QIcon('icons:search.svg'))
         self.filter_dialog = FilterDialog(self.base_data, self)
         self.pb_search.clicked.connect(self.filter_dialog.show)
 
@@ -153,25 +153,20 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.pb_export.clicked.connect(self.export_preflight)
         self.pb_cancel.clicked.connect(self.cancel)
 
-        (self.tw_files.
-            setSelectionBehavior(QtWidgets.
-                                 QAbstractItemView.SelectRows))
-        (self.tw_files.
-            selectionModel().
-            selectionChanged.
-            connect(self.selection_changed))
-        (self.tw_files.
-            horizontalHeader().
-            setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch))
+        self.tw_files.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tw_files.selectionModel().selectionChanged.connect(self.selection_changed)
+        self.tw_files.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
-        (self.tw_remap.
-            horizontalHeader().
-            setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch))
+        self.tw_remap.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.tw_remap.cellChanged.connect(self.update_label_map)
 
         self.cb_truncated.stateChanged.connect(self.exclude_changed)
         self.cb_occluded.stateChanged.connect(self.exclude_changed)
         self.cb_difficult.stateChanged.connect(self.exclude_changed)
+
+        # Find and shade the header select all button and make more visible
+        corner = self.tw_files.findChild(QtWidgets.QAbstractButton)
+        corner.setStyleSheet("background-color: #CCC;")
 
     def cancel(self):
         if self.exporter is not None:
@@ -190,16 +185,17 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.tw_files.setRowCount(len(data))
         for index, bbx_file in enumerate(data):
             item = QtWidgets.QTableWidgetItem(bbx_file)
-            item.setFlags(QtCore.Qt.ItemIsSelectable)
+            item.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.tw_files.setItem(index, 0, item)
 
             item = QtWidgets.QTableWidgetItem(data[bbx_file]['summary'])
-            item.setFlags(QtCore.Qt.ItemIsSelectable)
+            item.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.tw_files.setItem(index, 1, item)
             self.tw_files.resizeRowToContents(index)
         self.tw_files.resizeColumnToContents(1)
         self.pb_select_directory.setEnabled(True)
         self.pb_export.setEnabled(True)
+        self.pb_search.setEnabled(True)
         self.progressBar.setRange(0, 1)
         self.base_data.update(data)
         self.masks = masks
@@ -362,7 +358,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                 msg_box.setText('{}'.format(file_name))
                 msg_box.setInformativeText(
                     'Error found in remap object: {}'.format(error))
-                msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
                 msg_box.exec()
             except PermissionError:
                 msg_box = QtWidgets.QMessageBox()
@@ -370,7 +366,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                 msg_box.setText('{}'.format(file_name))
                 msg_box.setInformativeText(
                     'You do not have permission to read this file.')
-                msg_box.setStandardButtons(QtWidgets.QMessageBox.Ok)
+                msg_box.setStandardButtons(QtWidgets.QMessageBox.StandardButton.Ok)
                 msg_box.exec()
             self.selection_changed()
 
@@ -397,10 +393,10 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
             if label not in self.label_map:
                 self.label_map[label] = ''
             item = QtWidgets.QTableWidgetItem(label)
-            item.setFlags(QtCore.Qt.NoItemFlags)
+            item.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.tw_remap.setItem(row, 0, item)
             item = QtWidgets.QTableWidgetItem(str(labels[label]))
-            item.setFlags(QtCore.Qt.NoItemFlags)
+            item.setFlags(QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.tw_remap.setItem(row, 1, item)
             item = QtWidgets.QTableWidgetItem(self.label_map[label])
             self.tw_remap.setItem(row, 2, item)

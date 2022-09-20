@@ -1,5 +1,5 @@
 numpy
 pillow
-pyqt5
+pyqt6
 tabulate
 tensorflow

@@ -29,7 +29,7 @@ import json
 import numpy as np
 from PIL import Image
 from tabulate import tabulate
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
+from PyQt6 import QtCore, QtGui, QtWidgets, uic
 from bboxee.gui import SelectModelDialog
 from functools import reduce
 
@@ -70,9 +70,9 @@ class AccuracyWidget(QtWidgets.QWidget, WIDGET):
         self.scene = QtWidgets.QGraphicsScene()
         self.gv_display.setScene(self.scene)
 
-        self.tw_results.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
-        self.tw_results.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        self.tw_results.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.tw_results.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tw_results.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.tw_results.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
         self.tb_summary.setFontFamily("monospace")
 
@@ -177,24 +177,24 @@ class AccuracyWidget(QtWidgets.QWidget, WIDGET):
             self.tw_results.setItem(row, 0, item)
 
             item = QtWidgets.QTableWidgetItem(str(len(rec['predicted'])))
-            item.setTextAlignment(QtCore.Qt.AlignHCenter)
+            item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
             self.tw_results.setItem(row, 1, item)
 
             text = ''
             if len(rec['IoUs']) > 0:
                 text = '{:0.4f}'.format(np.average(rec['IoUs']))
             item = QtWidgets.QTableWidgetItem(text)
-            item.setTextAlignment(QtCore.Qt.AlignHCenter)
+            item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
             self.tw_results.setItem(row, 2, item)
 
             text = str(rec['false_positive'])
             item = QtWidgets.QTableWidgetItem(text)
-            item.setTextAlignment(QtCore.Qt.AlignHCenter)
+            item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
             self.tw_results.setItem(row, 3, item)
 
             text = str(rec['false_negative'])
             item = QtWidgets.QTableWidgetItem(text)
-            item.setTextAlignment(QtCore.Qt.AlignHCenter)
+            item.setTextAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
             self.tw_results.setItem(row, 4, item)
         self.summary = summary
         self.tw_results.selectRow(0)
@@ -345,14 +345,14 @@ class AccuracyWidget(QtWidgets.QWidget, WIDGET):
                 h, w, c = image.shape
                 bpl = int(image.nbytes / h)
                 if c == 4:
-                    qt_image = QtGui.QImage(image.data, w, h, QtGui.QImage.Format_RGBA8888)
+                    qt_image = QtGui.QImage(image.data, w, h, QtGui.QImage.Format.Format_RGBA8888)
                 else:
-                    qt_image = QtGui.QImage(image.data, w, h, bpl, QtGui.QImage.Format_RGB888)
+                    qt_image = QtGui.QImage(image.data, w, h, bpl, QtGui.QImage.Format.Format_RGB888)
                 self.scene.addPixmap(QtGui.QPixmap.fromImage(qt_image))
                 bounding_rect = self.scene.itemsBoundingRect()
-                self.gv_display.fitInView(bounding_rect, QtCore.Qt.KeepAspectRatio)
+                self.gv_display.fitInView(bounding_rect, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
 
-                brush = QtGui.QBrush(QtCore.Qt.yellow, QtCore.Qt.SolidPattern)
+                brush = QtGui.QBrush(QtCore.Qt.GlobalColor.yellow, QtCore.Qt.BrushStyle.SolidPattern)
                 pen = QtGui.QPen(brush, 2)
 
                 for ann in self.summary[name]['reference']:
@@ -366,7 +366,7 @@ class AccuracyWidget(QtWidgets.QWidget, WIDGET):
                     rect = QtCore.QRectF(top_left, bottom_right)
                     self.scene.addRect(rect, pen)
 
-                brush = QtGui.QBrush(QtCore.Qt.magenta, QtCore.Qt.SolidPattern)
+                brush = QtGui.QBrush(QtCore.Qt.GlobalColor.magenta, QtCore.Qt.BrushStyle.SolidPattern)
                 pen = QtGui.QPen(brush, 2)
 
                 for ann in self.summary[name]['predicted']:
