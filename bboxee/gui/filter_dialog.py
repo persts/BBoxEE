@@ -40,10 +40,11 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
         QtWidgets.QDialog.__init__(self, parent)
         self.setupUi(self)
         self.setWindowTitle('Filter')
+        self.activateWindow()
         self.data = data
 
         self.pb_cancel.clicked.connect(self.close)
-        self.pb_filter_confirmed.clicked.connect(self.filter)
+        self.pb_filter_confirmed.clicked.connect(self.filter_type)
 
     def filter(self):
         label = self.input_label.text()
@@ -76,3 +77,45 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
             temp_image_list.sort()
             self.filtered_list.emit(temp_image_list)
             self.close()
+
+    def filterBBX(self):
+        if self.data:
+            label = self.input_label.text()
+            temp_bbx_list = []
+            self.list_widget = QtWidgets.QListWidget()
+            self.list_widget.setWindowTitle('Matching BBX Files')
+            matches = False
+
+            for bbx_file in self.data:
+                if self.cb_flagged.isChecked() and self.data[bbx_file]['flagged_images']:
+                    matches = True
+                    temp_bbx_list.append(bbx_file)
+                    continue
+                if label != '' and bbx_file not in temp_bbx_list:     
+                    if self.cb_case_sensitive.isChecked():
+                        for l in self.data[bbx_file]['labels']:
+                            if label in l:
+                                matches = True
+                                temp_bbx_list.append(bbx_file)
+                                break
+                    else:
+                        for l in self.data[bbx_file]['labels']:
+                            if label.lower() in l.lower():
+                                matches = True
+                                temp_bbx_list.append(bbx_file)
+                                break
+
+            for b in temp_bbx_list:
+                self.list_widget.addItem(b)
+
+            if matches:
+                self.list_widget.show()
+                self.list_widget.resize(600, 100)
+            else:
+                QtWidgets.QMessageBox.information(self, 'Matching BBX Files', 'No bbx files were found containing the label: {}'.format(label))
+
+    def filter_type(self):
+        if "schema" in self.data:
+            self.filter()
+        else:
+            self.filterBBX()
