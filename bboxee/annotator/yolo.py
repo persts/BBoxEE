@@ -55,11 +55,11 @@ class Annotator(QtCore.QThread):
         self.device = 'cpu'
         if torch.cuda.is_available():
             self.device = 'cuda:0'
-            try:
-                if torch.backends.mps.is_built and torch.backends.mps.is_available():
-                    self.device = 'mps'
-            except AttributeError:
-                pass
+        try:
+            if torch.backends.mps.is_built and torch.backends.mps.is_available():
+                self.device = 'mps'
+        except AttributeError:
+            pass
 
     def run(self):
         """The starting point for the thread."""

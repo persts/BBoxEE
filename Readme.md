@@ -25,6 +25,13 @@ Build a virtual environment and install the dependencies:
 ```bash
 cd [Your BBoxEE Workspace]
 
+[Apple M1 Note]
+If you follow the Linux steps PyQt6 may not install due to clang not finding Python.h
+
+You can resolve this by adding and additional environmental variable with the following:
+
+export C_INCLUDE_PATH=/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Headers
+
 [Linux]
 python -m venv bboxee-env
 source bboxee-env/bin/activate
@@ -82,5 +89,5 @@ torch.save(ckpt, './model.0.2.pt')
 ```
 **At the time of writing this, M1 GPU (MPS) support is only available with PyTorch >= v1.13, which has to be installed from the nighly builds.
 ```bash
-pip3 install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
+python -m pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 ```
