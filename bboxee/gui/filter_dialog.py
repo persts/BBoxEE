@@ -60,15 +60,6 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
                 for a in ann:
                     if self.match(input_label, a['label']):
                         temp_image_list.append(image)
-                    # if self.cb_case_sensitive.isChecked():
-                    #     if label in a['label'] and image not in temp_image_list:
-                    #         temp_image_list.append(image)
-                    #         break
-                    # else:
-                    #     label = label.lower()
-                    #     if label in a['label'].lower() and image not in temp_image_list:
-                    #         temp_image_list.append(image)
-                    #         break
 
         if len(temp_image_list) == 0:
             message = ('No results')
@@ -101,19 +92,6 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
                             temp_bbx_list.append(bbx_file)
                             matches = True
 
-                    # if self.cb_case_sensitive.isChecked():
-                    #     for label in self.data[bbx_file]['labels']:
-                    #         if needle in label:
-                    #             matches = True
-                    #             temp_bbx_list.append(bbx_file)
-                    #             break
-                    # else:
-                    #     for label in self.data[bbx_file]['labels']:
-                    #         if needle.lower() in label.lower():
-                    #             matches = True
-                    #             temp_bbx_list.append(bbx_file)
-                    #             break
-
             for bbx_file in temp_bbx_list:
                 self.list_widget.addItem(bbx_file)
 
@@ -129,48 +107,15 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
         else:
             self.filterBBX()
 
-    def match(self, label, haystack):
-        self.label = label
+    def match(self, needle, haystack):
+        self.needle = needle
         self.haystack = haystack
 
         if self.cb_case_sensitive.isChecked() == False:
-            label = label.lower()
+            needle = needle.lower()
             haystack = haystack.lower()
-        
+
         if self.cb_exact_match.isChecked():
-            return label == haystack
+            return needle == haystack
         else:
-            return label in haystack
-            
-            
-
-
-
-# filter(for image in self.data['images']:
-#                 ann = self.data['images'][image]['annotations']
-#                 for a in ann:
-#                     if self.cb_case_sensitive.isChecked():
-#                         if label in a['label'] and image not in temp_image_list:
-#                             temp_image_list.append(image)
-#                             break, iterable)
-
-
-#if self.data:
-            #needle = self.input_label.text()
-         #   temp_bbx_list = []
-          #  self.list_widget = QtWidgets.QListWidget()
-        #    self.list_widget.setWindowTitle('Matching BBX Files')
-        #    self.list_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
-          #  matches = False
-
-         #   for bbx_file in self.data:
-          #      if self.cb_flagged.isChecked() and self.data[bbx_file]['flagged_images']:
-          #          matches = True
-          #          temp_bbx_list.append(bbx_file)
-           #         continue
-          #      if needle != '' and bbx_file not in temp_bbx_list:
-           #         if self.cb_case_sensitive.isChecked():
-            #            for label in self.data[bbx_file]['labels']:
-           #                 if needle in label:
-           #                     matches = True
-           #                     temp_bbx_list.append(bbx_file)
+            return needle in haystack
