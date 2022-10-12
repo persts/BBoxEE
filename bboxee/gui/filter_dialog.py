@@ -76,9 +76,6 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
         if self.data:
             needle = self.input_label.text()
             temp_bbx_list = []
-            self.list_widget = QtWidgets.QListWidget()
-            self.list_widget.setWindowTitle('Matching BBX Files')
-            self.list_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
             matches = False
 
             for bbx_file in self.data:
@@ -92,10 +89,14 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
                             temp_bbx_list.append(bbx_file)
                             matches = True
 
-            for bbx_file in temp_bbx_list:
-                self.list_widget.addItem(bbx_file)
-
             if matches:
+                self.list_widget = QtWidgets.QListWidget()
+                self.list_widget.setWindowTitle('Matching BBX Files')
+                self.list_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
+
+                for bbx_file in temp_bbx_list:
+                    self.list_widget.addItem(bbx_file)
+                
                 self.list_widget.show()
                 self.list_widget.resize(600, 100)
             else:
@@ -108,9 +109,6 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
             self.filterBBX()
 
     def match(self, needle, haystack):
-        self.needle = needle
-        self.haystack = haystack
-
         if self.cb_case_sensitive.isChecked() == False:
             needle = needle.lower()
             haystack = haystack.lower()
