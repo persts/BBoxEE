@@ -48,25 +48,18 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
         self.pb_filter_confirmed.clicked.connect(self.filter_type)
 
     def filter(self):
-        label = self.input_label.text()
+        input_label = self.input_label.text()
         temp_image_list = []
 
         if self.cb_flagged.isChecked():
             temp_image_list = temp_image_list + self.data['review']
 
-        if label != "":
+        if input_label != "":
             for image in self.data['images']:
                 ann = self.data['images'][image]['annotations']
                 for a in ann:
-                    if self.cb_case_sensitive.isChecked():
-                        if label in a['label'] and image not in temp_image_list:
-                            temp_image_list.append(image)
-                            break
-                    else:
-                        label = label.lower()
-                        if label in a['label'].lower() and image not in temp_image_list:
-                            temp_image_list.append(image)
-                            break
+                    if self.match(input_label, a['label']):
+                        temp_image_list.append(image)
 
         if len(temp_image_list) == 0:
             message = ('No results')
@@ -83,9 +76,6 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
         if self.data:
             needle = self.input_label.text()
             temp_bbx_list = []
-            self.list_widget = QtWidgets.QListWidget()
-            self.list_widget.setWindowTitle('Matching BBX Files')
-            self.list_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
             matches = False
 
             for bbx_file in self.data:
@@ -94,30 +84,36 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
                     temp_bbx_list.append(bbx_file)
                     continue
                 if needle != '' and bbx_file not in temp_bbx_list:
-                    if self.cb_case_sensitive.isChecked():
-                        for label in self.data[bbx_file]['labels']:
-                            if needle in label:
-                                matches = True
-                                temp_bbx_list.append(bbx_file)
-                                break
-                    else:
-                        for label in self.data[bbx_file]['labels']:
-                            if needle.lower() in label.lower():
-                                matches = True
-                                temp_bbx_list.append(bbx_file)
-                                break
-
-            for bbx_file in temp_bbx_list:
-                self.list_widget.addItem(bbx_file)
+                    for label in self.data[bbx_file]['labels']:
+                        if self.match(needle, label):
+                            temp_bbx_list.append(bbx_file)
+                            matches = True
 
             if matches:
+                self.list_widget = QtWidgets.QListWidget()
+                self.list_widget.setWindowTitle('Matching BBX Files')
+                self.list_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
+
+                for bbx_file in temp_bbx_list:
+                    self.list_widget.addItem(bbx_file)
+                
                 self.list_widget.show()
                 self.list_widget.resize(600, 100)
             else:
-                QtWidgets.QMessageBox.information(self, 'Matching BBX Files', 'No bbx files were found containing the label: {}'.format(label))
+                QtWidgets.QMessageBox.information(self, 'Matching BBX Files', 'No bbx files were found containing the label: {}'.format(needle))
 
     def filter_type(self):
         if "schema" in self.data:
             self.filter()
         else:
             self.filterBBX()
+
+    def match(self, needle, haystack):
+        if self.cb_case_sensitive.isChecked() == False:
+            needle = needle.lower()
+            haystack = haystack.lower()
+
+        if self.cb_exact_match.isChecked():
+            return needle == haystack
+        else:
+            return needle in haystack
