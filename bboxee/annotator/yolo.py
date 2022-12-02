@@ -29,7 +29,7 @@ from bboxee import schema
 import numpy as np
 import torch
 from utils.augmentations import letterbox
-from utils.general import non_max_suppression, scale_coords, xyxy2xywh
+from utils.general import non_max_suppression, scale_boxes, xyxy2xywh
 
 
 class Annotator(QtCore.QThread):
@@ -95,7 +95,7 @@ class Annotator(QtCore.QThread):
                     for det in pred:
                         if len(det):
                             # Rescale boxes
-                            det[:, :4] = scale_coords(img.shape[2:], det[:, :4], img_original.shape).round()
+                            det[:, :4] = scale_boxes(img.shape[2:], det[:, :4], img_original.shape).round()
                             for *box, conf, cls in reversed(det):
                                 annotation = schema.annotation()
                                 annotation['created_by'] = 'machine'
