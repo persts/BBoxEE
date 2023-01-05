@@ -110,6 +110,7 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
                 height = self.list_widget.sizeHintForRow(0) * self.list_widget.count()
                 if height > max_height:
                     height = max_height
+                width += 25
                 
                 #centering widget around filter dialog
                 centerX = self.pos().x() + self.width()/2
