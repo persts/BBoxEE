@@ -273,14 +273,14 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
                 self.mode = Mode.Pan
                 # manufacture a shift+click event
                 handmade_event = QtGui.QMouseEvent(
-                    QtCore.QEvent.MouseButtonPress, QtCore.QPointF(event.pos()),
+                    QtCore.QEvent.Type.MouseButtonPress, QtCore.QPointF(event.pos()),
                     QtCore.Qt.MouseButton.LeftButton, event.buttons(), QtCore.Qt.KeyboardModifier.ShiftModifier)
                 self.mousePressEvent(handmade_event)
 
         elif button == QtCore.Qt.MouseButton.LeftButton and event.modifiers() == QtCore.Qt.KeyboardModifier.ShiftModifier:  # QtCore.Qt.NoModifier
             # pan the background image
             self.mode = Mode.Pan
-            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+            self.setDragMode(QtWidgets.QGraphicsView.DragMode.ScrollHandDrag)
             QtWidgets.QGraphicsView.mousePressEvent(self, event)
         elif button == QtCore.Qt.MouseButton.LeftButton:
             point = self.mapToScene(event.pos())
@@ -347,7 +347,7 @@ class AnnotationGraphicsView(QtWidgets.QGraphicsView):
 
         bbox = self.selected_bbox
         if self.mode == Mode.Pan:
-            self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+            self.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
             self.mode = None
             # Emit the point, to refocus the table entry for the bbox in case pan
             # was initiated inside of a bbox

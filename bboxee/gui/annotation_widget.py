@@ -751,24 +751,22 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 # Load images from image directory
                 self.load_image_list()
 
-    def load_from_file(self):
+    def load_from_file(self, file_name=False):
         """(Slot) Load existing annotation data from file."""
         if self.dirty_data_check():
-            file_name = (QtWidgets.
-                         QFileDialog.
-                         getOpenFileName(self,
-                                         'Load Annotations',
-                                         self.image_directory,
-                                         'BBoxEE (*.bbx)'))
-            if file_name[0] != '':
+            if not file_name:
+                file_name = QtWidgets.QFileDialog.getOpenFileName(self, 'Load Annotations', self.image_directory, 'BBoxEE (*.bbx)')
+                file_name = file_name[0]
+
+            if file_name != '':
                 # Read the bbx file
-                file = open(file_name[0], 'r')
+                file = open(file_name, 'r')
                 self.data.clear()
                 self.data.update(json.load(file))
                 file.close()
 
                 # Search for first instance of config file and load the labels
-                self.image_directory = os.path.split(file_name[0])[0]
+                self.image_directory = os.path.split(file_name)[0]
                 self.load_config(self.image_directory)
                 self.populate_labels()
 
