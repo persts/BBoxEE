@@ -38,7 +38,7 @@ class LicenseGroupBox(QtWidgets.QGroupBox, GBOX):
     license_changed = QtCore.pyqtSignal(dict)
     apply_license = QtCore.pyqtSignal(dict)
 
-    def __init__(self, config_data, icon_size=24, parent=None):
+    def __init__(self, parent=None):
         """Class init function."""
         QtWidgets.QGroupBox.__init__(self, parent)
         self.setupUi(self)
