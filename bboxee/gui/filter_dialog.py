@@ -35,6 +35,7 @@ DIALOG, _ = uic.loadUiType(os.path.join(bundle_dir, 'filter_dialog.ui'))
 
 class FilterDialog(QtWidgets.QDialog, DIALOG):
     filtered_list = QtCore.pyqtSignal(list)
+    BBX_file_selected = QtCore.pyqtSignal(str)
 
     def __init__(self, data, parent):
         QtWidgets.QDialog.__init__(self, parent)
@@ -47,6 +48,19 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
 
         self.pb_cancel.clicked.connect(self.close)
         self.pb_filter_confirmed.clicked.connect(self.filter_type)
+
+        self.list_widget = QtWidgets.QListWidget()
+        self.list_widget.setWindowTitle('Matching BBX Files')
+        self.list_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
+        self.list_widget.itemDoubleClicked.connect(self.double_click)
+
+    def double_click(self, item_clicked):
+        file_selected = item_clicked.text()
+
+        self.list_widget.close()
+        self.close()
+
+        self.BBX_file_selected.emit(file_selected)
 
     def filter(self):
         input_label = self.input_label.text()
@@ -91,9 +105,7 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
                             matches = True
 
             if matches:
-                self.list_widget = QtWidgets.QListWidget()
-                self.list_widget.setWindowTitle('Matching BBX Files')
-                self.list_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
+                self.list_widget.clear()
 
                 for bbx_file in temp_bbx_list:
                     self.list_widget.addItem(bbx_file)

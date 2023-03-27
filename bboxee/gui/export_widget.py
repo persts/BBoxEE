@@ -120,6 +120,8 @@ class Globber(QtCore.QThread):
 class ExportWidget(QtWidgets.QWidget, EXPORT):
     """Widget for selecting, relabeling, and exporting annotated images."""
 
+    BBX_file_selected_2 = QtCore.pyqtSignal(str)
+
     def __init__(self, icon_size, parent=None):
         """Class init function."""
         QtWidgets.QWidget.__init__(self, parent)
@@ -146,6 +148,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.pb_search.setIconSize(size)
         self.pb_search.setIcon(QtGui.QIcon('icons:search.svg'))
         self.filter_dialog = FilterDialog(self.base_data, self)
+        self.filter_dialog.BBX_file_selected.connect(self.BBX_file_selected_2.emit)
         self.pb_search.clicked.connect(self.filter_dialog.show)
 
         self.comboBoxFormat.currentIndexChanged.connect(self.check_format)

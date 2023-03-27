@@ -36,16 +36,19 @@ class MainWindow(QtWidgets.QMainWindow):
         template = 'Bounding Box Editor and Exporter [BBoxEE v{}]'
         self.setWindowTitle(template.format(__version__))
         self.annotation_widget = AnnotationWidget(icon_size)
-        widget = QtWidgets.QTabWidget()
-        widget.addTab(self.annotation_widget, 'Annotate')
-        widget.addTab(ExportWidget(icon_size), 'Export')
-        widget.addTab(AccuracyWidget(icon_size), 'Accuracy Report')
-        self.setCentralWidget(widget)
+        self.export_widget = ExportWidget(icon_size)
+        self.widget = QtWidgets.QTabWidget()
+        self.widget.addTab(self.annotation_widget, 'Annotate')
+        self.widget.addTab(self.export_widget, 'Export')
+        self.widget.addTab(AccuracyWidget(icon_size), 'Accuracy Report')
+        self.setCentralWidget(self.widget)
 
         self.error_widget = QtWidgets.QTextBrowser()
         self.error_widget.setWindowTitle('EXCEPTION DETECTED')
         self.error_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
         self.error_widget.resize(900, 500)
+
+        self.export_widget.BBX_file_selected_2.connect(self.load_BBX)
 
     def closeEvent(self, event):
         if self.annotation_widget.dirty_data_check():
@@ -58,3 +61,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for line in error:
             self.error_widget.append(line)
         self.error_widget.show()
+
+    def load_BBX(self, file_name):
+        self.widget.setCurrentWidget(self.annotation_widget)
+        self.annotation_widget.load_from_file(file_name)
