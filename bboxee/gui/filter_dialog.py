@@ -112,8 +112,8 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
 
                 for bbx_file in temp_bbx_list:
                     self.list_widget.addItem(bbx_file)
-                
-                #resize widget
+
+                # resize widget
                 max_width = int(self.parent.width() * .8)
                 max_height = int(self.parent.height() * .8)
                 width = 300
@@ -123,15 +123,17 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
                 if width > max_width:
                     width = max_width
                 height = self.list_widget.sizeHintForRow(0) * self.list_widget.count()
-                if height > max_height:
+                if height < 200:
+                    height = 200
+                elif height > max_height:
                     height = max_height
                 width += 25
-                
-                #centering widget around filter dialog
-                centerX = self.pos().x() + self.width()/2
-                centerY = self.pos().y() + self.height()/2
-                list_widget_posX = int(centerX - width/2)
-                list_widget_posY = int(centerY - height/2)
+
+                # centering widget around filter dialog
+                centerX = self.pos().x() + self.width() / 2
+                centerY = self.pos().y() + self.height() / 2
+                list_widget_posX = int(centerX - width / 2)
+                list_widget_posY = int(centerY - height / 2)
 
                 self.list_widget.resize(width, height)
                 self.list_widget.move(list_widget_posX, list_widget_posY)
@@ -147,7 +149,7 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
             self.filterBBX()
 
     def match(self, needle, haystack):
-        if self.cb_case_sensitive.isChecked() == False:
+        if self.cb_case_sensitive.isChecked() is False:
             needle = needle.lower()
             haystack = haystack.lower()
 
@@ -159,5 +161,5 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
     def redisplay(self):
         if self.redisplay_filter_results:
             self.show()
-            self.filterBBX()
+            self.list_widget.show()
             self.redisplay_filter_results = False

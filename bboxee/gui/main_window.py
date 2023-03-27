@@ -48,7 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.error_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
         self.error_widget.resize(900, 500)
 
-        self.export_widget.BBX_file_selected_2.connect(self.load_BBX)
+        self.export_widget.BBX_file_selected.connect(self.load_BBX)
 
     def closeEvent(self, event):
         if self.annotation_widget.dirty_data_check():
