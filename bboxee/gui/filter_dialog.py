@@ -45,6 +45,7 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
         self.activateWindow()
         self.data = data
         self.parent = parent
+        self.redisplay_filter_results = False
 
         self.pb_cancel.clicked.connect(self.close)
         self.pb_filter_confirmed.clicked.connect(self.filter_type)
@@ -56,6 +57,8 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
 
     def double_click(self, item_clicked):
         file_selected = item_clicked.text()
+
+        self.redisplay_filter_results = True
 
         self.list_widget.close()
         self.close()
@@ -152,3 +155,9 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
             return needle == haystack
         else:
             return needle in haystack
+
+    def redisplay(self):
+        if self.redisplay_filter_results:
+            self.show()
+            self.filterBBX()
+            self.redisplay_filter_results = False

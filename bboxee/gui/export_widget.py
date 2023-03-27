@@ -200,6 +200,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.pb_export.setEnabled(True)
         self.pb_search.setEnabled(True)
         self.progressBar.setRange(0, 1)
+        self.base_data.clear()
         self.base_data.update(data)
         self.masks = masks
 
@@ -383,6 +384,10 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                 else:
                     labels[label] += self.base_data[bbx_file]['labels'][label]
         self.update_remap_table(labels)
+
+    def showEvent(self, event):
+        event.accept()
+        self.filter_dialog.redisplay()
 
     def update_label_map(self, row, column):
         """(Slot) Update label map when cell in table changes."""
