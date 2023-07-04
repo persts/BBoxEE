@@ -161,5 +161,5 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
     def redisplay(self):
         if self.redisplay_filter_results:
             self.show()
-            self.list_widget.show()
+            self.filterBBX()
             self.redisplay_filter_results = False

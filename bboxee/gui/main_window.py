@@ -43,6 +43,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.widget.addTab(AccuracyWidget(icon_size), 'Accuracy Report')
         self.setCentralWidget(self.widget)
 
+        self.annotation_widget.file_saved.connect(self.export_widget.data_refresh)
+
         self.error_widget = QtWidgets.QTextBrowser()
         self.error_widget.setWindowTitle('EXCEPTION DETECTED')
         self.error_widget.setWindowModality(QtCore.Qt.WindowModality.ApplicationModal)
