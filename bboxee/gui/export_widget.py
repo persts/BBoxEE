@@ -51,6 +51,63 @@ class Globber(QtCore.QThread):
         QtCore.QThread.__init__(self)
         self.directory = ''
 
+    def parse(self, bbx_file_name):
+        # Read labels from original annotaiton file and summarize by file.
+        file = open(bbx_file_name, 'r')
+        contents = json.load(file)
+        file.close()
+
+        bbx_file = {'summary': '',
+                    'labels': {},
+                    'images': {},
+                    'mask_name': '',
+                    'flagged_images': False}
+        # Backward compatability check
+        if 'review' in contents:
+            # Determine if bbx file contains images flagged for review
+            bbx_file['flagged_images'] = len(contents['review']) > 0
+
+        mask = ""
+        summary = {}
+        # Store mask and set name in data object
+        if contents['mask_name'] != '':
+            mask = contents['mask']
+        bbx_file['mask_name'] = contents['mask_name']
+        # Loop through all of the images and summarize
+        for entry in contents['images']:
+            bbx_file['images'][entry] = contents['images'][entry]
+            labels = {}
+            exclusions = {}
+
+            annotations = contents['images'][entry]['annotations']
+            for annotation in annotations:
+                if annotation['label'] not in labels:
+                    labels[annotation['label']] = 1
+                else:
+                    labels[annotation['label']] += 1
+
+                if annotation['label'] not in summary:
+                    summary[annotation['label']] = 1
+                else:
+                    summary[annotation['label']] += 1
+
+                if annotation['truncated'] == "Y":
+                    exclusions['truncated'] = True
+                if annotation['occluded'] == "Y":
+                    exclusions['occluded'] = True
+                if annotation['difficult'] == "Y":
+                    exclusions['difficult'] = True
+            tmp = contents['images'][entry]
+            tmp['exclusions'] = exclusions
+            tmp['labels'] = labels
+        string = ''
+        bbx_file['labels'] = summary
+        for label in summary:
+            string += label + ': ' + str(summary[label]) + "\n"
+        bbx_file['summary'] = string
+        
+        return bbx_file, contents["mask_name"], mask
+
     def run(self):
         """The starting point for the thread."""
         self.init_progress.emit(0, 'Scanning...')
@@ -60,59 +117,11 @@ class Globber(QtCore.QThread):
         data = {}
         masks = {}
         for p, bbx_file in enumerate(file_list):
-            # Read labels from original annotaiton file and summarize by file.
-            file = open(bbx_file, 'r')
-            contents = json.load(file)
-            file.close()
-
-            data[bbx_file] = {'summary': '',
-                              'labels': {},
-                              'images': {},
-                              'mask_name': '',
-                              'flagged_images': False}
-            # Backward compatability check
-            if 'review' in contents:
-                # Determine if bbx file contains images flagged for review
-                data[bbx_file]['flagged_images'] = len(contents['review']) > 0
-
-            summary = {}
-            # Store mask and set name in data object
-            if contents['mask_name'] != '':
-                if contents['mask_name'] not in masks:
-                    masks[contents['mask_name']] = contents['mask']
-            data[bbx_file]['mask_name'] = contents['mask_name']
-            # Loop through all of the images and summarize
-            for entry in contents['images']:
-                data[bbx_file]['images'][entry] = contents['images'][entry]
-                labels = {}
-                exclusions = {}
-
-                annotations = contents['images'][entry]['annotations']
-                for annotation in annotations:
-                    if annotation['label'] not in labels:
-                        labels[annotation['label']] = 1
-                    else:
-                        labels[annotation['label']] += 1
-
-                    if annotation['label'] not in summary:
-                        summary[annotation['label']] = 1
-                    else:
-                        summary[annotation['label']] += 1
-
-                    if annotation['truncated'] == "Y":
-                        exclusions['truncated'] = True
-                    if annotation['occluded'] == "Y":
-                        exclusions['occluded'] = True
-                    if annotation['difficult'] == "Y":
-                        exclusions['difficult'] = True
-                tmp = contents['images'][entry]
-                tmp['exclusions'] = exclusions
-                tmp['labels'] = labels
-            string = ''
-            data[bbx_file]['labels'] = summary
-            for label in summary:
-                string += label + ': ' + str(summary[label]) + "\n"
-            data[bbx_file]['summary'] = string
+            parsed_file, mask_name, mask = self.parse(bbx_file)
+            data[bbx_file] = parsed_file
+            if mask != "":
+                if mask_name not in masks:
+                    masks[mask_name] = mask
             self.progress.emit(p + 1)
         self.finished.emit(data, masks)
 
@@ -181,6 +190,15 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
             self.spinBoxShards.setEnabled(True)
         else:
             self.spinBoxShards.setEnabled(False)
+    
+    def data_refresh(self, file_saved):
+        if file_saved in self.base_data:
+            parsed_file, mask_name, mask = self.globber.parse(file_saved)
+            if mask_name not in self.masks:
+                self.masks[mask_name] = mask
+            self.base_data[file_saved] = parsed_file
+
+            self.display(self.base_data, self.masks)         
 
     def display(self, data, masks):
         """(Slot) Display annotation files in table with summary count
@@ -200,8 +218,9 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.pb_export.setEnabled(True)
         self.pb_search.setEnabled(True)
         self.progressBar.setRange(0, 1)
+        temp = data.copy()
         self.base_data.clear()
-        self.base_data.update(data)
+        self.base_data.update(temp)
         self.masks = masks
 
     def exclude_changed(self):

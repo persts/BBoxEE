@@ -46,6 +46,8 @@ WIDGET, _ = uic.loadUiType(os.path.join(bundle_dir, 'annotation_widget.ui'))
 class AnnotationWidget(QtWidgets.QWidget, WIDGET):
     """Widget for annotating images."""
 
+    file_saved = QtCore.pyqtSignal(str)
+
     def __init__(self, icon_size=24, parent=None):
         """Class init function."""
         QtWidgets.QWidget.__init__(self, parent)
@@ -927,6 +929,7 @@ class AnnotationWidget(QtWidgets.QWidget, WIDGET):
                 file.close()
                 self.set_dirty(False)
                 saved = True
+                self.file_saved.emit(file_name[0])
             else:
                 message = ('You are attempting to save the annotations '
                            'outside of the current image directory. '
