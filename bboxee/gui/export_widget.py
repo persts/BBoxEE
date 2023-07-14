@@ -141,7 +141,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.exporter = None
 
         self.globber = Globber()
-        self.globber.finished.connect(self.display)
+        self.globber.finished.connect(self.store_data)
         self.globber.init_progress.connect(self.init_progress_bar)
         self.globber.progress.connect(self.progressBar.setValue)
 
@@ -197,10 +197,9 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
             if mask_name not in self.masks:
                 self.masks[mask_name] = mask
             self.base_data[file_saved] = parsed_file
+            self.display(self.base_data)
 
-            self.display(self.base_data, self.masks)         
-
-    def display(self, data, masks):
+    def display(self, data):
         """(Slot) Display annotation files in table with summary count
         by label."""
         self.tw_files.setRowCount(len(data))
@@ -218,10 +217,6 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.pb_export.setEnabled(True)
         self.pb_search.setEnabled(True)
         self.progressBar.setRange(0, 1)
-        temp = data.copy()
-        self.base_data.clear()
-        self.base_data.update(temp)
-        self.masks = masks
 
     def exclude_changed(self):
         labels = {}
@@ -407,6 +402,13 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
     def showEvent(self, event):
         event.accept()
         self.filter_dialog.redisplay()
+
+    def store_data(self, data, masks):
+        self.base_data.clear()
+        self.base_data.update(data)
+        self.masks = masks
+
+        self.display(self.base_data)
 
     def update_label_map(self, row, column):
         """(Slot) Update label map when cell in table changes."""
