@@ -105,7 +105,7 @@ class Globber(QtCore.QThread):
         for label in summary:
             string += label + ': ' + str(summary[label]) + "\n"
         bbx_file['summary'] = string
-        
+
         return bbx_file, contents["mask_name"], mask
 
     def run(self):
@@ -190,25 +190,26 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
             self.spinBoxShards.setEnabled(True)
         else:
             self.spinBoxShards.setEnabled(False)
-    
+
     def data_refresh(self, file_saved):
         if file_saved in self.base_data:
             parsed_file, mask_name, mask = self.globber.parse(file_saved)
             if mask_name not in self.masks:
                 self.masks[mask_name] = mask
             self.base_data[file_saved] = parsed_file
-            self.display(self.base_data)
+            self.display()
+            self.selection_changed()
 
-    def display(self, data):
+    def display(self):
         """(Slot) Display annotation files in table with summary count
         by label."""
-        self.tw_files.setRowCount(len(data))
-        for index, bbx_file in enumerate(data):
+        self.tw_files.setRowCount(len(self.base_data))
+        for index, bbx_file in enumerate(self.base_data):
             item = QtWidgets.QTableWidgetItem(bbx_file)
             item.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.tw_files.setItem(index, 0, item)
 
-            item = QtWidgets.QTableWidgetItem(data[bbx_file]['summary'])
+            item = QtWidgets.QTableWidgetItem(self.base_data[bbx_file]['summary'])
             item.setFlags(QtCore.Qt.ItemFlag.ItemIsSelectable | QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.tw_files.setItem(index, 1, item)
             self.tw_files.resizeRowToContents(index)
@@ -408,7 +409,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.base_data.update(data)
         self.masks = masks
 
-        self.display(self.base_data)
+        self.display()
 
     def update_label_map(self, row, column):
         """(Slot) Update label map when cell in table changes."""

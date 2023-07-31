@@ -138,9 +138,9 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
                 self.list_widget.resize(width, height)
                 self.list_widget.move(list_widget_posX, list_widget_posY)
                 self.list_widget.show()
-
             else:
-                QtWidgets.QMessageBox.information(self, 'Matching BBX Files', 'No bbx files were found containing the label: {}'.format(needle))
+                if self.redisplay_filter_results is False:
+                    QtWidgets.QMessageBox.information(self, 'Matching BBX Files', 'No bbx files were found containing the label: {}'.format(needle))
 
     def filter_type(self):
         if "schema" in self.data:
@@ -160,6 +160,6 @@ class FilterDialog(QtWidgets.QDialog, DIALOG):
 
     def redisplay(self):
         if self.redisplay_filter_results:
-            self.show()
+            # self.show()
             self.filterBBX()
             self.redisplay_filter_results = False
