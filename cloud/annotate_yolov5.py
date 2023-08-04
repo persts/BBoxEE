@@ -101,6 +101,10 @@ try:
 except AttributeError:
     pass
 checkpoint = torch.load(MODEL)
+# Patch for older YOLOv5 models
+for m in checkpoint['model'].modules():
+    if isinstance(m, torch.nn.Upsample) and not hasattr(m, 'recompute_scale_factor'):
+        m.recompute_scale_factor = None
 model = checkpoint['model'].float().fuse().eval().to(device)
 
 # Loop through all of the folder with images and process each image

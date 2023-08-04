@@ -66,9 +66,15 @@ class Annotator(QtCore.QThread):
         self.stop = False
         self.data = schema.annotation_file()
         self.data['analysts'].append('Machine Generated')
+
         if self.model is None:
             checkpoint = torch.load(self.model_file)
-            self.model = checkpoint['model'].float().fuse().eval().to(self.device)
+            # Patch for older YOLOv5 models
+            for m in checkpoint['model'].modules():
+                if isinstance(m, torch.nn.Upsample) and not hasattr(m, 'recompute_scale_factor'):
+                    m.recompute_scale_factor = None
+        self.model = checkpoint['model'].float().fuse().eval().to(self.device)
+
         self.model_loaded.emit()
         for count, image_name in enumerate(self.image_list):
             if count >= self.starting_image:
