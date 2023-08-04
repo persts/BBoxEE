@@ -22,6 +22,7 @@
 # along with this software.  If not, see <http://www.gnu.org/licenses/>.
 #
 # --------------------------------------------------------------------------
+from .dark_mode_palette import DarkModePalette  # noqa: F401
 from .select_model_dialog import SelectModelDialog  # noqa: F401
 from .analyst_dialog import AnalystDialog  # noqa: F401
 from .coco_dialog import CocoDialog  # noqa: F401
