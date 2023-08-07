@@ -32,7 +32,7 @@ You can resolve this by adding and additional environmental variable with the fo
 
 export C_INCLUDE_PATH=/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Headers
 
-[Linux]
+[Linux & OSX]
 python -m venv bboxee-env
 source bboxee-env/bin/activate
 git clone https://github.com/persts/BBoxEE
@@ -57,7 +57,7 @@ Clone the YOLO5 repo and install dependencies
 ```bash
 cd [Your BBoxEE Workspace]
 
-[Linux]
+[Linux & OSX]
 git clone https://github.com/ultralytics/yolov5 YOLO5
 python -m pip install -r YOLO5/requirements.txt
 export PYTHONPATH=$PYTHONPATH:[Your BBoxEE workspace]/yolov5
@@ -66,9 +66,4 @@ export PYTHONPATH=$PYTHONPATH:[Your BBoxEE workspace]/yolov5
 git clone https://github.com/ultralytics/yolov5 YOLO5
 python -m pip install -r YOLO5\requirements.txt
 set PYTHONPATH=%PYTHONPATH%;[Your BBoxEE workspace]\yolov5
-```
-### Note about YOLO5 support
-**At the time of writing this, M1 GPU (MPS) support is only available with PyTorch >= v1.13, which has to be installed from the nighly builds.
-```bash
-python -m pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu
 ```
