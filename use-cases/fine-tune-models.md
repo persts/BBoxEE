@@ -7,7 +7,11 @@ This tutorial will focus on camera trap data and the popular MegaDetector model.
 ## Prerequisites
 * Python3
 * Git
-This tutorial was created with Python v3.8.10 (Ubuntu).
+This tutorial was created with Python v3.8.10 (Ubuntu) and Python v3.9.6 (Apple M1 Ventura 13.5).
+
+### Apple M1 Support
+At the time of writing this, BBoxEE will take advantage of the Apple M1 MPS (GPU) during inference (annotation) but training on MPS is not available for YOLOv5
+
 
 ## Setting up your environment
 For this tutorial I will be working in my home directory.
@@ -30,7 +34,7 @@ python -m pip install -r lib/yolov5/requirements.txt
 deactivate
 
 mkdir models
-wget https://github.com/agentmorris/MegaDetector/releases/download/v5.0/md_v5a.0.0.pt -O models/md_v5a.0.0.pt
+curl -L https://github.com/agentmorris/MegaDetector/releases/download/v5.0/md_v5a.0.0.pt -o ./models/md_v5a.0.0.pt
 
 mkdir training-data
 mkdir modeling-building
@@ -129,13 +133,20 @@ If you have an existing dataset with image level labels, you may be interested i
 ## Fine-tune model
 Start the training process.
 ```bash
+[Linux]
 cd model-building
 cp ~/fine-tune/lib/yolov5/data/hyps/hyp.no-augmentation.yaml .
 python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --freeze 13 --epochs 5 --batch 10 --project .
+
+[Apple M1]
+cd model-building
+cp ~/fine-tune/lib/yolov5/data/hyps/hyp.no-augmentation.yaml .
+# Apple M1 and YOLOv5 does not support using the MPS device during training, eventually it may be possible to use --device mps
+python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --freeze 13 --epochs 5 --batch 10 --project .  --device cpu
 ```
 Congrats! You have a full training pipeline set up. The model results will be saved to a directory called exp. Each time you restart the training process the exp directory will be incremented with a number, e.g., a second training run will be saved in exp2.
 
-Now for the bad news...Obviously the model we just trained will be terrible as we only had 12 images and one class in the dataset. A big part of training, and fine-tuning, models has to do with hyperparameter optimization. Hyperparameter optimization has a lot to do with your specific dataset. The default parameters used here are a good place to start, but are far from optimal and hyperparameter optimization is beyond the scope of this tutorial. 
+Now for the reality check. Obviously the model we just trained will be terrible as we only had 12 images and one class in the dataset. A big part of training, and fine-tuning, models has to do with hyperparameter optimization. Hyperparameter optimization has a lot to do with your specific dataset. The default parameters used here are a good place to start, but are far from optimal and hyperparameter optimization is a bit beyond the scope of this tutorial. 
 
 Here are just some thoughts and things to consider.
 * Training on the CPU will not be realistic, you really need to use a GPU
