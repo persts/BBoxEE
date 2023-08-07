@@ -73,7 +73,7 @@ class Annotator(QtCore.QThread):
             for m in checkpoint['model'].modules():
                 if isinstance(m, torch.nn.Upsample) and not hasattr(m, 'recompute_scale_factor'):
                     m.recompute_scale_factor = None
-        self.model = checkpoint['model'].float().fuse().eval().to(self.device)
+            self.model = checkpoint['model'].float().fuse().eval().to(self.device)
 
         self.model_loaded.emit()
         for count, image_name in enumerate(self.image_list):

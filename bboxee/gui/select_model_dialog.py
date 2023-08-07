@@ -176,3 +176,4 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         if file_name[0] != '':
             self.set_label(self.labelYoloModelFile, file_name[0])
             self.last_dir = os.path.split(file_name[0])[0]
+            self.pushButtonYolo.setDisabled(False)

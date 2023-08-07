@@ -14,12 +14,12 @@ We have put together a [quick start guide](https://github.com/persts/BBoxEE/blob
 ### Dependencies
 BBoxEE is being developed with Python 3.8.10 on Ubuntu 20.04 with the following libraries:
 
-* PyQt6 (6.3.1)
-* Pillow (9.2.0)
-* Numpy (1.23.2)
-* Tabulate (0.8.10)
-* TensorFlow (2.10.0)
-* Torch (1.12.1+cu113)
+* PyQt6 (6.5.2)
+* Pillow (10.0.0)
+* Numpy (1.24.3)
+* Tabulate (0.9.0)
+* TensorFlow (2.13.0)
+* Torch (2.0.1)
 
 Build a virtual environment and install the dependencies:
 ```bash
@@ -68,25 +68,6 @@ python -m pip install -r YOLO5\requirements.txt
 set PYTHONPATH=%PYTHONPATH%;[Your BBoxEE workspace]\yolov5
 ```
 ### Note about YOLO5 support
-Some models may not work with the newest versions of Torch. If you get an exception when trying to use a model that looks similar to the messages below, 
-
-```code
-File "___lib/python3.8/site-packages/torch/nn/modules/upsampling.py", line 154, in forward
-    recompute_scale_factor=self.recompute_scale_factor)
-
-File "___/lib/python3.8/site-packages/torch/nn/modules/module.py", line 1207, in __getattr__
-    raise AttributeError("'{}' object has no attribute '{}'".format(
-```
-You can upgrade your existing model with the following code as a template.
-```bash
-import torch
-
-ckpt = torch.load('model.0.1.pt')
-for m in ckpt['model'].modules():
-    if type(m) is torch.nn.Upsample:
-        m.recompute_scale_factor = None
-torch.save(ckpt, './model.0.2.pt')
-```
 **At the time of writing this, M1 GPU (MPS) support is only available with PyTorch >= v1.13, which has to be installed from the nighly builds.
 ```bash
 python -m pip install --pre torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/nightly/cpu

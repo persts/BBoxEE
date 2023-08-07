@@ -116,6 +116,9 @@
        </item>
        <item row="6" column="0" colspan="3">
         <widget class="QPushButton" name="pushButtonYolo">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="text">
           <string>Load Model</string>
          </property>
