@@ -136,15 +136,15 @@ Start the training process.
 [Linux]
 cd model-building
 cp ~/fine-tune/lib/yolov5/data/hyps/hyp.no-augmentation.yaml .
-python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --freeze 13 --epochs 5 --batch 10 --project .
+python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --freeze 10 --epochs 20 --batch 10 --project . --name MD-fine-tune
 
 [Apple M1]
 cd model-building
 cp ~/fine-tune/lib/yolov5/data/hyps/hyp.no-augmentation.yaml .
-# Apple M1 and YOLOv5 does not support using the MPS device during training, eventually it may be possible to use --device mps
-python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --freeze 13 --epochs 5 --batch 10 --project .  --device cpu
+# Apple M1 and YOLOv5 does not support using the MPS device during training, eventually it may be possible to use --device mps and is possible with YOLOv8
+python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --freeze 10 --epochs 20 --batch 10 --project .  --device cpu
 ```
-Congrats! You have a full training pipeline set up. The model results will be saved to a directory called exp. Each time you restart the training process the exp directory will be incremented with a number, e.g., a second training run will be saved in exp2.
+Congrats! You have a full training pipeline set up. The model results will be saved to a directory called MD-fine-tune. Each time you restart the training process the MD-fine-tune directory will be incremented with a number, e.g., a second training run will be saved in MD-fine-tune2.
 
 Now for the reality check. Obviously the model we just trained will be terrible as we only had 12 images and one class in the dataset. A big part of training, and fine-tuning, models has to do with hyperparameter optimization. Hyperparameter optimization has a lot to do with your specific dataset. The default parameters used here are a good place to start, but are far from optimal and hyperparameter optimization is a bit beyond the scope of this tutorial. 
 
