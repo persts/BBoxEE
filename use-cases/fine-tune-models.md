@@ -136,13 +136,13 @@ Start the training process.
 [Linux]
 cd model-building
 cp ~/fine-tune/lib/yolov5/data/hyps/hyp.no-augmentation.yaml .
-python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --freeze 10 --epochs 20 --batch 10 --project . --name MD-fine-tune
+python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --optimizer Adam --freeze 10 --epochs 20 --batch 10 --project . --name MD-fine-tune
 
 [Apple M1]
 cd model-building
 cp ~/fine-tune/lib/yolov5/data/hyps/hyp.no-augmentation.yaml .
 # Apple M1 and YOLOv5 does not support using the MPS device during training, eventually it may be possible to use --device mps and is possible with YOLOv8
-python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --freeze 10 --epochs 20 --batch 10 --project .  --device cpu
+python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --optimizer Adam --freeze 10 --epochs 20 --batch 10 --project . --name MD-fine-tune
 ```
 Congrats! You have a full training pipeline set up. The model results will be saved to a directory called MD-fine-tune. Each time you restart the training process the MD-fine-tune directory will be incremented with a number, e.g., a second training run will be saved in MD-fine-tune2.
 
