@@ -81,7 +81,7 @@ Additional usage information can be found the in the [quick start guide](https:/
 
 ![Screen Shot](./images/ft-3.png)
 
-Magenta bounding boxes are bounding boxes generate by a model. Yellow bounding boxes are bounding boxes create or modified by a human analyst. 
+Magenta bounding boxes are bounding boxes generate by a model. Yellow bounding boxes are bounding boxes created or modified by a human analyst. 
 
 You can use the pull-down menu in the label display table to change the label for a bounding box. Alternatively, you can just hover over the bounding box and press the letter corresponding to the first letter of label you want to assign. If you have multiple labels that start with the same letter, keep pressing that letter to cycle through all of the possible labels.
 
@@ -118,7 +118,7 @@ You can exclude labels by typing "Exclude" in the New Label column. Likewise, yo
 At the time of export it is not uncommon to see a label that is clearly a mistake. You can click on the Search button to find which .bbx file contains the labels you are searching for. When the results dialog pops up, you can double click on a row and it will open that .bbx file in the Annotate tab. Once you make changes and save your .bbx file, the changes will be reflected on the Export tab when you return. 
 
 ## Batch annotation
-If you have a large number images directories to process or a large number images per directory, you may want to start the batch annotation process and just walk away for a couple of days.
+If you have a large number of image directories to process or a large number images per directory, you may want to start the batch annotation process and just walk away for a couple of days.
 
 USAGE: python annotate_yolov5.py TOP_DATA_FOLDER MODEL SHAPE STRIDE CONFIDENCE
 
@@ -126,7 +126,7 @@ USAGE: python annotate_yolov5.py TOP_DATA_FOLDER MODEL SHAPE STRIDE CONFIDENCE
 cd ~/fine-tune
 python lib/BBoxEE/cloud/annotate_yolov5.py lib/BBoxEE/demo models/md_v5a.0.0.pt 1280 64 0.7
 ```
-Reviewing and correcting bounding boxes in BBoxEE take very little resources and can be run on a very minimal computer. If your don't have a GPU but have access to a cloud based GPU instance, you could run the batch annotation process on the cloud then download the data and edit on a basic laptop.
+Reviewing and correcting bounding boxes in BBoxEE requires very little resources and can be run on a very minimal computer. If your don't have a GPU but have access to a cloud based GPU instance, you could run the batch annotation process on the cloud then download the data and edit on a basic laptop.
 
 If you have an existing dataset with image level labels, you may be interested in [this use case](existing-dataset.md).
 
@@ -154,8 +154,10 @@ Here are just some thoughts and things to consider.
 * The smaller your batch size the smaller your learning-rate should be
 * Number of epochs needed will depend on the size of your dataset and your learning rate. 20 epochs with 20k images and 9 classes produced a very usable model in less than 24 hours on a NVIDIA 1080Ti GPU
 * If you are going to be training on a GPU cloud instance, you can follow the same setup instructions but simply skip cloning BBoxEE.
+* Take good notes regarding your hyperparameters and training results, you will likely end up running multiple fine-tune runs and having good notes will be critical to reproducing good models. 
+* Your hyperparamters will very likely need to change over time as you add more training data or futher fine-tune your custom model.
 
 ## Model evaluation and the active learning cycle
 YOLO will output a number of statistics during the training process. BBoxEE also has a Accuracy Report tab where you can run your new model on a directory of images you have previously annotated and compare the model's results to your annotations.
 
-Once you have a decent model, use that model in BBoxEe to annotation any new data. Training statistics and accuracy reports are helpful, but using your new model regularly in your workflow will allow you get a much better sense for the types of images it is failing on. After you annotation more data with your new model, you can continue to fine-tune your custom model by using it's weights rather than the MegaDetectors in the Fine-tune model section of the tutorial. Basically these steps are a continuous cycle until you have a production quality model.  
+Once you have a decent model, use that model in BBoxEE to annotate any new data. Training statistics and accuracy reports are helpful, but using your new model regularly in your workflow will allow you get a much better sense for the types of images it is failing on. After you annotation more data with your new model, you can continue to fine-tune your custom model by using it's weights rather than the MegaDetectors in the Fine-tune model section of the tutorial. Basically these steps are a continuous cycle until you have a production quality model.  
