@@ -68,6 +68,8 @@ In the Automated Annotation panel, click the Annotate button to start the model 
 
 Once the annotation process has completed, your next task is to review the bounding boxes and assign your project specific labels.
 
+You may need to do a few test runs and adjust your Probability Threshold to find a value that works well with your data. You need to find a balance between having too many false positive and false negatives. 
+
 ## Review bounding boxes
 The demo data comes with a default bboxee_config.json file. This file holds your project specific labels and licensing information. When it comes time to annotation your own data, you will need to copy the bboxee_config.json file to the top level directory where you have stored your data and edit this file to include your project's labels. 
 
@@ -133,14 +135,17 @@ If you have an existing dataset with image level labels, you may be interested i
 ## Fine-tune model
 Start the training process.
 ```bash
-[Linux]
 cd model-building
 cp ~/fine-tune/lib/yolov5/data/hyps/hyp.no-augmentation.yaml .
+```
+Edit the hyp.no-augmentation.yaml file and change lr0: 0.01 to lr0: 0.001
+
+
+```bash
+[Linux]
 python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --optimizer Adam --freeze 10 --epochs 20 --batch 10 --project . --name MD-fine-tune
 
 [Apple M1]
-cd model-building
-cp ~/fine-tune/lib/yolov5/data/hyps/hyp.no-augmentation.yaml .
 # Apple M1 and YOLOv5 does not support using the MPS device during training, eventually it may be possible to use --device mps and is possible with YOLOv8
 python ../lib/yolov5/train.py --data ../training-data/dataset.yaml --weights ../models/md_v5a.0.0.pt --img 1280 --hyp hyp.no-augmentation.yaml --optimizer Adam --freeze 10 --epochs 20 --batch 10 --project . --name MD-fine-tune
 ```
@@ -149,13 +154,15 @@ Congrats! You have a full training pipeline set up. The model results will be sa
 Now for the reality check. Obviously the model we just trained will be terrible as we only had 12 images and one class in the dataset. A big part of training, and fine-tuning, models has to do with hyperparameter optimization. Hyperparameter optimization has a lot to do with your specific dataset. The default parameters used here are a good place to start, but are far from optimal and hyperparameter optimization is a bit beyond the scope of this tutorial. 
 
 Here are just some thoughts and things to consider.
-* Training on the CPU will not be realistic, you really need to use a GPU
+* Training on the CPU will not be realistic, you really need to use a GPU.
 * Batch size will depend on your resources. Batch size of 10 with --img 1280 works on a GPU with 8GB of RAM.
-* The smaller your batch size the smaller your learning-rate should be
-* Number of epochs needed will depend on the size of your dataset and your learning rate. 20 epochs with 20k images and 9 classes produced a very usable model in less than 24 hours on a NVIDIA 1080Ti GPU
+* The smaller your batch size the smaller your learning-rate should be.
+* Number of epochs needed will depend on the size of your dataset and your learning rate. 20 epochs with 20k images and 9 classes produced a very usable model in less than 24 hours on a NVIDIA GTX 1080 GPU.
+* The less images you have the more epochs you will need.
+* It is better to set your epochs higher than you think you need. You can interrupt the training to evaluate the model then restart the training if needed. The benefit of this is that your optimized will restart from where it left off unlike starting a completely new run which will re initialize your optimized. 
 * If you are going to be training on a GPU cloud instance, you can follow the same setup instructions but simply skip cloning BBoxEE.
 * Take good notes regarding your hyperparameters and training results, you will likely end up running multiple fine-tune runs and having good notes will be critical to reproducing good models. 
-* Your hyperparamters will very likely need to change over time as you add more training data or futher fine-tune your custom model.
+* Your hyperparamters will very likely need to change over time as you add more training data or futher fine-tune your custom model. The same is true regarding the confidence threshold you use when running your model on your data. 
 
 ## Model evaluation and the active learning cycle
 YOLO will output a number of statistics during the training process. BBoxEE also has a Accuracy Report tab where you can run your new model on a directory of images you have previously annotated and compare the model's results to your annotations.
