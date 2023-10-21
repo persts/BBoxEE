@@ -33,7 +33,7 @@ You can resolve this by adding and additional environmental variable with the fo
 export C_INCLUDE_PATH=/Library/Developer/CommandLineTools/Library/Frameworks/Python3.framework/Headers
 
 [Linux & OSX]
-python -m venv bboxee-env
+python3 -m venv bboxee-env
 source bboxee-env/bin/activate
 git clone https://github.com/persts/BBoxEE
 python -m pip install --upgrade pip
