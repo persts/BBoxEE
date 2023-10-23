@@ -45,10 +45,6 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.setWindowTitle('Select Model')
         self.last_dir = '.'
 
-        self.pushButtonTFGraph.clicked.connect(self.get_inference_graph)
-        self.interence_graph = None
-
-        self.pushButtonLabelMapV1.clicked.connect(self.get_label_map)
         self.pushButtonLabelMapV2.clicked.connect(self.get_label_map_2)
         self.label_map = None
 
@@ -56,7 +52,6 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.pushButtonYoloModelFile.clicked.connect(self.get_yolo_model)
         self.model = None
 
-        self.pushButtonTFV1.clicked.connect(self.tensorflow_v1_frozen_selected)
         self.pushButtonTFV2.clicked.connect(self.tensorflow_v2_saved_model)
         self.pushButtonYolo.clicked.connect(self.yolo_model)
 
@@ -66,25 +61,6 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         clipped = qfm.elidedText(text, QtCore.Qt.TextElideMode.ElideMiddle, width)
         label.setText(clipped)
         label.raw_text = text
-
-    def tensorflow_v1_frozen_selected(self):
-        """Load a frozen inference graph and label map."""
-        self.pushButtonTFV1.setDisabled(True)
-        self.pushButtonLabelMapV1.setDisabled(True)
-        self.pushButtonTFGraph.setDisabled(True)
-        try:
-            from bboxee.annotator.tensorflow_v1_frozen import Annotator
-            graph = self.labelTFGraph.raw_text
-            label_map = self.labelLabelMapV1.raw_text
-            self.annotator = Annotator(graph, label_map)
-            self.selected.emit(self.annotator)
-            self.hide()
-        except ModuleNotFoundError:
-            message = 'Required TensorFlow modules not found.'
-            QtWidgets.QMessageBox.critical(self, 'Export', message)
-        self.pushButtonTFV1.setDisabled(False)
-        self.pushButtonLabelMapV1.setDisabled(False)
-        self.pushButtonTFGraph.setDisabled(False)
 
     def tensorflow_v2_saved_model(self):
         """Load a saved model and label map."""
@@ -123,27 +99,6 @@ class SelectModelDialog(QtWidgets.QDialog, DIALOG):
         self.pushButtonYoloModelFile.setEnabled(True)
 
     # Helper functions
-    def get_inference_graph(self):
-        file_name = (QtWidgets.
-                     QFileDialog.
-                     getOpenFileName(self,
-                                     'Select Frozen Inference Graph',
-                                     self.last_dir, 'TF Graph (*.pb)'))
-        if file_name[0] != '':
-            self.set_label(self.labelTFGraph, file_name[0])
-            self.last_dir = os.path.split(file_name[0])[0]
-            self.pushButtonTFV1.setDisabled(False)
-
-    def get_label_map(self):
-        file_name = (QtWidgets.
-                     QFileDialog.
-                     getOpenFileName(self,
-                                     'Select Label Map',
-                                     self.last_dir, 'Label Map (*.pbtxt *.txt)'))
-        if file_name[0] != '':
-            self.set_label(self.labelLabelMapV1, file_name[0])
-            self.last_dir = os.path.split(file_name[0])[0]
-            self.pushButtonTFGraph.setDisabled(False)
 
     def get_label_map_2(self):
         file_name = (QtWidgets.

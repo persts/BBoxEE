@@ -28,8 +28,8 @@ from PyQt6 import QtCore
 from bboxee import schema
 import numpy as np
 import torch
-from utils.augmentations import letterbox
-from utils.general import non_max_suppression, scale_boxes, xyxy2xywh
+from yolov5.utils.augmentations import letterbox
+from yolov5.utils.general import non_max_suppression, scale_boxes, xyxy2xywh
 
 
 class Annotator(QtCore.QThread):

@@ -29,8 +29,8 @@ import torch
 import ntpath
 import numpy as np
 from PIL import Image
-from utils.augmentations import letterbox
-from utils.general import non_max_suppression, scale_boxes, xyxy2xywh
+from yolov5.utils.augmentations import letterbox
+from yolov5.utils.general import non_max_suppression, scale_boxes, xyxy2xywh
 from tqdm import tqdm
 
 # Usage check

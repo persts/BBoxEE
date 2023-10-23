@@ -14,12 +14,13 @@ We have put together a [quick start guide](https://github.com/persts/BBoxEE/blob
 ### Dependencies
 BBoxEE is being developed with Python 3.8.10 on Ubuntu 20.04 with the following libraries:
 
-* PyQt6 (6.5.2)
-* Pillow (10.0.0)
+* PyQt6 (6.5.3)
+* Pillow (10.1.0)
 * Numpy (1.24.3)
 * Tabulate (0.9.0)
-* TensorFlow (2.13.0)
-* Torch (2.0.1)
+* TensorFlow (2.13.1)
+* Torch (2.1.0)
+* yolov5 (7.0.13)
 
 Build a virtual environment and install the dependencies:
 ```bash
@@ -51,19 +52,4 @@ python -m pip install -r BBoxEE\requirements.txt
 ```bash
 cd BBoxEE
 python main.py
-```
-### YOLO5 (Torch) Support
-Clone the YOLO5 repo and install dependencies
-```bash
-cd [Your BBoxEE Workspace]
-
-[Linux & OSX]
-git clone https://github.com/ultralytics/yolov5 YOLO5
-python -m pip install -r YOLO5/requirements.txt
-export PYTHONPATH=$PYTHONPATH:[Your BBoxEE workspace]/yolov5
-
-[Windows]
-git clone https://github.com/ultralytics/yolov5 YOLO5
-python -m pip install -r YOLO5\requirements.txt
-set PYTHONPATH=%PYTHONPATH%;[Your BBoxEE workspace]\yolov5
 ```
