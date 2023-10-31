@@ -219,6 +219,12 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         self.pb_search.setEnabled(True)
         self.progressBar.setRange(0, 1)
 
+    def display_error(self, message):
+        QtWidgets.QMessageBox.critical(self,
+                                       'ERROR',
+                                       message,
+                                       QtWidgets.QMessageBox.StandardButton.Ok)
+
     def exclude_changed(self):
         labels = {}
         cbt = self.cb_truncated.isChecked()
@@ -284,6 +290,9 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                     self.exporter.info = diag.info
                     if accepted == 0:
                         return
+
+                if export_to == 'YOLOv5':
+                    self.exporter.error.connect(self.display_error)
 
                 self.pb_export.setEnabled(False)
                 self.pb_select_directory.setEnabled(False)

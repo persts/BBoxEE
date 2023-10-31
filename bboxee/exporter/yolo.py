@@ -28,7 +28,7 @@ import random
 import numpy as np
 from shutil import copy2
 from PIL import Image
-from PyQt6 import QtCore, QtWidgets
+from PyQt6 import QtCore
 
 
 class Exporter(QtCore.QThread):
@@ -36,6 +36,7 @@ class Exporter(QtCore.QThread):
 
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal(int, int)
+    error = QtCore.pyqtSignal(str)
 
     def __init__(self,
                  directory,
@@ -105,18 +106,12 @@ class Exporter(QtCore.QThread):
             os.makedirs(label_train_path)
             os.makedirs(label_val_path)
         except FileExistsError:
-            QtWidgets.QMessageBox.critical(None,
-                                           'ERROR',
-                                           'Image and label directory already exists in\n{}'.format(self.directory),
-                                           QtWidgets.QMessageBox.StandardButton.Ok)
             self.exported.emit(0, 0)
+            self.error.emit('Image and label directory already exists in\n{}'.format(self.directory))
             return None
         except PermissionError:
-            QtWidgets.QMessageBox.critical(None,
-                                           'ERROR',
-                                           'You do not have write permission on \n{}'.format(self.directory),
-                                           QtWidgets.QMessageBox.StandardButton.Ok)
             self.exported.emit(0, 0)
+            self.error.emit('You do not have write permission on \n{}'.format(self.directory))
             return None
 
         # Create yaml file
