@@ -1,6 +1,6 @@
 # Bounding Box Editor and Exporter (BBoxEE)
 
-BBoxEE is a open-source tool for annotating bounding boxes and exporting data to training object detectors. BBoxEE was specifically developed for the [Animal Detection Network (Andenet)](http://biodiversityinformatics.amnh.org/ml4conservation/animal-detection-network/) initiative, however, it is not limited to annotating camera trap data and can be used for any bounding box annotation task.
+BBoxEE is a open-source tool for annotating bounding boxes and exporting data to training object detectors. BBoxEE was specifically developed for the [Animal Detection Network (Andenet)]([http://biodiversityinformatics.amnh.org/ml4conservation/animal-detection-network/](https://www.amnh.org/research/center-for-biodiversity-conservation/research-and-conservation/biodiversity-informatics/machine-learning-for-conservation)) initiative, however, it is not limited to annotating camera trap data and can be used for any bounding box annotation task.
 
 BBoxEE is actively under development by Peter Ersts of the [Center for Biodiversity and Conservation at the American Museum of Natural History](https://www.amnh.org/our-research/center-for-biodiversity-conservation). Additional documentation will be forthcoming.
 
