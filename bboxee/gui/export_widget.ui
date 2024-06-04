@@ -308,12 +308,17 @@
              <widget class="QComboBox" name="comboBoxFormat">
               <item>
                <property name="text">
-                <string>TensorFlow Record</string>
+                <string>YOLOv9</string>
                </property>
               </item>
               <item>
                <property name="text">
                 <string>YOLOv5</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>TensorFlow Record</string>
                </property>
               </item>
               <item>
@@ -369,6 +374,9 @@
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
              <widget class="QLabel" name="label">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="text">
                <string>Number of Shards</string>
               </property>

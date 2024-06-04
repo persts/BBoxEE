@@ -267,7 +267,10 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                 message = 'Required TensorFlow modules not found.'
                 QtWidgets.QMessageBox.critical(self, 'Export', message)
         elif export_to == 'YOLOv5':
-            from bboxee.exporter.yolo import Exporter
+            from bboxee.exporter.yolo_v5 import Exporter
+            module_loaded = True
+        elif export_to == 'YOLOv9':
+            from bboxee.exporter.yolo_v9 import Exporter
             module_loaded = True
         elif export_to == 'COCO':
             from bboxee.exporter.coco import Exporter
