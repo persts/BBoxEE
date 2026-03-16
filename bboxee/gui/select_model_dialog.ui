@@ -24,7 +24,7 @@
      </property>
      <widget class="QWidget" name="yolo9">
       <attribute name="title">
-       <string>YOLOv9</string>
+       <string>YOLOv9+</string>
       </attribute>
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">

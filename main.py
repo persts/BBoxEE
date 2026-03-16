@@ -40,14 +40,14 @@ if __name__ == "__main__":
 
     QtCore.QDir.addSearchPath('icons', os.path.join(os.path.dirname(__file__), 'icons'))
 
-    handler = ExceptionHandler()
+#    handler = ExceptionHandler()
 
     screen = app.primaryScreen()
     for s in app.screens():
         if screen.geometry().width() < s.geometry().width():
             screen = s
     gui = MainWindow(int(screen.geometry().height() * 0.020))
-    handler.exception.connect(gui.display_exception)
+#    handler.exception.connect(gui.display_exception)
     gui.show()
     gui.windowHandle().setScreen(screen)
     gui.resize(int(screen.geometry().width() * 0.95), int(screen.geometry().height() * 0.85))

@@ -79,12 +79,12 @@ class Annotator(QtCore.QThread):
                         if conf >= self.threshold:
                             annotation = schema.annotation()
                             annotation['created_by'] = 'machine'
-                            annotation['bbox']['xmin'] = boxes.xyxyn[index][0]
-                            annotation['bbox']['ymin'] = boxes.xyxyn[index][1]
-                            annotation['bbox']['xmax'] = boxes.xyxyn[index][2]
-                            annotation['bbox']['ymax'] = boxes.xyxyn[index][3]
+                            annotation['bbox']['xmin'] = boxes.xyxyn[index][0].item()
+                            annotation['bbox']['ymin'] = boxes.xyxyn[index][1].item()
+                            annotation['bbox']['xmax'] = boxes.xyxyn[index][2].item()
+                            annotation['bbox']['ymax'] = boxes.xyxyn[index][3].item()
                             annotation['label'] = self.model.names[int(boxes.cls[index])]
-                            annotation['confidence'] = conf
+                            annotation['confidence'] = conf.item()
                             entry['annotations'].append(annotation)
                     if len(entry['annotations']) > 0:
                         self.data['images'][image_name] = entry

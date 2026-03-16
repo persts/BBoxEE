@@ -12,15 +12,15 @@ We have put together a [quick start guide](https://github.com/persts/BBoxEE/blob
 ## Installation
 
 ### Dependencies
-BBoxEE is being developed with Python 3.8.10 on Ubuntu 20.04 with the following libraries:
+BBoxEE is being developed with Python 3.12.3 on Ubuntu 24.04 with the following libraries:
 
-* PyQt6 (6.5.3)
-* Pillow (10.1.0)
-* Numpy (1.24.3)
-* Tabulate (0.9.0)
-* TensorFlow (2.13.1)
-* Torch (2.1.0)
-* yolov5 (7.0.13)
+* PyQt6 (6.10.2)
+* Pillow (12.1.1)
+* Numpy (2.4.3)
+* Tabulate (0.10.0)
+* Torch (2.10.0)
+* yolov5 (7.0.14)
+* ultralytics (8.4.21)
 
 Build a virtual environment and install the dependencies:
 ```bash
