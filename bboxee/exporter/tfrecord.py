@@ -64,7 +64,8 @@ class Exporter(QtCore.QThread):
                  images,
                  label_map,
                  validation_split,
-                 shards,
+                 shards=0,
+                 init_count=0,
                  masks={},
                  strip_metadata=False):
         """
@@ -75,6 +76,8 @@ class Exporter(QtCore.QThread):
             image_data (File): Image and Annotation List
             labels_map (dict): Class/label names
             validation_split (float): Percent to use for validation
+            sharts (int): Number of shards to create, tensorflow specifi
+            init_count (int): Sets the starting count for the file name
             masks (dict): Binary arrays for masking metadata
             strip_metadata (bool): Flag for stripping metadata
         """

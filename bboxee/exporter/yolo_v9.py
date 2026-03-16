@@ -44,6 +44,7 @@ class Exporter(QtCore.QThread):
                  label_map,
                  validation_split,
                  shards=0,
+                 init_count=0,
                  masks={},
                  strip_metadata=False):
         """
@@ -54,6 +55,8 @@ class Exporter(QtCore.QThread):
             image_data (File): Image and Annotation List
             labels_map (dict): Class/label names
             validation_split (float): Percent to use for validation
+            sharts (int): Number of shards to create, tensorflow specifi
+            init_count (int): Sets the starting count for the file name
             masks (dict): Binary arrays for masking metadata
             strip_metadata (bool): Flag for stripping metadata
         """
@@ -99,7 +102,7 @@ class Exporter(QtCore.QThread):
             label_train_path = os.path.join(train, 'labels')
             os.makedirs(label_train_path)
 
-            validation = os.path.join(self.directory, 'validation')
+            validation = os.path.join(self.directory, 'val')
             os.makedirs(validation)
             image_val_path = os.path.join(validation, 'images')
             os.makedirs(image_val_path)
@@ -116,26 +119,27 @@ class Exporter(QtCore.QThread):
 
         # Create yaml file
         file = open(os.path.join(self.directory, 'dataset.yaml'), 'w')
-        file.write("train: {}\n".format(train))
-        file.write("val: {}\n".format(validation))
+        file.write("path: {}\n".format(self.directory))
+        file.write("train: train/images\n")
+        file.write("val: val/images\n")
         file.write("nc: {}\n".format(len(self.labels)))
         file.write("names:\n")
         for index, label in enumerate(self.labels):
-            file.write(f"  {index}: {label}")
+            file.write(f"  {index}: {label}\n")
         file.close()
 
-        img_path = os.path.join(image_train_path, 'train_')
-        label_path = os.path.join(label_train_path, 'train_')
+        img_path = image_train_path
+        label_path = label_train_path
         count = 0
         for index, rec in enumerate(self.images):
             if self.stop:
                 break
             if index == self.train_size:
-                img_path = os.path.join(image_val_path, 'val_')
-                label_path = os.path.join(label_val_path, 'val_')
-                count = 0
-            img_file = img_path + '{:010d}.jpg'.format(count)
-            label_file = label_path + '{:010d}.txt'.format(count)
+                img_path = image_val_path
+                label_path = label_val_path
+
+            img_file = os.path.join(img_path, '{:010d}.{}'.format(count, rec['file_name'][-3:]))
+            label_file = os.path.join(label_path, '{:010d}.txt'.format(count))
 
             src_file = os.path.join(rec['directory'], rec['file_name'])
             if os.path.exists(src_file):

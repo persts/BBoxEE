@@ -32,7 +32,7 @@ from PyQt6 import QtCore
 
 
 class Exporter(QtCore.QThread):
-    """Export annotated images into the YOLOv5 format."""
+    """Export annotated images into the YOLOv24 format."""
 
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal(int, int)
@@ -66,7 +66,7 @@ class Exporter(QtCore.QThread):
         self.label_map = label_map
         self.train_size = int((1.0 - validation_split) * len(self.images))
         self.stop = False
-
+        self.init_count = init_count
         self.masks = masks
         self.strip_metadata = strip_metadata
 
@@ -95,18 +95,18 @@ class Exporter(QtCore.QThread):
 
         # Create new directories
         try:
-            image_path = os.path.join(self.directory, 'images')
-            os.makedirs(image_path)
-            image_train_path = os.path.join(image_path, 'train')
-            image_val_path = os.path.join(image_path, 'validation')
+            train = os.path.join(self.directory, 'train')
+            os.makedirs(train)
+            image_train_path = os.path.join(train, 'images')
             os.makedirs(image_train_path)
-            os.makedirs(image_val_path)
-
-            label_path = os.path.join(self.directory, 'labels')
-            os.makedirs(label_path)
-            label_train_path = os.path.join(label_path, 'train')
-            label_val_path = os.path.join(label_path, 'validation')
+            label_train_path = os.path.join(train, 'labels')
             os.makedirs(label_train_path)
+
+            validation = os.path.join(self.directory, 'val')
+            os.makedirs(validation)
+            image_val_path = os.path.join(validation, 'images')
+            os.makedirs(image_val_path)
+            label_val_path = os.path.join(validation, 'labels')
             os.makedirs(label_val_path)
         except FileExistsError:
             self.exported.emit(0, 0)
@@ -119,24 +119,27 @@ class Exporter(QtCore.QThread):
 
         # Create yaml file
         file = open(os.path.join(self.directory, 'dataset.yaml'), 'w')
-        file.write("train: {}\n".format(image_train_path))
-        file.write("val: {}\n".format(image_val_path))
-        file.write("nc: {}\n".format(len(self.labels)))
-        file.write("names: {}".format(json.dumps(self.labels)))
+        file.write("path: {}\n".format(self.directory))
+        file.write("train: train/images\n")
+        file.write("val: val/images\n")
+        file.write("\n")
+        file.write("names:\n")
+        for index, label in enumerate(self.labels):
+            file.write(f"  {index}: {label}\n")
         file.close()
 
-        img_path = os.path.join(image_train_path, 'train_')
-        label_path = os.path.join(label_train_path, 'train_')
-        count = 0
+        img_path = image_train_path
+        label_path = label_train_path
+        count = self.init_count
         for index, rec in enumerate(self.images):
             if self.stop:
                 break
             if index == self.train_size:
-                img_path = os.path.join(image_val_path, 'val_')
-                label_path = os.path.join(label_val_path, 'val_')
-                count = 0
-            img_file = img_path + '{:010d}.jpg'.format(count)
-            label_file = label_path + '{:010d}.txt'.format(count)
+                img_path = image_val_path
+                label_path = label_val_path
+
+            img_file = os.path.join(img_path, '{:010d}.{}'.format(count, rec['file_name'][-3:]))
+            label_file = os.path.join(label_path, '{:010d}.txt'.format(count))
 
             src_file = os.path.join(rec['directory'], rec['file_name'])
             if os.path.exists(src_file):
@@ -168,10 +171,10 @@ class Exporter(QtCore.QThread):
                     template = "{}{} {} {} {} {}"
                     label_string += template.format(nl, label, x, y, width, height)
                     nl = "\n"
-
-                file = open(label_file, 'w')
-                file.write(label_string)
-                file.close()
+                if len(label_string) > 0:
+                    file = open(label_file, 'w')
+                    file.write(label_string)
+                    file.close()
                 count += 1
                 self.progress.emit(index + 1)
 

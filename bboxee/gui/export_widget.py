@@ -188,8 +188,17 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         format = self.comboBoxFormat.currentText()
         if format == 'TensorFlow Record':
             self.spinBoxShards.setEnabled(True)
+            self.label_shards.setEnabled(True)
         else:
             self.spinBoxShards.setEnabled(False)
+            self.label_shards.setEnabled(False)
+
+        if format == 'YOLOv24':
+            self.le_init_count.setEnabled(True)
+            self.label_count.setEnabled(True)
+        else:
+            self.le_init_count.setEnabled(False)
+            self.label_count.setEnabled(False)
 
     def data_refresh(self, file_saved):
         if file_saved in self.base_data:
@@ -272,6 +281,9 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         elif export_to == 'YOLOv9':
             from bboxee.exporter.yolo_v9 import Exporter
             module_loaded = True
+        elif export_to == 'YOLOv24':
+            from bboxee.exporter.yolo_v24 import Exporter
+            module_loaded = True
         elif export_to == 'COCO':
             from bboxee.exporter.coco import Exporter
             module_loaded = True
@@ -285,6 +297,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
                                          self.label_map,
                                          validation_split,
                                          shards,
+                                         int(self.le_init_count.text()),
                                          self.masks,
                                          self.cb_strip_metadata.isChecked())
                 if export_to == 'COCO':

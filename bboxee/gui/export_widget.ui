@@ -308,6 +308,11 @@
              <widget class="QComboBox" name="comboBoxFormat">
               <item>
                <property name="text">
+                <string>YOLOv24</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
                 <string>YOLOv9</string>
                </property>
               </item>
@@ -355,7 +360,7 @@
             <item>
              <widget class="QDoubleSpinBox" name="doubleSpinBoxSplit">
               <property name="minimum">
-               <double>0.010000000000000</double>
+               <double>0.000000000000000</double>
               </property>
               <property name="maximum">
                <double>0.500000000000000</double>
@@ -371,9 +376,55 @@
            </layout>
           </item>
           <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <item>
+             <widget class="QLabel" name="label_count">
+              <property name="text">
+               <string>Starting image count</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <spacer name="horizontalSpacer_3">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="le_init_count">
+              <property name="maximumSize">
+               <size>
+                <width>100</width>
+                <height>16777215</height>
+               </size>
+              </property>
+              <property name="layoutDirection">
+               <enum>Qt::LeftToRight</enum>
+              </property>
+              <property name="text">
+               <string>0</string>
+              </property>
+              <property name="maxLength">
+               <number>14</number>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
            <layout class="QHBoxLayout" name="horizontalLayout_6">
             <item>
-             <widget class="QLabel" name="label">
+             <widget class="QLabel" name="label_shards">
               <property name="enabled">
                <bool>false</bool>
               </property>
@@ -397,6 +448,9 @@
             </item>
             <item>
              <widget class="QSpinBox" name="spinBoxShards">
+              <property name="enabled">
+               <bool>false</bool>
+              </property>
               <property name="minimum">
                <number>2</number>
               </property>
