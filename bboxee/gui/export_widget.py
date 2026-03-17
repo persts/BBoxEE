@@ -193,7 +193,7 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
             self.spinBoxShards.setEnabled(False)
             self.label_shards.setEnabled(False)
 
-        if format == 'YOLOv24':
+        if format == 'YOLOv26':
             self.le_init_count.setEnabled(True)
             self.label_count.setEnabled(True)
         else:
@@ -281,8 +281,8 @@ class ExportWidget(QtWidgets.QWidget, EXPORT):
         elif export_to == 'YOLOv9':
             from bboxee.exporter.yolo_v9 import Exporter
             module_loaded = True
-        elif export_to == 'YOLOv24':
-            from bboxee.exporter.yolo_v24 import Exporter
+        elif export_to == 'YOLOv26':
+            from bboxee.exporter.yolo_v26 import Exporter
             module_loaded = True
         elif export_to == 'COCO':
             from bboxee.exporter.coco import Exporter

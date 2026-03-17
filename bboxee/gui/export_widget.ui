@@ -308,7 +308,7 @@
              <widget class="QComboBox" name="comboBoxFormat">
               <item>
                <property name="text">
-                <string>YOLOv24</string>
+                <string>YOLOv26</string>
                </property>
               </item>
               <item>

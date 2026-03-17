@@ -32,7 +32,7 @@ from PyQt6 import QtCore
 
 
 class Exporter(QtCore.QThread):
-    """Export annotated images into the YOLOv24 format."""
+    """Export annotated images into the YOLOv26 format."""
 
     progress = QtCore.pyqtSignal(int)
     exported = QtCore.pyqtSignal(int, int)
